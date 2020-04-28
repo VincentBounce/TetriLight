@@ -932,7 +932,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 			back: {	//tetris background
 				background: {type:'canvas', gfx:GFX._gfxGridBackground},				
 				ghostBlocks:{},
-				allBlocks: {}	}	},
+				realBlocks: {}	}	},
 		frontZone: {
 			y:'_pxCeilHeight', type:'canvas', gfx:GFX._gfxGridFront, height: '_pxFullGridHeight' },
 		controlZone: {
@@ -947,8 +947,8 @@ function Grid(keyboard, colorTxt) { with(this) {
 			y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
 	});
 	_domNode._childs.frontZone.drawGfx({col:_colorTxt});
-	_realBlocksNode = _domNode._childs.frameZone._childs.back._childs.allBlocks;	//shortcut
-	_ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks;	//shortcut
+	_realBlocksNode = _domNode._childs.frameZone._childs.back._childs.realBlocks; //shortcut
+	_ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks; //shortcut
 	_domNode._childs.frameZone._childs.back._childs.background.drawGfx({col:_colorTxt});
 	_domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', rgbaTxt(_color.light), '0 0 0.4em '+rgbaTxt(_color.light));	//_textCharCountWidthMin : 1 or 7
 	_domNode._childs.controlZone.setText(_keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3], 8);	//up down left right
@@ -1177,7 +1177,7 @@ Grid.prototype = {
 			lose();
 		}
 	}},
-	lockFallingShapePrepareMoving: function() { with(this) { //can be called recursively
+	lockFallingShapePrepareMoving: function() { with(this) { //can be called recursively, when shapes hit floor
 		gridAnimsStackPush(this, newFallingShape);
 		_lockedShapes = []; //release for garbage collector
 		_lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
@@ -1278,14 +1278,13 @@ Grid.prototype = {
 	}}
 };
 //TETRIS SHAPE Class
-function Shape(grid, group, jMin, isNewLockedShape=false) { with(this) { //default falling shape means not isNewLockedShape
+function Shape(grid, group) { with(this) { //default falling shape means not group argument
 	_grid						= grid;
 	_shapeIndex					= GAME._shapeIdTick++;
-	_isLockedShape				= isNewLockedShape;
-	if (!isNewLockedShape)
+	if (arguments.length == 1)
 		newControlledShape();
-	else								//case SHAPE_TYPES.locked
-		newLockedShape(group, jMin);	//old: this[shapeOrChain](group);
+	else //(arguments.length == 2)
+		newShapeForExistingLockedBlocks(group);	//old: this[shapeOrChain](group);
 }}
 Shape.prototype = {
 	_grid						: null,
@@ -1293,7 +1292,7 @@ Shape.prototype = {
 	_iPosition					: null,
 	_jPosition					: null,
 	_shapeType					: null,
-	_isLockedShape				: null,
+	_isLockedShape				: false,
 	_pivotsCount				: null,
 	_pivot						: null,
 	_colorTxt					: null,
@@ -1314,10 +1313,11 @@ Shape.prototype = {
 		_color					= GFX._colors[_colorTxt];
 		_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
 	}},
-	newLockedShape: function(group, jMin) { with(this) { //shape prepared to fall after clearing rows, need to be called from down to upper
+	newShapeForExistingLockedBlocks: function(group) { with(this) { //shape prepared to fall after clearing rows, need to be called from down to upper
 		_domNode				= _grid._realBlocksNode.newChild({});
-		_shapeBlocks			= group;
-		_jPosition				= jMin;
+		_shapeBlocks			= group.shape;
+		_jPosition				= group.jMin;
+		_isLockedShape			= true;
 		for (let b=0;b < _shapeBlocks.length;b++)
 			_shapeBlocks[b]._shape = this;	//link to shape
 		putShapeNodeIn();
@@ -1340,7 +1340,7 @@ Shape.prototype = {
 		}
 	}},
 	putShapeInLockedNode: function() { with(this) {
-		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockInLockedNode(); });
+		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockInRealBlocksNode(); });
 	}},
 	putShapeNodeIn: function() { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockNodeIn(_domNode); });
@@ -1635,7 +1635,7 @@ LockedBlocks.prototype = {
 			let jEquals = []; let group, shape; //[if shape blocks color]			
 			while (groups.length > 0) {								//equivalent to while (groups.length)
 				group = groups.shift();							//lower block
-				shape = new Shape(_grid, group.shape, group.jMin, true); //true means creating new locked shape with orphan blocks ready to run drop animation
+				shape = new Shape(_grid, group); //creating new dropable shape based on locked blocks ready to run drop animation
 				_grid._lockedShapes[shape._shapeIndex] = shape;		//add
 				if (mode == SEARCH_MODE.down) {						//[if shape blocks color] to sort equals
 					if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
@@ -1741,7 +1741,7 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 		case BLOCK_TYPES.orphan: //rising row coming from level j=0
 			_grid  = shapeOrGrid;
 			//_grid._lockedBlocks._blocksCount++;
-			putBlockInLockedNode();
+			putBlockInRealBlocksNode();
 			isPlacedBlock = true; //isPlacedBlock turns true at the construction only when it belongs to rising rows
 			_blockIndex = GAME._newBlockId++;
 			//console.log(this); //$$$$$$$$$$$$
@@ -1787,24 +1787,11 @@ Block.prototype = {
 			&& (_grid._matrix[i][j] == null) //_matrix[i][j]==null means free
 		);
 	}},
-	drawBlock: function() { with(this) { 				//here you can hide top block outside grid
-		_domNode.moveToStep(_iPosition, _jPosition);
-	}},
-	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) and (true)
-		if (fromTestToPlaced == isPlacedBlock)
-			console.log(fromTestToPlaced +' '+isPlacedBlock);
-        /*if (isPlacedBlock)
-        	_grid._lockedBlocks.removeBlockFromLockedBlocks(this); //for search blocks move up
-        _grid.removeBlockFromMatrix(this); //testing isPlacedBlock inside
-		isPlacedBlock = fromTestToPlaced;
-        _grid.putBlockInMatrix(this); //testing isPlacedBlock inside
-        if (isPlacedBlock)
-			_grid._lockedBlocks.putBlockInLockedBlocks(this); //for search blocks move up*/
-		
-		/*if (fromTestToPlaced == isPlacedBlock) {
-			console.log(this); //bug below! #DEBUG, covering blocks bugs!!!
-			console.log(fromTestToPlaced +' '+isPlacedBlock);
-		}*/
+	drawBlock: function() { //here you can hide top block outside grid
+		this._domNode.moveToStep(this._iPosition, this._jPosition);
+	},
+	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
+		//if (fromTestToPlaced == isPlacedBlock) console.log(this); //bug below! #DEBUG
 		if (fromTestToPlaced) { //code normally beter, normally fromTestToPlaced <> isPlacedBlock
 			isPlacedBlock = true;
 			_grid.putBlockInMatrix(this);
@@ -1815,13 +1802,12 @@ Block.prototype = {
 			isPlacedBlock = false;
 		}
 	}},
-	putBlockInLockedNode: function() { with(this) {
-		_grid._lockedBlocks._blocksCount++;
-		_grid._realBlocksNode.putChild(_domNode);
-	}},
-	putBlockNodeIn: function(myParent) { with(this) {
-		myParent.putChild(_domNode);
-	}}
+	putBlockInRealBlocksNode: function() {
+		this._grid._realBlocksNode.putChild(this._domNode);
+	},
+	putBlockNodeIn: function(myParentNode) {
+		myParentNode.putChild(this._domNode);
+	}
 };
 //TETRIS SCORE Class
 function Score(grid) { with(this) {
