@@ -1791,19 +1791,21 @@ Block.prototype = {
 		_domNode.moveToStep(_iPosition, _jPosition);
 	}},
 	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) and (true)
-        if (isPlacedBlock)
+		if (fromTestToPlaced == isPlacedBlock)
+			console.log(fromTestToPlaced +' '+isPlacedBlock);
+        /*if (isPlacedBlock)
         	_grid._lockedBlocks.removeBlockFromLockedBlocks(this); //for search blocks move up
         _grid.removeBlockFromMatrix(this); //testing isPlacedBlock inside
 		isPlacedBlock = fromTestToPlaced;
         _grid.putBlockInMatrix(this); //testing isPlacedBlock inside
         if (isPlacedBlock)
-			_grid._lockedBlocks.putBlockInLockedBlocks(this); //for search blocks move up
+			_grid._lockedBlocks.putBlockInLockedBlocks(this); //for search blocks move up*/
 		
 		/*if (fromTestToPlaced == isPlacedBlock) {
 			console.log(this); //bug below! #DEBUG, covering blocks bugs!!!
 			console.log(fromTestToPlaced +' '+isPlacedBlock);
 		}*/
-		/*if (fromTestToPlaced) { //code normally beter, normally fromTestToPlaced <> isPlacedBlock
+		if (fromTestToPlaced) { //code normally beter, normally fromTestToPlaced <> isPlacedBlock
 			isPlacedBlock = true;
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this)
@@ -1811,7 +1813,7 @@ Block.prototype = {
 			_grid.removeBlockFromMatrix(this); //before remove it, then change isPlacedBlock, reverse operations
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(this)
 			isPlacedBlock = false;
-		}*/
+		}
 	}},
 	putBlockInLockedNode: function() { with(this) {
 		_grid._lockedBlocks._blocksCount++;
