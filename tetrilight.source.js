@@ -1491,8 +1491,8 @@ Shape.prototype = {
 		while (shapesHit.length > 0) //equivalent to while (shapesHit.length)
 			shapesHit.pop().shapesHitIfMove(iRight, jUp);
 	}},
-	shapeSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //calls only Block.blockSwitchFromTestToPlaced
-		_shapeBlocks.forEach(function(myBlock){ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); })
+	shapeSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) {
+		_shapeBlocks.forEach(function(myBlock){ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); })  //only called here
 	}},
 	beginSoftDropping: function(force) { with(this) {		//full falling, called by keydown, call falling()
 		if (!_grid._softDropping && (_grid._softDroppingReloaded || force) ) {	//if not falling and reloaded
@@ -1580,10 +1580,9 @@ LockedBlocks.prototype = {
 		_lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
     	_lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++;
 		 if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount ) //if full row to clear
-		 { 	//if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) == -1)//$$$$$$$ if value not found
+		 //if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) == -1)//$$$$$$$ if value not found
 			_grid._rowsToClearList.putInList(block._jPosition, true); //true to put something
 			//_grid._rowsToClearArray.push(block._jPosition); //preparing rows to clear, not negative values
-		 }
 	}},
 	removeBlockFromLockedBlocks: function(block) { with(this) {
 		delete _lockedBlocksArray[block._blockIndex]; //remove block from locked blocks
@@ -1665,8 +1664,7 @@ LockedBlocks.prototype = {
 				}
 			}
 		}
-		//if (mode == SEARCH_MODE.up)
-		//	_grid._fallingShape.shapeSwitchFromTestToPlaced(true);//in case of 0 group, falling shape is back here
+		//if ((groups.length == 0) && (mode == SEARCH_MODE.up)) console.log("#DEBUG shapeSwitchFromTestToPlaced(true) never called from chainSearchOrphan");
 	}},
 	chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { //recursive
 		var block = _grid._matrix
