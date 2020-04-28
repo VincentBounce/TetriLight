@@ -1195,7 +1195,7 @@ Grid.prototype = {
 	}},
 	moveShapesInMatrix: function(myShapes) { with(this) { //move locked shapes to drop (after clearing rows) into matrix
 		myShapes.forEach((myShape)=>{ myShape.removeShapeFromPlaced(); }) //move to a tested place
-		myShapes.forEach(function(myShape){ myShape.moveShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
+		myShapes.forEach((myShape)=>{ myShape.moveShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
 	}},
 	countAndClearRows: function() { with(this) { //locks block and computes rows to transfer and _scores
 		//old: AUDIO.audioPlay('landFX');
@@ -1377,19 +1377,18 @@ Shape.prototype = {
 			_jVector -= jUp;							//if ghostshape covered, new block layer hides it
 		AUDIO.audioPlay('moveFX');
 	}},
-	removeShapeFromPlaced: function() { with(this) {			//move in testing mode
+	removeShapeFromPlaced: function() { with(this) { //move in testing mode
 		_shapeBlocks.forEach(function(myBlock){
-	        _grid.removeBlockFromMatrix(myBlock);
+			_grid.removeBlockFromMatrix(myBlock);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
 			myBlock.isPlacedBlock = false; //ok old BLOCK_STATES
-	        _grid.putBlockInMatrix(myBlock);
+			//_grid.putBlockInMatrix(myBlock);
 		});
 	}},
 	moveShapeToPlaced: function(iRight, jUp, dropType) { with(this) {
-		_shapeBlocks.forEach(function(myBlock){
-			_grid.removeBlockFromMatrix(myBlock); //remove from old slot
-			//if (dropType != DROP_TYPES.newFallingShape)	//if it's a locked shape to drop after clearing rows
-			//	_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock); //remove block with old postion
+		_shapeBlocks.forEach(function(myBlock){ //MOVE TO PLACED
+			if (dropType == DROP_TYPES.newFallingShape)	//REMOVE FROM PLACED, only if it's not a new falling shape
+				_grid.removeBlockFromMatrix(myBlock); //remove from old slot
 	        myBlock.isPlacedBlock = true;
 			myBlock._iPosition += iRight; //updating position
 			myBlock._jPosition += jUp; //updating position
@@ -1755,10 +1754,9 @@ Block.prototype = {
 	_blockIndex						: null,		//block index
 	destroyBlock: function() { with(this) {		//destructor, remove block anywhere
 		_domNode.destroyDomNode();
-		if (isPlacedBlock) {
-	        _grid.removeBlockFromMatrix(this);
-			_grid._lockedBlocks.removeBlockFromLockedBlocks(this);
-		}
+		//if (isPlacedBlock == false) #DEBUG error
+	    _grid.removeBlockFromMatrix(this);
+		_grid._lockedBlocks.removeBlockFromLockedBlocks(this);
 	}},
 	createNode: function() { with(this) {
 		_domNode = new DomNode({type:'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx:GFX._gfxBlock});
@@ -1781,15 +1779,15 @@ Block.prototype = {
 		this._domNode.moveToStep(this._iPosition, this._jPosition);
 	},
 	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
-		//if (fromTestToPlaced == isPlacedBlock) console.log(this); //bug below! #DEBUG
+		//if (fromTestToPlaced == isPlacedBlock) console.log(this); #DEBUG
 		if (fromTestToPlaced) { //code normally beter, normally fromTestToPlaced <> isPlacedBlock
-			isPlacedBlock = true;
+			//isPlacedBlock = true;
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this)
 		} else {
 			_grid.removeBlockFromMatrix(this); //before remove it, then change isPlacedBlock, reverse operations
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(this)
-			isPlacedBlock = false;
+			//isPlacedBlock = false;
 		}
 	}},
 	putBlockInRealBlocksNode: function() {
