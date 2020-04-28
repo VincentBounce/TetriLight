@@ -1037,10 +1037,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 			for (let p in _lockedShapes) {
 				_lockedShapes[p].putShapeInLockedNode();
 				_lockedShapes[p].drawShape();
-				if (_lockedShapes[p]._isLockedShape)
-					_lockedShapes[p]._domNode.destroyDomNode();
-				else
-					_lockedShapes[p]._isLockedShape = true;	//to lock falling shape
+				_lockedShapes[p]._domNode.destroyDomNode(); //_isLockedShape always true, so optimized
 			}
 			_lockedShapes = [];
 			_ghostBlocksNode.show();
@@ -1098,7 +1095,7 @@ Grid.prototype = {
 	_domNode						: null,
 	_realBlocksNode					: null,
 	_ghostBlocksNode				: null,
-	_fallingShape					: null,
+	_fallingShape					: null,			//falling shape or locked shapes prepared to fall after sweeping
 	_lockedShapes					: null,			
 	_nextShape						: null,			//next shape about to be place
 	_nextShapePreview				: null,			//preview on top of grid
@@ -1177,16 +1174,15 @@ Grid.prototype = {
 			lose();
 		}
 	}},
-	lockFallingShapePrepareMoving: function() { with(this) { //can be called recursively, when shapes hit floor
+	lockFallingShapePrepareMoving: function() { with(this) { //can be called recursively, when falling shape or locked shapes in game hit floor
 		gridAnimsStackPush(this, newFallingShape);
 		_lockedShapes = []; //release for garbage collector
 		_lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
 		if (!_fallingShape.finishSoftDropping(false)); //drop timer stopped without running again
 			_dropTimer.finish(); //drop timer stopped, others to end?
 		_anims.shapeRotateAnim.finish(); //because made by drop period
-		_fallingShape._isLockedShape = true;
 		moveShapesInMatrix(_lockedShapes);
-		if (_fallingShape._jVector == 0) { //if classic single falling shape
+		if (_fallingShape._jVector == 0) { //if played single falling shape
 			_fallingShape.putShapeInLockedNode();
 			_fallingShape._domNode.destroyDomNode();
 			//AUDIO.audioPlay('landFX');
@@ -1292,7 +1288,6 @@ Shape.prototype = {
 	_iPosition					: null,
 	_jPosition					: null,
 	_shapeType					: null,
-	_isLockedShape				: false,
 	_pivotsCount				: null,
 	_pivot						: null,
 	_colorTxt					: null,
@@ -1317,7 +1312,6 @@ Shape.prototype = {
 		_domNode				= _grid._realBlocksNode.newChild({});
 		_shapeBlocks			= group.shape;
 		_jPosition				= group.jMin;
-		_isLockedShape			= true;
 		for (let b=0;b < _shapeBlocks.length;b++)
 			_shapeBlocks[b]._shape = this;	//link to shape
 		putShapeNodeIn();
@@ -1565,7 +1559,7 @@ function LockedBlocks(grid) { with(this) {
 	_lockedBlocksArrayByRow	= [];
 	for (let row=GAME._matrixBottom;row <= GAME._matrixHeight;row++) {
 		_lockedBlocksArrayByRow[row] = {};
-		_lockedBlocksArrayByRow[row].blocksCount = 0;	//0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalBoxesCount+1)
+		_lockedBlocksArrayByRow[row].rowBlocksCount = 0;	//0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalBoxesCount+1)
 		_lockedBlocksArrayByRow[row].blocks = [];
 	}
 }}
@@ -1582,9 +1576,10 @@ LockedBlocks.prototype = {
 	}},
 	putBlockInLockedBlocks: function(block) { with(this) {	//here we fill _lockedBlocksArray
 		_lockedBlocksArray[block._blockIndex] = block;
+		_blocksCount++;
 		_lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
-    	_lockedBlocksArrayByRow[block._jPosition].blocksCount++;
-		 if ( _lockedBlocksArrayByRow[block._jPosition].blocksCount == RULES.horizontalBoxesCount ) //if full row to clear
+    	_lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++;
+		 if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount ) //if full row to clear
 		 { 	//if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) == -1)//$$$$$$$ if value not found
 			_grid._rowsToClearList.putInList(block._jPosition, true); //true to put something
 			//_grid._rowsToClearArray.push(block._jPosition); //preparing rows to clear, not negative values
@@ -1593,8 +1588,9 @@ LockedBlocks.prototype = {
 	removeBlockFromLockedBlocks: function(block) { with(this) {
 		delete _lockedBlocksArray[block._blockIndex]; //remove block from locked blocks
 		delete _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
-		_lockedBlocksArrayByRow[block._jPosition].blocksCount--;
-     	if ( _lockedBlocksArrayByRow[block._jPosition].blocksCount == RULES.horizontalBoxesCount-1 ) //if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
+		_lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--;
+		_blocksCount--;
+     	if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount-1 ) //if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
 			_grid._rowsToClearList.eraseItemFromList(block._jPosition);
 		//_grid._rowsToClearArray.splice( //necessary for correct exection
 		//		_grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); //we remove position of block._jPosition in _rowsToClearArra
@@ -1658,7 +1654,7 @@ LockedBlocks.prototype = {
 						_grid._lockedShapes[p].shapesHitIfMove(0, 1);
 					}
 				_grid.moveShapesInMatrix(_grid._lockedShapes);
-				if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].blocksCount)
+				if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
 					_grid.gridAnimsStackPush(_grid, _grid.lost);
 				else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
 					_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
@@ -1734,17 +1730,14 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 		case BLOCK_TYPES.inShape: //falling ghape
 			_shape = shapeOrGrid;
 			_grid  = _shape._grid;
-			//_grid._lockedBlocks._blocksCount++;
 			putBlockNodeIn(_shape._domNode);
-			_blockIndex = GAME._newBlockId++; //old: _grid.putBlockInMatrix(this); _grid._lockedBlocks.putBlockInLockedBlocks(this);
+			_blockIndex = GAME._newBlockId++;
 			break;
 		case BLOCK_TYPES.orphan: //rising row coming from level j=0
 			_grid  = shapeOrGrid;
-			//_grid._lockedBlocks._blocksCount++;
 			putBlockInRealBlocksNode();
 			isPlacedBlock = true; //isPlacedBlock turns true at the construction only when it belongs to rising rows
 			_blockIndex = GAME._newBlockId++;
-			//console.log(this); //$$$$$$$$$$$$
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this);
 			drawBlock();
@@ -1763,7 +1756,6 @@ Block.prototype = {
 	_color							: null,
 	_blockIndex						: null,		//block index
 	destroyBlock: function() { with(this) {		//destructor, remove block anywhere
-		_grid._lockedBlocks._blocksCount--;
 		_domNode.destroyDomNode();
 		if (isPlacedBlock) {
 	        _grid.removeBlockFromMatrix(this);
