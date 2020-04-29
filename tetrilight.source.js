@@ -1012,9 +1012,10 @@ function Grid(keyboard, colorTxt) { with(this) {
 		}},
 		endAnimFunc: function() { with(this) {
 			for (let p in _lockedShapes) { //fetch rows to remove
-				_lockedShapes[p].putShapeInLockedNode(); //remove from moving div
-				_lockedShapes[p].drawShape();
-				_lockedShapes[p]._domNode.destroyDomNode();
+				_lockedShapes[p]
+					.putShapeInLockedNode() //remove from moving div
+					.drawShape()
+					._domNode.destroyDomNode();
 			}
 			_lockedShapes = [];
 			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.begin); //we stack _anims.quakeAnim.begin();
@@ -1272,12 +1273,12 @@ Grid.prototype = {
 	}}
 };
 //TETRIS SHAPE Class
-function Shape(grid, group) { with(this) { //default falling shape means not group argument
+function Shape(grid, group=false) { with(this) { //default falling shape means not group argument
 	_grid						= grid;
 	_shapeIndex					= GAME._shapeIdTick++;
-	if (arguments.length == 1)
+	if (!group)
 		newControlledShape();
-	else //(arguments.length == 2)
+	else
 		newShapeForExistingLockedBlocks(group);	//old: this[shapeOrChain](group);
 }}
 Shape.prototype = {
@@ -1311,8 +1312,13 @@ Shape.prototype = {
 		_shapeBlocks			= group.shape;
 		_jPosition				= group.jMin;
 		for (let b=0;b < _shapeBlocks.length;b++)
-			_shapeBlocks[b]._shape = this;	//link to shape
+			_shapeBlocks[b]._shape = this; //link to shape
 		putShapeNodeIn();
+	}},
+	getjVectorUnderShape: function() { with(this) {	//return negative slots count from falling shape to floor where it can be placed
+		let result = 0;
+		while (canMoveFromPlacedToPlaced(0, --result));	//compute result decrement BEFORE calling function
+		return (++result);								//compute result increment BEFORE calling function
 	}},
 	putShapeInGame: function() { with(this) {
 		_shapeBlocks = new Array(_polyominoBlocks.length);
@@ -1330,37 +1336,37 @@ Shape.prototype = {
 				_jPosition + _polyominoBlocks[b][1],
 				_colorTxt);
 		}
+		return this;
 	}},
 	putShapeInLockedNode: function() { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockInRealBlocksNode(); });
+		return this;
 	}},
 	putShapeNodeIn: function() { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockNodeIn(_domNode); });
-	}},
-	jVector: function() { with(this) {	//return negative slots count from falling shape to floor where it can be placed
-		var result;
-		result = 0;
-		while (canMoveFromPlacedToPlaced(0, --result));	//compute result decrement BEFORE calling function
-		return (++result);								//compute result increment BEFORE calling function
+		return this;
 	}},
 	drawShape: function() { with(this) { //show hidden shapes
 		_shapeBlocks.forEach(function(myBlock){ myBlock.drawBlock(); });//_shapeBlocks.forEach(Block.prototype.drawBlock); //KO, how to apply drawBlock on each block?
+		return this;
 	}},
 	drawGhostAfterCompute: function() { with(this) {
 		if (_ghostBlocks) {
-			_jVector = jVector();						//if not not placed so deleted so ghost deleted
+			_jVector = getjVectorUnderShape();						//if not not placed so deleted so ghost deleted
 			_shapeBlocks.forEach(function(myBlock, b){	//'this' inside callee function is same as calling function 
 				_ghostBlocks[b]._iPosition = _shapeBlocks[b]._iPosition;
 				_ghostBlocks[b]._jPosition = _shapeBlocks[b]._jPosition + _jVector;
 				_ghostBlocks[b].drawBlock();
 			})
 		}
+		return this;
 	}},
 	clearGhostBlocks: function() { with(this) {
 		if (_ghostBlocks) {								//if ghost blocks (not in chain)
 			_ghostBlocks.forEach(function(myBlock){ myBlock._domNode.destroyDomNode(); });
 			_ghostBlocks = null;
 		}
+		return this;
 	}},
 	moveFalling: function(iRight, jUp) { with(this) {	//iRight == 0 or jUp == 0, jUp negative to fall
 		_grid._anims.shapeRotateAnim.finish();			//comment/remove this line to continue animating rotation when drop #DEBUG
@@ -1374,12 +1380,14 @@ Shape.prototype = {
 		else
 			_jVector -= jUp;							//if ghostshape covered, new block layer hides it
 		AUDIO.audioPlay('moveFX');
+		return this;
 	}},
 	removeShapeFromPlaced: function() { with(this) { //move in testing mode
 		_shapeBlocks.forEach(function(myBlock){
 			_grid.removeBlockFromMatrix(myBlock);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
 		});
+		return this;
 	}},
 	moveShapeToPlaced: function(iRight, jUp, dropType=false) { with(this) { //move to placed
 		_shapeBlocks.forEach(function(myBlock){
@@ -1390,6 +1398,7 @@ Shape.prototype = {
 		});
 		if (dropType && (jUp < 0))
 			_grid._score.computeScoreDuringDrop(-jUp, dropType); //computeScoreDuringDrop receive slots count traveled, and dropType
+		return this;
 	}},
 	canMoveFromPlacedToPlaced: function(iRight, jUp) { with(this) { //can move into grid
 		shapeSwitchFromTestToPlaced(false);
@@ -1414,12 +1423,11 @@ Shape.prototype = {
 				if (_grid._softDropping)				//if falling
 					finishSoftDropping(true);
 			moveFalling(iRight, jUp);
-			return true;
 		} else {										//shape can't move...
 			if (jUp < 0)								//...player or drop timer try move down
 				_grid.lockFallingShapePrepareMoving();
-			return false;
 		}
+		return this;
 	}},
 	rotateDataInMatrix: function() { with(this) { //1 is clockwiseQuarters
 		_pivot = (_pivot+1+_pivotsCount) % _pivotsCount;//we test need rotating in canShapeRotate()
@@ -1431,12 +1439,13 @@ Shape.prototype = {
 	        _grid.putBlockInMatrix(_shapeBlocks[b]);
 			_grid._lockedBlocks.putBlockInLockedBlocks(_shapeBlocks[b]);
 		}
+		return this;
 	}},
 	canShapeRotate: function() { with(this) { //1 is clockwiseQuarters
 		if (_pivotsCount == 1)
 			return false;
 		else {
-			var result = true;
+			let result = true;
 			shapeSwitchFromTestToPlaced(false);
 			for (let b=0;b < _shapeBlocks.length;b++)
 				if ( !_shapeBlocks[b].isFreeSlot(
@@ -1460,8 +1469,9 @@ Shape.prototype = {
 			drawGhostAfterCompute();
 			AUDIO.audioPlay('rotateFX');
 		}
+		return this;
 	}},
-	shapesHitIfMove: function(iRight, jUp) { with(this) {	//if all shapes AND moving verticaly ; test only and assign jVector if necessary
+	shapesHitIfMove: function(iRight, jUp) { with(this) {	//if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
 		shapeSwitchFromTestToPlaced(false);
 		var shapesHit = [];
 		var blockHit;
@@ -1476,9 +1486,11 @@ Shape.prototype = {
 		shapeSwitchFromTestToPlaced(true);
 		while (shapesHit.length > 0) //equivalent to while (shapesHit.length)
 			shapesHit.pop().shapesHitIfMove(iRight, jUp);
+		return this;
 	}},
 	shapeSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); })  //only called here
+		return this;
 	}},
 	beginSoftDropping: function(force) { with(this) {		//full falling, called by keydown, call falling()
 		if (!_grid._softDropping && (_grid._softDroppingReloaded || force) ) {	//if not falling and reloaded
@@ -1492,6 +1504,7 @@ Shape.prototype = {
 				finishSoftDropping();
 				_grid.lockFallingShapePrepareMoving();
 			}												//nothing if key stay pressed
+		return this;
 	}},
 	softDropping: function() { with(this) {					//full falling iterative
 		_grid._dropTimer.finish();
@@ -1501,6 +1514,7 @@ Shape.prototype = {
 			_grid._softDropTimer.run();
 		} else
 			finishSoftDropping(true);						//ends fall and launching drop timer
+		return this;
 	}},
 	finishSoftDropping: function(keep) { with(this) {		//stop fall in all cases, keep if new period, return false if not falling
 		if (_grid._softDropping) {
@@ -1509,12 +1523,13 @@ Shape.prototype = {
 			if (keep)
 				_grid._dropTimer.run();						//shape can move after fall or stopped
 		}
-		return _grid._softDropping;
+		return this; //_grid._softDropping;
 	}},
 	hardDropping: function() { with(this) {
 		_grid._dropTimer.finish();
 		finishSoftDropping();
 		_grid.lockFallingShapePrepareMoving();
+		return this;
 	}}
 };
 //TETRIS NEXT SHAPE PREVIEW Class
@@ -1670,8 +1685,8 @@ LockedBlocks.prototype = {
 		while (changed) {
 			changed = false;
 			for (let p in jEquals) {
-				var j = jEquals[p].shape.jVector();
-				if (j != 0) { //jVector() negative or zero, equivalent if (j) or if (j < 0)
+				var j = jEquals[p].shape.getjVectorUnderShape();
+				if (j != 0) { //getjVectorUnderShape() negative or zero, equivalent if (j) or if (j < 0)
 					jEquals[p].shape._jVector = j;
 					jEquals[p].shape.removeShapeFromPlaced();
 					jEquals[p].shape.moveShapeToPlaced(0, j, DROP_TYPES.hard);
