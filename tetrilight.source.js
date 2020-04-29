@@ -494,7 +494,7 @@ GameGraphics.prototype = {
 	}},
 	zoom1Step: function(step) { with(this) {	//computing for zoom with pixels into web browser
 		_scaleFactor += step;
-		var old = _pxFullGridWidth;
+		let oldGridWidth = _pxFullGridWidth;
 		_pxBlockSize += step;
 		_pxGameWidth = _rootNode.getWidth();
 		_pxGameHeight = _rootNode.getHeight() - _pxTopMenuZoneHeight;
@@ -518,7 +518,7 @@ GameGraphics.prototype = {
 		_YScorePosition = 0;
 		_XMessagePosition = Math.round(_pxFullGridWidth/2);
 		_YMessagePosition = Math.round(_pxFullGridHeight/2);
-		_zoomRatio = !old ? 1 : _pxFullGridWidth / old;
+		_zoomRatio = !oldGridWidth ? 1 : _pxFullGridWidth / oldGridWidth;
 	}},
 	create_: function()  { with(this) {		//creating all graphics
 		_gfxBackground = new VectorGfx({
@@ -531,20 +531,20 @@ GameGraphics.prototype = {
 			_width:	'_pxFullGridWidth',
 			_height: '_pxFullGridHeight',
 			_nocache: true,
-			draw_: function(c, x, y, a) {					//context, x, y, args
+			draw_: function(c, x, y, a) { //context, x, y, args
 				var col = _colors[a.col];
-				c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y);		//left border
+				c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y); //left border
 				c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
 				c.lineTo(x,y+_pxFullGridHeight);
 				c.fillStyle=linearGradient(c,0,0,_pxGridBorder,0,1,rgbaTxt(col.dark),0,rgbaTxt(col.light));
 				c.fill();
-				c.beginPath();c.moveTo(x+_pxFullGridWidth,y);	//right border
+				c.beginPath();c.moveTo(x+_pxFullGridWidth,y); //right border
 				c.lineTo(x+_pxGridBorder+_pxGridWidth,y);
 				c.lineTo(x+_pxGridBorder+_pxGridWidth,y+_pxGridHeight);
 				c.lineTo(x+_pxFullGridWidth,y+_pxFullGridHeight);
 				c.fillStyle=linearGradient(c,_pxGridWidth+_pxGridBorder,0,_pxGridBorder,0,0,rgbaTxt(col.dark),1,rgbaTxt(col.light));
 				c.fill();
-				c.beginPath();c.moveTo(0,_pxFullGridHeight);	//bottom border
+				c.beginPath();c.moveTo(0,_pxFullGridHeight); //bottom border
 				c.lineTo(_pxGridBorder,_pxGridHeight);
 				c.lineTo(_pxGridBorder+_pxGridWidth,_pxGridHeight);
 				c.lineTo(_pxFullGridWidth,_pxFullGridHeight);
@@ -816,7 +816,7 @@ Game.prototype = {
 				count++;
 				grid._domNode.redrawNode();	//we change all sizes
 				grid._domNode.moveCenterTo(null, GFX._pxTopMenuZoneHeight + GFX._pxHalfGameHeight);
-				grid._domNode.moveTo(count*realIntervalX + (count-1)*GFX._pxFullGridWidth, null);
+				grid._domNode.moveNodeTo(count*realIntervalX + (count-1)*GFX._pxFullGridWidth, null);
 			}
 		}
 	}},
@@ -1008,7 +1008,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 	_anims.shapeHardDropAnim = new Animation({	//animation for 1 shape, falling or after clearing
 		animateFunc: function() { with(this) {
 			for (let p in _lockedShapes)
-				_lockedShapes[p]._domNode.moveTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
+				_lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
 		}},
 		endAnimFunc: function() { with(this) {
 			for (let p in _lockedShapes) { //fetch rows to remove
@@ -1032,7 +1032,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 	_anims.rising1RowAnim = new Animation({
 		animateFunc: function() { with(this) {		//"this" display animation instancied object
 			for (let p in _lockedShapes)
-				_lockedShapes[p]._domNode.moveTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
+				_lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
 		}},
 		endAnimFunc: function() { with(this) {
 			for (let p in _lockedShapes) {
@@ -1164,14 +1164,14 @@ Grid.prototype = {
 			_nextShapePreview.unMark(_fallingShape); //change current shape preview by a new shape
 			_nextShape = new Shape(this); //change current shape preview by a new shape
 			_nextShapePreview.mark(_nextShape); //change current shape preview by a new shape
-			_fallingShape.moveShapeToPlaced(0, 0); //only place with call without previous removeShapeFromPlace()
-			_fallingShape.drawShape();
-			_fallingShape.drawGhostAfterCompute();
+			_fallingShape.moveShapeToPlaced(0, 0) //only place with call without previous removeShapeFromPlace()
+				.drawShape()
+				.drawGhostAfterCompute();
 			_dropTimer.run();
 		} else { //it's lost
-			_fallingShape.drawShape();
-			_fallingShape.clearGhostBlocks();
-			_fallingShape._domNode.set({opacity: GFX._lostShapeOpacity});
+			_fallingShape.drawShape()
+				.clearGhostBlocks()
+				._domNode.set({opacity: GFX._lostShapeOpacity});
 			lose();
 		}
 	}},
@@ -1184,8 +1184,8 @@ Grid.prototype = {
 		_anims.shapeRotateAnim.finish(); //because made by drop period
 		moveShapesInMatrix(_lockedShapes);
 		if (_fallingShape._jVector == 0) { //if played single falling shape
-			_fallingShape.putShapeInLockedNode();
-			_fallingShape._domNode.destroyDomNode();
+			_fallingShape.putShapeInLockedNode()
+				._domNode.destroyDomNode();
 			//AUDIO.audioPlay('landFX');
 			_gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);	//exec countAndClearRows immediately
 		} else { //if locked shapes to drop, have to make animation before next counting
@@ -2238,7 +2238,7 @@ DomNode.prototype = {
 		setWidth(getWidth());
 		setHeight(getHeight());
 		if (after2ndCall) {
-			moveTo(getXInit(), getYInit());						//init x y
+			moveNodeTo(getXInit(), getYInit());						//init x y
 			if (_moveStepStack) 								//positionned with fx
 				moveToStep.apply(this, _moveStepStack);
 		}
@@ -2323,13 +2323,13 @@ DomNode.prototype = {
 		_o.style.left = _x;
 		_o.style.top = _y;
 	}},
-	moveTo: function(x, y) { with(this) {
+	moveNodeTo: function(x, y) { with(this) {
 		if (x) setX(x);
 		if (y) setY(y);
 	}},
 	moveToStep: function(i, j) { with(this) {
 		_moveStepStack = [i, j];
-		moveTo(_vectorGfx.fx(i), _vectorGfx.fy(j));
+		moveNodeTo(_vectorGfx.fx(i), _vectorGfx.fy(j));
 	}},
 	moveCenterTo: function(x, y) { with(this) {
 		if (x) setX(Math.round(x-getWidth()/2));
@@ -2347,7 +2347,7 @@ DomNode.prototype = {
 			canvas._id = getUId_();//++ _count;
 		_childs[canvas._id] = canvas;							//manage parent
 		canvas._parent = this;									//manage parent
-		canvas.moveTo(canvas._x, canvas._y);
+		canvas.moveNodeTo(canvas._x, canvas._y);
 		_o.appendChild(canvas._o);
 	}},
 	createText: function(font, fontWeight, color, textShadow, textCharCountWidthMin) { with(this) {
