@@ -47,7 +47,6 @@ callee function (appelée), calling function (appelante)
 => to define a func <> >= operator
 only Object or Array variables can be assigned by references
 
-
 ====================CODE JS ARRAY====================
 queue(fifo) / gridAnimsStackPush(filo)
 shift<<, unshift>> [array] <<push, >>pop
@@ -70,6 +69,11 @@ for (let p in myArray) works for each index AND each properties, WARNING p is st
 myArray.forEach() works for each index
 	also ones with null and undefined values, excepted Empty slots (without value) in array
 delete myArray[4] makes the 5th slot Empty
+
+====================CODE GITHUB====================
+remove a remote: git remote rm old
+rename a branch: git branch -m ie9-last-version es5-fit-ie9
+rename a branch: git push tetrilight-github :ie9-last-version es5-fit-ie9
 
 ====================NAMING CONVENTION====================
 //#DEBUG: to track bug
@@ -1639,8 +1643,7 @@ LockedBlocks.prototype = {
 		_grid._softDropTimer.finish();
 		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
-		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
-		rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
+		rowFilledSlots = new Array(RULES.horizontalBoxesCount).fill(true); //we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
 		rowFilledSlots.forEach( function(tmpSlot, slotIndex){ //we skip delete rowFilledSlots
