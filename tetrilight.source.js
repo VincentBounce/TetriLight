@@ -421,8 +421,7 @@ GameGraphics.prototype = {
 	},
 	condition_: function(gridCount) { with(this) {	//gridCount = GAME._playersCount
 		return ( ( //#DEBUG: to compact grids together
-				//(_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) )
-				//&& (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
+				//(_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) ) && (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
 				(_pxGameWidth >= _pxFullGridWidth * gridCount )	&& (_pxGameHeight >= _pxFullGridAndCeil )
 			) || (!(_scaleFactor-1)) );
 	}},
@@ -532,8 +531,7 @@ GameGraphics.prototype = {
 			_width:	'_pxPreviewBlockSize',
 			_height: '_pxPreviewBlockSize',
 			draw_: function(c, x, y, a) {	//context, x, y, args
-				var col = _colors[a.col];
-				//c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); //useful if we don't erase previous value
+				var col = _colors[a.col]; //c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); //useful if we don't erase previous value
 				c.fillStyle=(a.__onOff?
 					linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, rgbaTxt(col.dark), 1, rgbaTxt(col.light))
 					:rgbaTxt(col.medium, _previewOpacity)
@@ -1562,7 +1560,7 @@ LockedBlocks.prototype = {
 				groups.push(group);
 		};
 		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
-		if ((groups.length == 0) && (mode == SEARCH_MODE.up)) console.log(mode + " #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan");
+		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
 		//old: if (mode == SEARCH_MODE.down)
