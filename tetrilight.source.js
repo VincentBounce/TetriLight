@@ -694,7 +694,7 @@ Game.prototype = {
 	_playersCount					: 0,
 	_gameState						: GAME_STATES.waiting,	//others: GAME_STATES.paused, GAME_STATES.running
 	_shapeIdTick					: 0,
-	_newBlockId					: 0,
+	_newBlockId						: 0,
 	_pentominoesBriefMode			: null,			
 	_gameShapesWithRotations		: null,
 	_shelf							: null,
@@ -1375,10 +1375,8 @@ Shape.prototype = {
 		removeShapeFromPlaced();
 		moveShapeToPlaced(iRight, jUp, DROP_TYPES.soft);
 		drawShape();
-		if (jUp == 0)									//if we move left or right
-			drawGhostAfterCompute();
-		else
-			_jVector -= jUp;							//if ghostshape covered, new block layer hides it
+		if (jUp == 0) drawGhostAfterCompute(); //if we move left or right
+		else _jVector -= jUp; //if ghostshape covered, new block layer hides it
 		AUDIO.audioPlay('moveFX');
 		return this;
 	}},
@@ -1616,56 +1614,51 @@ LockedBlocks.prototype = {
 			group.shape.push(block);
 			for (let dir=0;dir < 4;dir++)
 				chainSearch3Ways(block, group, toProcessList, dir); //chainSearch3Ways is recursive
-			if
-			( (mode == SEARCH_MODE.down) && (group.jMin >= 2) )
-				groups.push(group);
-			else if
-			( (mode == SEARCH_MODE.up) )
+			if ((( mode == SEARCH_MODE.down) && (group.jMin >= 2 ))
+				|| mode == SEARCH_MODE.up )
 				groups.push(group);
 		};
-		//here we decide
-		if (groups.length > 0) { //if we have at least 1 group equivalent if (groups.length)
-			_grid._lockedShapes = [];
-			groups.sort(function(a, b) {return a.jMin - b.jMin;});	//regular sort : lines full disapear
-			//old: if (mode == SEARCH_MODE.down)
-			let jEquals = []; let group, shape; //[if shape blocks color]			
-			while (groups.length > 0) {								//equivalent to while (groups.length)
-				group = groups.shift();							//lower block
-				shape = new Shape(_grid, group); //creating new dropable shape based on locked blocks ready to run drop animation
-				_grid._lockedShapes[shape._shapeIndex] = shape;		//add
-				if (mode == SEARCH_MODE.down) {						//[if shape blocks color] to sort equals
-					if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
-						jEquals.push({jMin: group.jMin, shape: shape});
-					else {
-						tryMoveShapesSamejEquals(jEquals);
-						jEquals = [{jMin: group.jMin, shape: shape}];//[if shape blocks color]
-					}
-				}
-			}
-			if (mode == SEARCH_MODE.down) {	//put switch here$$$$$$$$$
-				tryMoveShapesSamejEquals(jEquals);
-				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-				_grid._anims.shapeHardDropAnim.begin();
-			} else if (mode == SEARCH_MODE.up) {
-				_grid._fallingShape.shapeSwitchFromTestToPlaced(true);	//falling is back
-				for (let p in _grid._lockedShapes)
-					if (_grid._lockedShapes[p]._jPosition == 0) {		//sub first row : j = 0
-						_grid._lockedShapes[p]._jVector = 1;
-						_grid._lockedShapes[p].shapesHitIfMove(0, 1);
-					}
-				_grid.moveShapesInMatrix(_grid._lockedShapes);
-				if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
-					_grid.gridAnimsStackPush(_grid, _grid.lost);
-				else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
-					_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
-					_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-				} else {
-					_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
-					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
+		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
+		if ((groups.length == 0)) console.log(mode + " #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan");
+		_grid._lockedShapes = [];
+		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
+		//old: if (mode == SEARCH_MODE.down)
+		let jEquals = []; let group, shape; //[if shape blocks color]			
+		while (groups.length > 0) { //equivalent to while (groups.length)
+			group = groups.shift(); //lower block
+			shape = new Shape(_grid, group); //creating new dropable shape based on locked blocks ready to run drop animation
+			_grid._lockedShapes[shape._shapeIndex] = shape; //add
+			if (mode == SEARCH_MODE.down) { //[if shape blocks color] to sort equals
+				if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
+					jEquals.push({jMin: group.jMin, shape: shape});
+				else {
+					tryMoveShapesSamejEquals(jEquals);
+					jEquals = [{jMin: group.jMin, shape: shape}]; //[if shape blocks color]
 				}
 			}
 		}
-		//if ((groups.length == 0) && (mode == SEARCH_MODE.up)) console.log("#DEBUG shapeSwitchFromTestToPlaced(true) never called from chainSearchOrphan");
+		if (mode == SEARCH_MODE.down) {
+			tryMoveShapesSamejEquals(jEquals);
+			_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
+			_grid._anims.shapeHardDropAnim.begin();
+		} else { //mode == SEARCH_MODE.up
+			_grid._fallingShape.shapeSwitchFromTestToPlaced(true);	//falling is back
+			for (let p in _grid._lockedShapes)
+				if (_grid._lockedShapes[p]._jPosition == 0) {		//sub first row : j = 0
+					_grid._lockedShapes[p]._jVector = 1;
+					_grid._lockedShapes[p].shapesHitIfMove(0, 1);
+				}
+			_grid.moveShapesInMatrix(_grid._lockedShapes);
+			if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
+				_grid.gridAnimsStackPush(_grid, _grid.lost);
+			else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
+				_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
+				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
+			} else {
+				_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
+				_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
+			}
+		}
 	}},
 	chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { //recursive
 		var block = _grid._matrix
