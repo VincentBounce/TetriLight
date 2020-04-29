@@ -25,15 +25,6 @@ $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
-====================CHANGES FROM ECMAScript 5 (2009)====================
-var --> const: IE9 OK
-for (var --> for (let: IE9 OK
-(`Level ${_grid._level}`): IE9 KO
-var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}: IE9 KO
-cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]: IE9 KO
-func(arg=false): IE9 KO
-myArray.fill: IE9 KO
-
 ====================CODE JS====================
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
 	for large surface, small number of objects
@@ -1225,8 +1216,8 @@ Grid.prototype = {
 		_dropTimer.pauseOrResume();
 	}}
 };
-//TETRIS SHAPE Class //=false IE9
-function Shape(grid, group) { with(this) { //default falling shape means not group argument
+//TETRIS SHAPE Class
+function Shape(grid, group=false) { with(this) { //default falling shape means not group argument
 	_grid						= grid;
 	_shapeIndex					= GAME._shapeIdTick++;
 	if (!group)
@@ -1340,8 +1331,8 @@ Shape.prototype = {
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
 		});
 		return this;
-	}},//=false IE9
-	moveShapeToPlaced: function(iRight, jUp, dropType) { with(this) { //move to placed
+	}},
+	moveShapeToPlaced: function(iRight, jUp, dropType=false) { with(this) { //move to placed
 		_shapeBlocks.forEach(function(myBlock){
 			myBlock._iPosition += iRight; //updating position
 			myBlock._jPosition += jUp; //updating position
@@ -1572,9 +1563,8 @@ LockedBlocks.prototype = {
 				|| mode == SEARCH_MODE.up )
 				groups.push(group);
 		};
-		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
+		//here we decide, we have at least 1 group equivalent if (groups.length > 0). Message not appeared for now, and never appeared in IE9 version
 		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
-		//if (groups.length > 0) { //$$$$$$$$$ useless? IE9
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
 		//old: if (mode == SEARCH_MODE.down)
@@ -1650,8 +1640,7 @@ LockedBlocks.prototype = {
 		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
-		for (let i=0;i<rowFilledSlots.length;i++) rowFilledSlots[i]=true;//last IE9, for var in doesn't work because empty table
-		//rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
+		rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
 		rowFilledSlots.forEach( function(tmpSlot, slotIndex){ //we skip delete rowFilledSlots
