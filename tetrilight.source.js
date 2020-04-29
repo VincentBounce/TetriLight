@@ -216,10 +216,10 @@ function MainMenu() { with(this) { //queue or stack
 				GAME.pauseOrResume();
 		}
 	};//init below
-	document.documentElement.addEventListener('keydown', keyCapture, false); 		//document.documentElement root
-	document.documentElement.addEventListener('keyup', keyCapture, false);
-	document.documentElement.addEventListener('keypress', keyPressCapture, false);
-	document.documentElement.oncontextmenu = function(event){ cancelEvent(event); };
+	document.documentElement.addEventListener('keydown', keyCapture_, false); 		//document.documentElement root
+	document.documentElement.addEventListener('keyup', keyCapture_, false);
+	document.documentElement.addEventListener('keypress', keyPressCapture_, false);
+	document.documentElement.oncontextmenu = function(event){ cancelEvent_(event); };
 	_domNode = new DomNode({
 		onBody: true, width:100, height:100	});
 	GFX = new GameGraphics(_domNode);
@@ -243,13 +243,13 @@ function MainMenu() { with(this) { //queue or stack
 }}
 MainMenu.prototype = {
 	_domNode	: null,
-	cancelEvent: function(event) { with(this) {
+	cancelEvent_: function(event) { with(this) {
 	    event.stopPropagation();
 	    event.preventDefault();
 	}},
-	keyCapture: function(event) { with(this) {
+	keyCapture_: function(event) { with(this) {
 		//var s='';for (let p in event) {s += p+' '+event[p]+'\n'};
-		MAIN_MENU.cancelEvent(event);
+		MAIN_MENU.cancelEvent_(event);
 		switch (event.keyCode) {
 			case 'P'.charCodeAt(0):
 				if ((GAME._gameState != GAME_STATES.waiting) && (event.type=='keydown'))
@@ -262,7 +262,7 @@ MainMenu.prototype = {
 				break;
 		}
 	}},
-	keyPressCapture: function(event) { with(this) { //#DEBUG changing volume seems to not work
+	keyPressCapture_: function(event) { with(this) { //#DEBUG changing volume seems to not work
 		switch (event.keyCode) {
 	    case 43: // +
 			changeVolume(1);
@@ -1562,7 +1562,7 @@ LockedBlocks.prototype = {
 				groups.push(group);
 		};
 		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
-		if ((groups.length == 0)) console.log(mode + " #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan");
+		if ((groups.length == 0) && (mode == SEARCH_MODE.up)) console.log(mode + " #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan");
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
 		//old: if (mode == SEARCH_MODE.down)
