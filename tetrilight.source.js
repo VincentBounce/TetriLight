@@ -103,9 +103,9 @@ pauseOrResume stops every timers, music. It let FX finish. It block controls
 ====================CLASS====================
 MainMenu [1 instance]
 	DomNode [1 instance]
-	GFX=GameGraphics [1 instance] ()
+	GFX: GameGraphics [1 instance] ()
 		DomNode [same instance]
-	GAME=Game [1 instance]
+	GAME: Game [1 instance]
 		_gameEventsQueue
 		PentominoesBriefMode
 		Grid [x instance]
@@ -134,11 +134,11 @@ Examples of list: toProcessList / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
 //GLOBAL VARIABLES, each one handle one class instance only
-var BROWSER, MAIN, AUDIO, GFX, GAME;
+var BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
 const RULES 						= {				//tetris rules
 	transferRowsCountMin			: 1, 			//default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
-	pentominoesRowsCountMin			: 3, 			//default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
+	pentominoesRowsCountMin			: 1, 			//default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
 	horizontalBoxesCount			: 5,			//default 10, min 5 #DEBUG
 	verticalBoxesCount				: 21, 			//default 21 = (20 visible + 1 hidden) #DEBUG
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
@@ -147,15 +147,15 @@ const RULES 						= {				//tetris rules
 };
 const DURATIONS						= {				//tetris durations, periods in ms
 	pentominoesModeDuration			: 10000,		//5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
-	moveGridsDuration				: 350,			//0350 ms
-	clearRowsDuration				: 350,			//0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
+	movingGridsDuration				: 350,			//0350 ms
+	clearingRowsDuration			: 350,			//0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
 	rising1RowDuration				: 150,			//0150 ms or 250, increase for #DEBUG
-	rotateDuration					: 400,	 		//0400 ms
+	rotatingDuration				: 400,	 		//0400 ms
 	gridQuakeDuration				: 150,			//0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
 	centralMessagesDuration			: 1500,			//1500 ms, central messages displaying duration, replaced, not queued
-	scoreDuration					: 1500,			//1500 ms
+	displayingScoreDuration			: 1500,			//1500 ms
 	hardDropDuration				: 200,			//0200 ms, increase for #DEBUG
-	afterLostDuration				: 3500,			//3500 ms, period to display score
+	lostMessageDuration				: 3500,			//3500 ms, period to display score
 	softDropPeriod 					: 50,			//0050 ms, if this is max DropDuration
 	beginDropPeriod					: 1100	 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 };
@@ -184,36 +184,13 @@ const DROP_TYPES					= {soft: 1, hard: 2}; //hard: double score
 function init() {
 	for (let p in DURATIONS) DURATIONS[p]/=GAME_SPEED_RATIO;	//change durations with coeff, float instead integer no pb, to slowdown game
 	BROWSER = new Browser(); DomNode.prototype._transformProp = BROWSER.getTransformProperty();	//init 'Transform' param
-	MAIN = new MainMenu();
+	AUDIO = new Audio(SOUNDS);
+	AUDIO.changeVolume(false);
+	MAIN_MENU = new MainMenu();
+	if (GAME) GAME.destroyGame();
+	GAME = new Game();
 	GAME.addGrid();
 	//GAME.addGrid(); //#DEBUG
-
-	/*var tata=[666, "V", "I"];
-	tata[-1]=-555;
-	tata[3]=99999;
-	tata[5]=null;	//null is something
-	tata[6]=undefined;	//null is something
-	delete tata[6];
-	tata[666]=66666;
-	tata["mescouilles"]=555;
-	console.group();
-	tata.forEach(function(val, index, array){console.log(index);} );
-	for (let p in tata) console.log(p);	//enumerates everything: table indexs, then properties
-	console.log(tata);*/
-	/*var toto = [[5,6,7], "V", "I"];
-	toto["pddd"]=80;
-	toto["pddd"]=81;
-	toto["c"]=86;
-	toto[5]=89;
-	console.log(toto);
-	for (let p in toto) console.log(p);
-	delete toto[0];	//just set slot to undefined
-	console.log(toto);
-	toto.shift();	//remove the slot from the table!
-	console.log(toto);*/
-
-
-
 }
 //MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { with(this) { //queue or stack
@@ -238,7 +215,7 @@ function MainMenu() { with(this) { //queue or stack
 			if (GAME._gameState != GAME_STATES.waiting)
 				GAME.pauseOrResume();
 		}
-	};	//init below
+	};//init below
 	document.documentElement.addEventListener('keydown', keyCapture, false); 		//document.documentElement root
 	document.documentElement.addEventListener('keyup', keyCapture, false);
 	document.documentElement.addEventListener('keypress', keyPressCapture, false);
@@ -262,32 +239,18 @@ function MainMenu() { with(this) { //queue or stack
 			if ((event.offsetX < GFX._pxButtonSize) && (event.offsetY < GFX._pxButtonSize))
 					GAME.addGrid(); //top left square click capture to add another grid
 		}, false);
-	onresize = function() { GAME.organizeGrids({resize:true}) };		//on IE : load at start ; or window.onresize = organizeGrids;
-	AUDIO = new Audio(SOUNDS);
-	AUDIO.changeVolume(false);
-	newGame_();
+	window.onresize = function() { GAME.organizeGrids({resize:true}) };		//on IE : load at start ; or window.onresize = organizeGrids;
 }}
 MainMenu.prototype = {
 	_domNode	: null,
-	newGame_: function() { with(this) { //to call with buttons
-		if (GAME) GAME.destroyGame();
-		GAME = new Game();
-	}},
 	cancelEvent: function(event) { with(this) {
 	    event.stopPropagation();
 	    event.preventDefault();
 	}},
 	keyCapture: function(event) { with(this) {
-		//var s='';
-		//for (let p in event) {s += p+' '+event[p]+'\n'};
-		MAIN.cancelEvent(event);
+		//var s='';for (let p in event) {s += p+' '+event[p]+'\n'};
+		MAIN_MENU.cancelEvent(event);
 		switch (event.keyCode) {
-			/*case 72: //H for #DEBUG
-				if ((GAME._gameState == GAME_STATES.running) && (event.type=='keydown')) {
-					GAME.testH();
-					//changeVolume(false);
-				}
-				break;*/
 			case 'P'.charCodeAt(0):
 				if ((GAME._gameState != GAME_STATES.waiting) && (event.type=='keydown'))
 					GAME.pauseOrResume(); //to enter pause
@@ -300,9 +263,6 @@ MainMenu.prototype = {
 		}
 	}},
 	keyPressCapture: function(event) { with(this) { //#DEBUG changing volume seems to not work
-		//CancelEvent(event);
-		//alert(String.charCodeAt('+'));
-		//window.document.title='press '+event.type;
 		switch (event.keyCode) {
 	    case 43: // +
 			changeVolume(1);
@@ -311,34 +271,17 @@ MainMenu.prototype = {
 			changeVolume(-1);
 			break;	
 		}
-	}}/*,
-	keyUpCapture: function(event) { with(this) {
-	  switch (event.keyCode) {
-	    case 72: //h
-			//window.document.title='up '+event.type;
-	      break;
-		default:
-			break;
-	  }
-	}}*/
+	}}
 };
 //BROWSER Class
 function Browser() { with(this) {
 }}
 Browser.prototype = {
-/*	isReady: function() { with(this) {
-		return isCanvasReady() && getTransformProperty();
-	}},
-	isCanvasReady: function() { with(this) {
-		return !!document.createElement('canvas').getContext;	//test if function exist
-	}},*/
 	getTransformProperty: function() { with(this) {
 	    var properties = [
 	        ['transform', 'transform'],
 	        ['WebkitTransform', '-webkit-transform'],			//chrome 11 OK, Opera, Safari -webkit-transform
 	        ['msTransform', '-ms-transform']					//IE 9 OK -ms-transform
-	        //['MozTransform', '-moz-transform'],					//FireFox 3.1+ only, older: -moz-transform
-	        //['OTransform', '-o-transform']						//older versions: -o-transform
 	    ];
 	    var p;
 	    var elt = document.createElement('div');
@@ -681,7 +624,7 @@ function Game() { with(this) {
 		timingAnimFunc: function(x) {
 			return -(x-2*Math.sqrt(x));	//old: return -(x-2*Math.sqrt(x));
 		},
-		animDuration: DURATIONS.moveGridsDuration
+		animDuration: DURATIONS.movingGridsDuration
 	});
 	_gameEventsQueue = new EventsQueue();	//animating applied on _anims.moveGridsAnim
 }}
@@ -782,7 +725,7 @@ Game.prototype = {
 	}},
 	organizeGrids: function(att) { with(this) {	//horizontal organization only, zoomToFit makes the correct zoom
 		GFX.zoomToFit(_playersCount);
-		MAIN._domNode._childs.background.redrawNode();	//redraw background
+		MAIN_MENU._domNode._childs.background.redrawNode();	//redraw background
 		var realIntervalX = (GFX._pxGameWidth-(GFX._pxFullGridWidth*_playersCount)) / (_playersCount+1);
 		if (att.newGrid || att.oldGrid) {
 			if (att.newGrid)
@@ -923,7 +866,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 	_softDropTimer = new Timer( function() {with(this) {
 		_fallingShape.softDropping(); }},
 		DURATIONS.softDropPeriod );
-	_domNode = MAIN._domNode.newChild({		//creating gmae graphics
+	_domNode = MAIN_MENU._domNode.newChild({		//creating gmae graphics
 		width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
 		frameZone: {
 			x:'_pxGridBorder', y:'_pxCeilHeight',
@@ -1003,7 +946,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		timingAnimFunc: function(x) {
 			return 1 - Math.pow(x, 2);
 		},
-		animDuration: DURATIONS.moveGridsDuration
+		animDuration: DURATIONS.movingGridsDuration
 	});
 	_anims.shapeHardDropAnim = new Animation({	//animation for 1 shape, falling or after clearing
 		animateFunc: function() { with(this) {
@@ -1013,7 +956,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		endAnimFunc: function() { with(this) {
 			for (let p in _lockedShapes) { //fetch rows to remove
 				_lockedShapes[p]
-					.putShapeInLockedNode() //remove from moving div
+					.putShapeInRealBlocksNode() //remove from moving div
 					.drawShape()
 					._domNode.destroyDomNode();
 			}
@@ -1036,7 +979,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		}},
 		endAnimFunc: function() { with(this) {
 			for (let p in _lockedShapes) {
-				_lockedShapes[p].putShapeInLockedNode();
+				_lockedShapes[p].putShapeInRealBlocksNode();
 				_lockedShapes[p].drawShape();
 				_lockedShapes[p]._domNode.destroyDomNode(); //_isLockedShape always true, so optimized
 			}
@@ -1065,7 +1008,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		timingAnimFunc: function(x) {
 			return -90*(x-2*Math.sqrt(x));
 		},
-		animDuration: DURATIONS.rotateDuration
+		animDuration: DURATIONS.rotatingDuration
 	});
 	_anims.messageAnim = new Animation({
 		startAnimFunc: function() { with(this) {
@@ -1184,7 +1127,7 @@ Grid.prototype = {
 		_anims.shapeRotateAnim.finish(); //because made by drop period
 		moveShapesInMatrix(_lockedShapes);
 		if (_fallingShape._jVector == 0) { //if played single falling shape
-			_fallingShape.putShapeInLockedNode()
+			_fallingShape.putShapeInRealBlocksNode()
 				._domNode.destroyDomNode();
 			//AUDIO.audioPlay('landFX');
 			_gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);	//exec countAndClearRows immediately
@@ -1225,7 +1168,7 @@ Grid.prototype = {
 	}},
 	lose: function() { with(this) {	//lives during _score duration
 		_score.displays();
-		_anims.messageAnim.setDuration(DURATIONS.afterLostDuration); //empty queues necessary?
+		_anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); //empty queues necessary?
 		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.begin, ['You<BR/>lose', 4]);
 		_gridMessagesQueue.execNowOrEnqueue(this, afterLost_);
 		//AUDIO.audioStop('musicMusic');
@@ -1338,7 +1281,7 @@ Shape.prototype = {
 		}
 		return this;
 	}},
-	putShapeInLockedNode: function() { with(this) {
+	putShapeInRealBlocksNode: function() { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ myBlock.putBlockInRealBlocksNode(); });
 		return this;
 	}},
@@ -1692,8 +1635,7 @@ LockedBlocks.prototype = {
 		_grid._anims.shapeRotateAnim.finish();
 		_grid._dropTimer.finish();
 		_grid._softDropTimer.finish();
-		//prepareNewRisingRowAt_jPos0
-		var rowFilledSlots, tempBlock;
+		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
 		rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
@@ -1803,8 +1745,8 @@ function Score(grid) { with(this) {
 		timingAnimFunc: function(x) {
 			return -(x-2*Math.sqrt(x));
 		},
-		animDuration: DURATIONS.scoreDuration,
-		maxFps: 30/1000
+		animDuration: DURATIONS.displayingScoreDuration,
+		maxFps: 30/1000 //because animation need to displays digits slowly
 	});
 	writeScore(_scoreShowed);
 }}
@@ -2184,7 +2126,7 @@ DomNode.prototype = {
 	delTransform: function() { with(this) {
 		_o.style[_transformProp] = '';
 	}},
-	drawGfx: function(att) { with(this) {				//MAIN FUNCTION to draw a graphic
+	drawGfx: function(att) { with(this) {				//MAIN_MENU FUNCTION to draw a graphic
 		if (!att) var att = {};
 		var copyAtt = {};								//recording process to redraw
 		for (let p in att)
