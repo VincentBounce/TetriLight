@@ -178,7 +178,7 @@ const GAME_STATES					= {paused: 0, running: 1, waiting: 2};
 const GRID_STATES					= {connected: 0, playing: 1, lost: 2}; //connected but not started
 const BLOCK_TYPES					= {ghost: 0, inShape: 1, orphan: 2};
 const SEARCH_MODE					= {down: true, up: false};
-const DROP_TYPES					= {soft: 1, hard: 2, newFallingShape: 3}; //hard: double value
+const DROP_TYPES					= {soft: 1, hard: 2}; //hard: double score
 
 //INIT called by HTML browser
 function init() {
@@ -1163,7 +1163,7 @@ Grid.prototype = {
 			_nextShapePreview.unMark(_fallingShape); //change current shape preview by a new shape
 			_nextShape = new Shape(this); //change current shape preview by a new shape
 			_nextShapePreview.mark(_nextShape); //change current shape preview by a new shape
-			_fallingShape.moveShapeToPlaced(0, 0, DROP_TYPES.newFallingShape); //only place with call without previous removeShapeFromPlace()
+			_fallingShape.moveShapeToPlaced(0, 0); //only place with call without previous removeShapeFromPlace()
 			_fallingShape.drawShape();
 			_fallingShape.drawGhostAfterCompute();
 			_dropTimer.run();
@@ -1205,7 +1205,7 @@ Grid.prototype = {
 		let rowsToClearCount = _rowsToClearList.listSize;
 		if (rowsToClearCount > 0) { //if there's rows to clear
 			_score.combosCompute();
-			_score.winRows(rowsToClearCount);
+			_score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
 			if (rowsToClearCount >= RULES.transferRowsCountMin)	//if 2 rows cleared, tranfer rule
 				GAME.transferRows(this, rowsToClearCount);
 			if (rowsToClearCount >= RULES.pentominoesRowsCountMin) {//if 3 rows cleared, pentominoes rule: player have 3 blocks per shape, and others players have 5 blocks per shape
@@ -1242,14 +1242,9 @@ Grid.prototype = {
 		GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);	//prepare remove
 	}},
 	putBlockInMatrix: function(block) { with(this) { //only put placed block on grid, not testing one, set to block
-		//if (!block.isPlacedBlock) console.log("putBlockInMatrix "+block.isPlacedBlock);
-		//if (block.isPlacedBlock)			
 		_matrix[block._iPosition][block._jPosition] = block;
 	}},
 	removeBlockFromMatrix: function(block) { with(this) { //only remove placed block on grid, not testing one, set to null
-		//if (!block.isPlacedBlock) throw "erro";
-		//if (!block.isPlacedBlock) console.log("removeBlockFromMatrix "+block.isPlacedBlock);
-		//if (block.isPlacedBlock)
 		_matrix[block._iPosition][block._jPosition] = null;
 	}},
 	clearFullRowAfterClearingAnim: function(jRow) { with(this) { //we suppose that row is full
@@ -1384,22 +1379,17 @@ Shape.prototype = {
 		_shapeBlocks.forEach(function(myBlock){
 			_grid.removeBlockFromMatrix(myBlock);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
-			//myBlock.isPlacedBlock = false; //ok old BLOCK_STATES
-			//_grid.putBlockInMatrix(myBlock);
 		});
 	}},
-	moveShapeToPlaced: function(iRight, jUp, dropType) { with(this) {
-		_shapeBlocks.forEach(function(myBlock){ //MOVE TO PLACED
-			//if (dropType != DROP_TYPES.newFallingShape)	//REMOVE FROM PLACED, only if it's not a new falling shape
-			//	_grid.removeBlockFromMatrix(myBlock); //remove from old slot
-	        //myBlock.isPlacedBlock = true;
+	moveShapeToPlaced: function(iRight, jUp, dropType=false) { with(this) { //move to placed
+		_shapeBlocks.forEach(function(myBlock){
 			myBlock._iPosition += iRight; //updating position
 			myBlock._jPosition += jUp; //updating position
 	        _grid.putBlockInMatrix(myBlock); //put to new slot
 			_grid._lockedBlocks.putBlockInLockedBlocks(myBlock); //put block with new position
 		});
-		if (dropType && (jUp < 0) )
-			_grid._score.winDrop(-jUp, dropType);
+		if (dropType && (jUp < 0))
+			_grid._score.computeScoreDuringDrop(-jUp, dropType); //computeScoreDuringDrop receive slots count traveled, and dropType
 	}},
 	canMoveFromPlacedToPlaced: function(iRight, jUp) { with(this) { //can move into grid
 		shapeSwitchFromTestToPlaced(false);
@@ -1440,17 +1430,7 @@ Shape.prototype = {
 			_shapeBlocks[b]._jPosition = _jPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][1];
 	        _grid.putBlockInMatrix(_shapeBlocks[b]);
 			_grid._lockedBlocks.putBlockInLockedBlocks(_shapeBlocks[b]);
-			//_shapeBlocks[b].isPlacedBlock = false;
-	        //_grid.putBlockInMatrix(_shapeBlocks[b]); useless because only executed when isPlacedBlock
 		}
-		/*for (let b=0;b < _shapeBlocks.length;b++){
-	        //_grid.removeBlockFromMatrix(_shapeBlocks[b]);
-	        //_shapeBlocks[b].isPlacedBlock = true;
-			_shapeBlocks[b]._iPosition = _iPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][0];
-			_shapeBlocks[b]._jPosition = _jPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][1];
-	        _grid.putBlockInMatrix(_shapeBlocks[b]);
-			_grid._lockedBlocks.putBlockInLockedBlocks(_shapeBlocks[b]);
-		}*/
 	}},
 	canShapeRotate: function() { with(this) { //1 is clockwiseQuarters
 		if (_pivotsCount == 1)
@@ -1740,7 +1720,6 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 		case BLOCK_TYPES.orphan: //rising row coming from level j=0
 			_grid  = shapeOrGrid;
 			putBlockInRealBlocksNode();
-			//isPlacedBlock = true; //isPlacedBlock turns true at the construction only when it belongs to rising rows
 			_blockIndex = GAME._newBlockId++;
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this);
@@ -1750,7 +1729,6 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 	}
 }}
 Block.prototype = {
-	//isPlacedBlock					: false,	//public property
 	_grid							: null,		//undefined or null, overwise object not exist
 	_shape							: null,
 	_iPosition						: null,
@@ -1761,7 +1739,6 @@ Block.prototype = {
 	_blockIndex						: null,		//block index
 	destroyBlock: function() { with(this) {		//destructor, remove block anywhere
 		_domNode.destroyDomNode();
-		//if (isPlacedBlock == false) #DEBUG error
 	    _grid.removeBlockFromMatrix(this);
 		_grid._lockedBlocks.removeBlockFromLockedBlocks(this);
 	}},
@@ -1786,15 +1763,12 @@ Block.prototype = {
 		this._domNode.moveToStep(this._iPosition, this._jPosition);
 	},
 	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
-		//if (fromTestToPlaced == isPlacedBlock) console.log(this); #DEBUG
-		if (fromTestToPlaced) { //code normally beter, normally fromTestToPlaced <> isPlacedBlock
-			//isPlacedBlock = true;
+		if (fromTestToPlaced) {
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this)
 		} else {
-			_grid.removeBlockFromMatrix(this); //before remove it, then change isPlacedBlock, reverse operations
+			_grid.removeBlockFromMatrix(this);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(this)
-			//isPlacedBlock = false;
 		}
 	}},
 	putBlockInRealBlocksNode: function() {
@@ -1857,11 +1831,11 @@ Score.prototype = {
 				5); //last arg: higher for smaller text, not to queue, each new one replace previous one
 		}
 	}},
-	winDrop: function(count, dropType) { with(this) {
-		_delta += dropType * count;
+	computeScoreDuringDrop: function(slotTraveledCount, dropType) { with(this) {
+		_delta += dropType * slotTraveledCount;
 	}},
-	winRows: function(count) { with(this) {
-		_delta += 40 * _factor[count-1] * _level;
+	computeScoreForSweptRowsAndDisplay: function(sweptRowsCount) { with(this) {
+		_delta += 40 * _factor[sweptRowsCount-1] * _level;
 		displays();
 	}},
 	combosReset: function() { with(this) {
