@@ -43,8 +43,6 @@ JS editor: Visual Studio Code with "Monokay" theme
 Debugger: Chrome with CTRL+SHIFT+I
 delete myObject.myAttribute: not exist anymore, [undefined], then garbage collector comes
 myObject.myAttribute = null: value is [null], then garbage collector comes
-queue(fifo) / gridAnimsStackPush(filo)
-shift<<, unshift>> [array] <<push, >>pop
 var = cond ? if_true : if_false
 var x = {}; x = null (typeof == "object") / x = undefined (typeof == "undefined")
 typeof: item[undefined, boolean, number, string, object[array, set], function]
@@ -52,24 +50,35 @@ typeof: item[undefined, boolean, number, string, object[array, set], function]
 console.log() to log object into console (F12 key) on Chrome;
 console.clear() to clear before
 console.table() to have a clear table
+var result = myClassInstance.publicMethod(); <> var myMethod = myClassInstance.publicMethod;
+callee function (appelée), calling function (appelante)
+(function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
+=> to define a func <> >= operator
+only Object or Array variables can be assigned by references
+
+
+====================CODE JS ARRAY====================
+queue(fifo) / gridAnimsStackPush(filo)
+shift<<, unshift>> [array] <<push, >>pop
 delete myArray[0]: just set slot to undefined
-myArray.shift(): remove the slot from the table, even in empty
-for (let p in MyArray) delete myArray[p]: set to undefined not empty slots
+myArray.shift(): remove the slot from the table, even an Empty slot
+for (let p in MyArray) delete myArray[p]: set to undefined / not Empty slots
 instrument = [...instrument, 'violin', 'guitar'] //same as push violin, push guitar
 instrument = ['violin', 'guitar', ...instrument] //same as unshift violin, unshift guitar
 objectName.propertyName == objectName["propertyName"]
-myArray = new Array(6) adds an array of 6 empty slots, from 0 to 5
+myArray = new Array(6) adds an array of 6 Empty slots, from 0 to 5
+WARNING:
+	Empty: without value
+	null: with value
+	undefined: with value
 myArray["propertyName"]=3.14 adds a property, NOT an array index, array lenght still unchanged
 myArray[-1]=3.14 adds a property, NOT an array index, array length still unchanged
 myArray[666]=3.14 adds an array index, array length goes to 667
 for (let p in myArray) works for each index AND each properties, WARNING p is string
-	also ones with null and undefined values, excepted empty slots (without value) in array
+	also ones with null and undefined values, excepted Empty slots (without value) in array
 myArray.forEach() works for each index
-	also ones with null and undefined values, excepted empty slots (without value) in array
-delete myArray[4] makes the 5th slot empty
-var result = myClassInstance.publicMethod(); <> var myMethod = myClassInstance.publicMethod;
-callee function (appelée), calling function (appelante)
-=> to define a func <> >= operator
+	also ones with null and undefined values, excepted Empty slots (without value) in array
+delete myArray[4] makes the 5th slot Empty
 
 ====================NAMING CONVENTION====================
 //#DEBUG: to track bug
@@ -182,14 +191,6 @@ const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not
 const BLOCK_TYPES					= {ghost: 1, inShape: 2, orphan: 3};
 const SEARCH_MODE					= {down: 1, up: 2};
 const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
-
-/*const GAME_STATES					= {paused: 0, running: 1, waiting: 2};
-const GRID_STATES					= {connected: 0, playing: 1, lost: 2};	//connected but not started
-const BLOCK_TYPES					= {ghost: 0, inShape: 1, orphan: 2};
-const SEARCH_MODE					= {down: true, up: false};
-const DROP_TYPES					= {soft: 1, hard: 2};					//hard : double value
-*/
-
 
 //INIT called by HTML browser
 function init() {
@@ -1225,7 +1226,7 @@ Grid.prototype = {
 	}}
 };
 //TETRIS SHAPE Class //=false IE9
-function Shape(grid, group=false) { with(this) { //default falling shape means not group argument
+function Shape(grid, group) { with(this) { //default falling shape means not group argument
 	_grid						= grid;
 	_shapeIndex					= GAME._shapeIdTick++;
 	if (!group)
@@ -1244,7 +1245,7 @@ Shape.prototype = {
 	_colorTxt					: null,
 	_color						: null,
 	_shapeBlocks				: null,
-	_polyominoBlocks			: null,
+	_polyominoBlocks			: null, //READ ONLY, reference that points to current shape in GAME shapes store
 	_ghostBlocks				: null, //shadowed blocks
 	_domNode					: null,
 	_jVector					: 0, //vector upper (+) and under (-) shape
@@ -1257,8 +1258,8 @@ Shape.prototype = {
 		_pivot					= Math.floor(Math.random() * _pivotsCount);
 		_colorTxt				= GAME._storedPolyominoes[_shapeType].color;
 		_color					= GFX._colors[_colorTxt];
-		//_polyominoBlocks		= GAME._gameShapesWithRotations[_shapeType][_pivot].slice(1); //IE9, cloning array of shapes with rotations
-		_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
+		_polyominoBlocks		= GAME._gameShapesWithRotations[_shapeType][_pivot]; //refers to current shape in stored in GAME, it's a shortcut
+		//_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; or .slice(1) //cloning array of shapes with rotations, useless
 	}},
 	newShapeForExistingLockedBlocks: function(group) { with(this) { //shape prepared to fall after clearing rows, need to be called from down to upper
 		_domNode				= _grid._realBlocksNode.newChild({});
@@ -1340,7 +1341,7 @@ Shape.prototype = {
 		});
 		return this;
 	}},//=false IE9
-	moveShapeToPlaced: function(iRight, jUp, dropType=false) { with(this) { //move to placed
+	moveShapeToPlaced: function(iRight, jUp, dropType) { with(this) { //move to placed
 		_shapeBlocks.forEach(function(myBlock){
 			myBlock._iPosition += iRight; //updating position
 			myBlock._jPosition += jUp; //updating position
@@ -1573,7 +1574,7 @@ LockedBlocks.prototype = {
 		};
 		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
 		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
-		if (groups.length > 0) { //$$$$$$$$$
+		//if (groups.length > 0) { //$$$$$$$$$ useless? IE9
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
 		//old: if (mode == SEARCH_MODE.down)
@@ -1611,7 +1612,7 @@ LockedBlocks.prototype = {
 			} else {
 				_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
 				_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
-			}}
+			}
 		}
 	}},
 	chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { //recursive
@@ -1649,7 +1650,7 @@ LockedBlocks.prototype = {
 		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
-		for (let i=0;i<rowFilledSlots.length;i++) rowFilledSlots[i]=true;//last IE9
+		for (let i=0;i<rowFilledSlots.length;i++) rowFilledSlots[i]=true;//last IE9, for var in doesn't work because empty table
 		//rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
