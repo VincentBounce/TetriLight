@@ -1242,12 +1242,15 @@ Grid.prototype = {
 		GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);	//prepare remove
 	}},
 	putBlockInMatrix: function(block) { with(this) { //only put placed block on grid, not testing one, set to block
-		if (block.isPlacedBlock)			
-			_matrix[block._iPosition][block._jPosition] = block;
+		//if (!block.isPlacedBlock) console.log("putBlockInMatrix "+block.isPlacedBlock);
+		//if (block.isPlacedBlock)			
+		_matrix[block._iPosition][block._jPosition] = block;
 	}},
 	removeBlockFromMatrix: function(block) { with(this) { //only remove placed block on grid, not testing one, set to null
-		if (block.isPlacedBlock)
-			_matrix[block._iPosition][block._jPosition] = null;
+		//if (!block.isPlacedBlock) throw "erro";
+		//if (!block.isPlacedBlock) console.log("removeBlockFromMatrix "+block.isPlacedBlock);
+		//if (block.isPlacedBlock)
+		_matrix[block._iPosition][block._jPosition] = null;
 	}},
 	clearFullRowAfterClearingAnim: function(jRow) { with(this) { //we suppose that row is full
 		for (let i=1;i <= RULES.horizontalBoxesCount;i++)
@@ -1381,15 +1384,15 @@ Shape.prototype = {
 		_shapeBlocks.forEach(function(myBlock){
 			_grid.removeBlockFromMatrix(myBlock);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
-			myBlock.isPlacedBlock = false; //ok old BLOCK_STATES
+			//myBlock.isPlacedBlock = false; //ok old BLOCK_STATES
 			//_grid.putBlockInMatrix(myBlock);
 		});
 	}},
 	moveShapeToPlaced: function(iRight, jUp, dropType) { with(this) {
 		_shapeBlocks.forEach(function(myBlock){ //MOVE TO PLACED
-			if (dropType == DROP_TYPES.newFallingShape)	//REMOVE FROM PLACED, only if it's not a new falling shape
-				_grid.removeBlockFromMatrix(myBlock); //remove from old slot
-	        myBlock.isPlacedBlock = true;
+			//if (dropType != DROP_TYPES.newFallingShape)	//REMOVE FROM PLACED, only if it's not a new falling shape
+			//	_grid.removeBlockFromMatrix(myBlock); //remove from old slot
+	        //myBlock.isPlacedBlock = true;
 			myBlock._iPosition += iRight; //updating position
 			myBlock._jPosition += jUp; //updating position
 	        _grid.putBlockInMatrix(myBlock); //put to new slot
@@ -1428,22 +1431,26 @@ Shape.prototype = {
 			return false;
 		}
 	}},
-	rotateData: function() { with(this) { //1 is clockwiseQuarters
+	rotateDataInMatrix: function() { with(this) { //1 is clockwiseQuarters
 		_pivot = (_pivot+1+_pivotsCount) % _pivotsCount;//we test need rotating in canShapeRotate()
 		for (let b=0;b < _shapeBlocks.length;b++) {
 	        _grid.removeBlockFromMatrix(_shapeBlocks[b]);
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(_shapeBlocks[b]);
-			_shapeBlocks[b].isPlacedBlock = false;
-	        //_grid.putBlockInMatrix(_shapeBlocks[b]); useless because only executed when isPlacedBlock
-		}
-		for (let b=0;b < _shapeBlocks.length;b++){
-	        _grid.removeBlockFromMatrix(_shapeBlocks[b]);
-	        _shapeBlocks[b].isPlacedBlock = true;
 			_shapeBlocks[b]._iPosition = _iPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][0];
 			_shapeBlocks[b]._jPosition = _jPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][1];
 	        _grid.putBlockInMatrix(_shapeBlocks[b]);
 			_grid._lockedBlocks.putBlockInLockedBlocks(_shapeBlocks[b]);
+			//_shapeBlocks[b].isPlacedBlock = false;
+	        //_grid.putBlockInMatrix(_shapeBlocks[b]); useless because only executed when isPlacedBlock
 		}
+		/*for (let b=0;b < _shapeBlocks.length;b++){
+	        //_grid.removeBlockFromMatrix(_shapeBlocks[b]);
+	        //_shapeBlocks[b].isPlacedBlock = true;
+			_shapeBlocks[b]._iPosition = _iPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][0];
+			_shapeBlocks[b]._jPosition = _jPosition + GAME._gameShapesWithRotations[_shapeType][_pivot][b][1];
+	        _grid.putBlockInMatrix(_shapeBlocks[b]);
+			_grid._lockedBlocks.putBlockInLockedBlocks(_shapeBlocks[b]);
+		}*/
 	}},
 	canShapeRotate: function() { with(this) { //1 is clockwiseQuarters
 		if (_pivotsCount == 1)
@@ -1467,7 +1474,7 @@ Shape.prototype = {
 		finishSoftDropping(true); //stopping fall by continuing normal timer
 		if (canShapeRotate()) { //+_pivotsCount before modulo % ?
 			_grid._anims.shapeRotateAnim.finish();
-			rotateData();
+			rotateDataInMatrix();
 			drawShape();
 			_grid._anims.shapeRotateAnim.begin();
 			drawGhostAfterCompute();
@@ -1733,7 +1740,7 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 		case BLOCK_TYPES.orphan: //rising row coming from level j=0
 			_grid  = shapeOrGrid;
 			putBlockInRealBlocksNode();
-			isPlacedBlock = true; //isPlacedBlock turns true at the construction only when it belongs to rising rows
+			//isPlacedBlock = true; //isPlacedBlock turns true at the construction only when it belongs to rising rows
 			_blockIndex = GAME._newBlockId++;
 			_grid.putBlockInMatrix(this);
 			_grid._lockedBlocks.putBlockInLockedBlocks(this);
@@ -1743,7 +1750,7 @@ function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
 	}
 }}
 Block.prototype = {
-	isPlacedBlock					: false,	//public property
+	//isPlacedBlock					: false,	//public property
 	_grid							: null,		//undefined or null, overwise object not exist
 	_shape							: null,
 	_iPosition						: null,
