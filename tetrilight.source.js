@@ -30,7 +30,9 @@ var --> const: IE9 OK
 for (var --> for (let: IE9 OK
 (`Level ${_grid._level}`): IE9 KO
 var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}: IE9 KO
-cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps];
+cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]: IE9 KO
+func(arg=false): IE9 KO
+myArray.fill: IE9 KO
 
 ====================CODE JS====================
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
@@ -174,11 +176,20 @@ const SOUNDS						= {
 };
 const GAME_SPEED_RATIO				= 1; //default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
 const DEFAULT_VOLUME				= 0.6; //default 0.6, 0 to 1, if #DEBUG
+//values > 0 to avoid (value == false == 0)
+/*const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
+const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not started
+const BLOCK_TYPES					= {ghost: 1, inShape: 2, orphan: 3};
+const SEARCH_MODE					= {down: 1, up: 2};
+const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
+*/
 const GAME_STATES					= {paused: 0, running: 1, waiting: 2};
-const GRID_STATES					= {connected: 0, playing: 1, lost: 2}; //connected but not started
+const GRID_STATES					= {connected: 0, playing: 1, lost: 2};	//connected but not started
 const BLOCK_TYPES					= {ghost: 0, inShape: 1, orphan: 2};
 const SEARCH_MODE					= {down: true, up: false};
-const DROP_TYPES					= {soft: 1, hard: 2}; //hard: double score
+const DROP_TYPES					= {soft: 1, hard: 2};					//hard : double value
+
+
 
 //INIT called by HTML browser
 function init() {
@@ -190,7 +201,7 @@ function init() {
 	if (GAME) GAME.destroyGame();
 	GAME = new Game();
 	GAME.addGrid();
-	//GAME.addGrid(); //#DEBUG
+	GAME.addGrid(); //#DEBUG
 }
 //MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { with(this) { //queue or stack
@@ -1136,8 +1147,8 @@ Grid.prototype = {
 		}
 	}},
 	moveShapesInMatrix: function(myShapes) { with(this) { //move locked shapes to drop (after clearing rows) into matrix
-		myShapes.forEach((myShape)=>{ myShape.removeShapeFromPlaced(); }) //move to a tested place
-		myShapes.forEach((myShape)=>{ myShape.moveShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
+		myShapes.forEach(function(myShape){ myShape.removeShapeFromPlaced(); }) //move to a tested place
+		myShapes.forEach(function(myShape){ myShape.moveShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
 	}},
 	countAndClearRows: function() { with(this) { //locks block and computes rows to transfer and _scores
 		//old: AUDIO.audioPlay('landFX');
@@ -1213,7 +1224,7 @@ Grid.prototype = {
 		_dropTimer.pauseOrResume();
 	}}
 };
-//TETRIS SHAPE Class
+//TETRIS SHAPE Class //=false IE9
 function Shape(grid, group=false) { with(this) { //default falling shape means not group argument
 	_grid						= grid;
 	_shapeIndex					= GAME._shapeIdTick++;
@@ -1246,7 +1257,8 @@ Shape.prototype = {
 		_pivot					= Math.floor(Math.random() * _pivotsCount);
 		_colorTxt				= GAME._storedPolyominoes[_shapeType].color;
 		_color					= GFX._colors[_colorTxt];
-		_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
+		_polyominoBlocks		= GAME._gameShapesWithRotations[_shapeType][_pivot]; //IE9, cloning array of shapes with rotations
+		//_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
 	}},
 	newShapeForExistingLockedBlocks: function(group) { with(this) { //shape prepared to fall after clearing rows, need to be called from down to upper
 		_domNode				= _grid._realBlocksNode.newChild({});
@@ -1327,7 +1339,7 @@ Shape.prototype = {
 			_grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
 		});
 		return this;
-	}},
+	}},//=false IE9
 	moveShapeToPlaced: function(iRight, jUp, dropType=false) { with(this) { //move to placed
 		_shapeBlocks.forEach(function(myBlock){
 			myBlock._iPosition += iRight; //updating position
@@ -1561,6 +1573,7 @@ LockedBlocks.prototype = {
 		};
 		//here we decide, we have at least 1 group equivalent if (groups.length > 0)
 		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
+		if (groups.length > 0) { //$$$$$$$$$
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
 		//old: if (mode == SEARCH_MODE.down)
@@ -1583,9 +1596,9 @@ LockedBlocks.prototype = {
 			_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
 			_grid._anims.shapeHardDropAnim.begin();
 		} else { //mode == SEARCH_MODE.up
-			_grid._fallingShape.shapeSwitchFromTestToPlaced(true);	//falling is back
+			_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
 			for (let p in _grid._lockedShapes)
-				if (_grid._lockedShapes[p]._jPosition == 0) {		//sub first row : j = 0
+				if (_grid._lockedShapes[p]._jPosition == 0) { //sub first row : j = 0
 					_grid._lockedShapes[p]._jVector = 1;
 					_grid._lockedShapes[p].shapesHitIfMove(0, 1);
 				}
@@ -1598,7 +1611,7 @@ LockedBlocks.prototype = {
 			} else {
 				_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
 				_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
-			}
+			}}
 		}
 	}},
 	chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { //recursive
@@ -1636,7 +1649,8 @@ LockedBlocks.prototype = {
 		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
-		rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
+		for (let p in rowFilledSlots) rowFilledSlots[p]=true;//last IE9
+		//rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
 		rowFilledSlots.forEach( function(tmpSlot, slotIndex){ //we skip delete rowFilledSlots
@@ -1929,19 +1943,19 @@ Timer.prototype = {
 	_args						: null,
 	_timeOut					: null,
 	_running					: false,
-	run: function() { with(this) {				//return true if killing previous
+	run: function() { with(this) { //return true if killing previous
 		var needToKill			= finish();
 		_running				= true;
 		_beginTime 				= getTime();
-		_timeOut 				= setTimeout(_func, _timerPeriod);	//3rd argument _args not supported by IE9- and useless, so removed, setInterval is useless here, not used
+		_timeOut 				= setTimeout(_func, _timerPeriod); //setInterval is useless here, not used
 		return needToKill;
 	}},
 	isRunning: function() { with(this) {
 		return _running;
 	}},
-	pauseOrResume: function() { with(this) {		//works only if running, if not do nothing
-		if (_running) {						//if paused, resume and return false
-			if (_paused) {					//if not paused, pause and return true
+	pauseOrResume: function() { with(this) { //works only if running, if not do nothing
+		if (_running) { //if paused, resume and return false
+			if (_paused) { //if not paused, pause and return true
 				_paused			= false;
 				_timeOut 		= setTimeout(_func, _timerPeriod-(_pauseTime-_beginTime));
 			} else {
@@ -1952,8 +1966,8 @@ Timer.prototype = {
 			return				_paused;
 		}
 	}},
-	finish: function() { with(this) {		//return true if killing previous timer
-		_paused					= false;	//turn pause off, necessary ?
+	finish: function() { with(this) { //return true if killing previous timer
+		_paused					= false; //turn pause off, necessary ?
 		if (_running) {
 			clearTimeout(_timeOut);
 			_running			= false;
@@ -2304,7 +2318,7 @@ DomNode.prototype = {
 			_textCharCountWidth = textCharCountWidth;
 		else
 			_textCharCountWidth = (''+text).length;
-		_text.innerHTML = text;			//replace document.createTextNode('') designed	for IE9 & firefox
+		_text.innerHTML = text; //replace document.createTextNode('')
 		resizeText_();
 	}},
 	resizeText_: function() { with(this) {
