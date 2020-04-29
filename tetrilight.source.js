@@ -177,18 +177,18 @@ const SOUNDS						= {
 const GAME_SPEED_RATIO				= 1; //default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
 const DEFAULT_VOLUME				= 0.6; //default 0.6, 0 to 1, if #DEBUG
 //values > 0 to avoid (value == false == 0)
-/*const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
+const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
 const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not started
 const BLOCK_TYPES					= {ghost: 1, inShape: 2, orphan: 3};
 const SEARCH_MODE					= {down: 1, up: 2};
 const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
-*/
-const GAME_STATES					= {paused: 0, running: 1, waiting: 2};
+
+/*const GAME_STATES					= {paused: 0, running: 1, waiting: 2};
 const GRID_STATES					= {connected: 0, playing: 1, lost: 2};	//connected but not started
 const BLOCK_TYPES					= {ghost: 0, inShape: 1, orphan: 2};
 const SEARCH_MODE					= {down: true, up: false};
 const DROP_TYPES					= {soft: 1, hard: 2};					//hard : double value
-
+*/
 
 
 //INIT called by HTML browser
@@ -198,7 +198,7 @@ function init() {
 	AUDIO = new Audio(SOUNDS);
 	AUDIO.changeVolume(false);
 	MAIN_MENU = new MainMenu();
-	if (GAME) GAME.destroyGame();
+	//if (GAME) GAME.destroyGame();
 	GAME = new Game();
 	GAME.addGrid();
 	GAME.addGrid(); //#DEBUG
@@ -1257,8 +1257,8 @@ Shape.prototype = {
 		_pivot					= Math.floor(Math.random() * _pivotsCount);
 		_colorTxt				= GAME._storedPolyominoes[_shapeType].color;
 		_color					= GFX._colors[_colorTxt];
-		_polyominoBlocks		= GAME._gameShapesWithRotations[_shapeType][_pivot]; //IE9, cloning array of shapes with rotations
-		//_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
+		//_polyominoBlocks		= GAME._gameShapesWithRotations[_shapeType][_pivot].slice(1); //IE9, cloning array of shapes with rotations
+		_polyominoBlocks		= [...GAME._gameShapesWithRotations[_shapeType][_pivot] ]; //cloning array of shapes with rotations
 	}},
 	newShapeForExistingLockedBlocks: function(group) { with(this) { //shape prepared to fall after clearing rows, need to be called from down to upper
 		_domNode				= _grid._realBlocksNode.newChild({});
@@ -1649,7 +1649,7 @@ LockedBlocks.prototype = {
 		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount);
-		for (let p in rowFilledSlots) rowFilledSlots[p]=true;//last IE9
+		for (let i=0;i<rowFilledSlots.length;i++) rowFilledSlots[i]=true;//last IE9
 		//rowFilledSlots.fill(true);	//we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
