@@ -179,7 +179,7 @@ const RULES 						= {				//tetris rules
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
 	levelStepScoreCount				: 1000,			//default 1000 pts, score count before next level, decrease for #DEBUG
 	risingRowsHolesCountMaxRatio	: 0.3,			//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
-	fps								: 60/1000 };	//default 60/1000 = 60frames per 1000ms, browser frame rate
+	fps								: 60/1000 };	//default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
 const DURATIONS						= {				//tetris durations, periods in ms
 	pentominoesModeDuration			: 10000,		//5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
 	movingGridsDuration				: 350,			//0350 ms
@@ -761,7 +761,7 @@ Game.prototype = {
 					count*realIntervalX + (count-1)*GFX._pxFullGridWidth - grid._domNode.getX(),
 					0	];
 			}
-			//old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.begin); //#DEBUG above, $alert(att);
+			//old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.beginAnim); //#DEBUG above, $alert(att);
 			_anims.moveGridsAnim.beginAnim();
 			if (att.newGrid)
 				att.newGrid.startGrid();	//enqueue?
@@ -974,7 +974,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 					._domNode.destroyDomNode();
 			}
 			_lockedShapes = [];
-			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.begin); //we stack _anims.quakeAnim.beginAnim();
+			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.beginAnim); //we stack _anims.quakeAnim.beginAnim();
 			gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); //we stack AUDIO.audioPlay('landFX');
 			gridAnimsStackPop();
 			//old: _anims.quakeAnim.beginAnim();
@@ -1146,7 +1146,7 @@ Grid.prototype = {
 			_gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);	//exec countAndClearRows immediately
 		} else { //if locked shapes to drop, have to make animation before next counting
 			gridAnimsStackPush(this, countAndClearRows); //firstly stack countAndClearRows for later
-			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.begin); //secondly exec hard drop anim immediately
+			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.beginAnim); //secondly exec hard drop anim immediately
 			//sound played before after hardDrop and before Quake
 		}
 	}},
@@ -1182,7 +1182,7 @@ Grid.prototype = {
 	lose: function() { with(this) {	//lives during _score duration
 		_score.displays();
 		_anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); //empty queues necessary?
-		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.begin, ['You<BR/>lose', 4]);
+		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.beginAnim, ['You<BR/>lose', 4]);
 		_gridMessagesQueue.execNowOrEnqueue(this, afterLost_);
 		//AUDIO.audioStop('musicMusic');
 		_gridState = GRID_STATES.lost;
@@ -1195,7 +1195,7 @@ Grid.prototype = {
 	}},
 	afterLost_: function() { with(this) {
 		GAME._gameEventsQueue.execNowOrEnqueue(this, setVectorLost_);
-		GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.begin);	//prepare move up
+		GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.beginAnim);	//prepare move up
 		GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);	//prepare remove
 	}},
 	putBlockInMatrix: function(block) { with(this) { //only put placed block on grid, not testing one, set to block
@@ -1611,7 +1611,7 @@ LockedBlocks.prototype = {
 					_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
 				} else {
 					_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
-					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
+					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.runTimer);
 				}
 			}
 		}
@@ -2382,7 +2382,6 @@ class Animation {
 		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput!
 		this._duration					= att.animDuration;		//duration of animation
 		this.animOutput					= null;					//public value of f(x), current animation position after timingAnimFunc_, any value possible
-		this._duration					= null;
 		this._animating					= false;
 		this._paused					= false;
 		this._elapsedFrames				= 0;
@@ -2397,11 +2396,11 @@ class Animation {
 		this._elapsedFrames				= 0;
 	}
 	makeNextFrame_() {
-		console.log(this);
+		//console.log(this);
 		this.animateFunc_(); //draw frame on display, as defined in the instance of Animation
 		if ( (++this._elapsedFrames) < this._plannedFrames) {
 			this.animOutput					= this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); //input [0;1] animOutput have any value
-			this._windowNextFrameId			= window.requestAnimationFrame(this.makeNextFrame_); //new 2015 feature, fast on Firefox, 60fps
+			this._windowNextFrameId			= window.requestAnimationFrame(()=>{ this.makeNextFrame_(); }); //new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
 		} else
 			this.finishAnim();
 	}
@@ -2422,7 +2421,7 @@ class Animation {
 			if (this._paused) { //if paused, resume
 				this._paused 			= false;
 				this._beginTime 		+= performance.now()-this._pauseTime;
-				makeNextFrame_();
+				this.makeNextFrame_();
 			} else { //if playing, pausing
 				this._paused 			= true;
 				this._pauseTime 		= performance.now();
