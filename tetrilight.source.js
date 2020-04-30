@@ -25,6 +25,18 @@ $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
+====================CHANGES FROM ECMAScript 5 (2009)====================
+ECMAScript 2015: let, const, Transform: IE11 OK
+window.requestAnimationFrame : Firefox 23 / IE 10 / Chrome / Safari 7
+IE11 KO:
+	(`Level ${_grid._level}`)
+	var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
+	cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
+	func(arg=false)
+	myArray.fill()
+ECMAScript 2017:
+	Added Async functions
+
 ====================CODE JS====================
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
 	for large surface, small number of objects
@@ -86,8 +98,8 @@ merge 2 objects with different properties: myNewObject = Object.assign(firstOjec
 
 ====================CODE GITHUB====================
 remove a remote: git remote rm old
-rename a branch: git branch -m ie9-last-version es5-fit-ie9
-rename a branch: git push tetrilight-github :ie9-last-version es5-fit-ie9
+rename a branch: git branch -m es5-fit-ie9 es5-fit-ie11
+rename a branch: git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
 
 ====================NAMING CONVENTION====================
 //#DEBUG: to track bug
@@ -199,7 +211,7 @@ const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
 //INIT called by HTML browser
 function init() {
 	for (let p in DURATIONS) DURATIONS[p]/=RULES.gameSpeedRatio;	//change durations with coeff, float instead integer no pb, to slowdown game
-	BROWSER = new Browser(); DomNode.prototype._transformProp = BROWSER.getTransformProperty();	//init 'Transform' param
+	BROWSER = new Browser();
 	AUDIO = new Audio(SOUNDS);
 	AUDIO.changeVolume(false);
 	MAIN_MENU = new MainMenu();
@@ -293,19 +305,6 @@ MainMenu.prototype = {
 function Browser() { with(this) {
 }}
 Browser.prototype = {
-	getTransformProperty: function() { with(this) {
-	    let properties = [
-	        ['transform', 'transform'],
-	        ['WebkitTransform', '-webkit-transform'],			//chrome 11 OK, Opera, Safari -webkit-transform
-	        ['msTransform', '-ms-transform']					//IE 9 OK -ms-transform
-	    ];
-	    let p;
-	    let elt = document.createElement('div');
-	    while (p = properties.shift())
-	        if (isDefined(elt.style[p[0]]))
-	            return p[0];
-	    return false;
-	}},
 	isFullScreen: function() { with(this) {
 		return (innerWidth == screen.width && innerHeight > screen.height-5); //Firefox use 1px in height
 	}}
@@ -1575,7 +1574,7 @@ LockedBlocks.prototype = {
 				|| mode == SEARCH_MODE.up )
 				groups.push(group);
 		};
-		//here we decide, we have at least 1 group equivalent if (groups.length > 0). Message not appeared for now, and never appeared in IE9 version
+		//here we decide, we have at least 1 group equivalent if (groups.length > 0). Message not appeared for now, and never appeared in IE11 version
 		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
 		_grid._lockedShapes = [];
 		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
@@ -2112,7 +2111,6 @@ DomNode.prototype = {
 	_scaleZoom						: 1,				//float
 	_drawStack						: null,
 	_moveStepStack					: null,
-	_transformProp					: null,
 	_text							: null,				//text node
 	_textCharCountWidthMin			: null,				//letter number in div width
 	_textCharCountWidth				: null,
@@ -2128,16 +2126,16 @@ DomNode.prototype = {
 		return ++DomNode.prototype._idCount;
 	}},
 	setTransformOrigin: function(origin) { with(this) {
-		_o.style[_transformProp+'Origin'] = origin;
+		_o.style['transformOrigin'] = origin;
 	}},
 	setRotate: function(degres) { with(this) {
-		_o.style[_transformProp] = 'rotate('+degres+'deg)';
+		_o.style['transform'] = 'rotate('+degres+'deg)';
 	}},
 	setScale: function(factor) { with(this) {
-		_o.style[_transformProp] = 'scale('+factor+')';	//scale with ratio
+		_o.style['transform'] = 'scale('+factor+')';	//scale with ratio
 	}},
 	delTransform: function() { with(this) {
-		_o.style[_transformProp] = '';
+		_o.style['transform'] = '';
 	}},
 	drawGfx: function(attributes=false) { with(this) {	//MAIN FUNCTION to draw a graphic, following attributes
 		let att = attributes ? attributes : {}; //if attributes not supplied, we make new Object
