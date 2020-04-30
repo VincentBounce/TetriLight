@@ -82,7 +82,7 @@ myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it
 		_matrix.forEach( (column, index, matrix)=>{ //left and right boxes as margins columns, program fail if removed
 			matrix[index] = [];
 			for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; //height -1 to +(2x20) });
-
+merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
 
 ====================CODE GITHUB====================
 remove a remote: git remote rm old
@@ -158,6 +158,8 @@ Examples of listAutoIndex: _gridsListAuto
 let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
 const RULES 						= {				//tetris rules
+	gameSpeedRatio					: 1,			//default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+	initialVolume					: 0.3,			//default 0.6, 0 to 1, if #DEBUG
 	transferRowsCountMin			: 1, 			//default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
 	pentominoesRowsCountMin			: 1, 			//default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
 	horizontalBoxesCount			: 5,			//default 10, min 5 #DEBUG
@@ -193,8 +195,6 @@ const SOUNDS						= {
 	selectFX:						{ext:'wav'},
 	musicMusic:						{ext:'mp3', vol:0.5}
 };
-const GAME_SPEED_RATIO				= 1; //default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
-const DEFAULT_VOLUME				= 0.6; //default 0.6, 0 to 1, if #DEBUG
 //values > 0 to avoid (value == false == 0)
 const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
 const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not started
@@ -204,7 +204,7 @@ const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
 
 //INIT called by HTML browser
 function init() {
-	for (let p in DURATIONS) DURATIONS[p]/=GAME_SPEED_RATIO;	//change durations with coeff, float instead integer no pb, to slowdown game
+	for (let p in DURATIONS) DURATIONS[p]/=RULES.gameSpeedRatio;	//change durations with coeff, float instead integer no pb, to slowdown game
 	BROWSER = new Browser(); DomNode.prototype._transformProp = BROWSER.getTransformProperty();	//init 'Transform' param
 	AUDIO = new Audio(SOUNDS);
 	AUDIO.changeVolume(false);
@@ -323,7 +323,7 @@ function Audio(sounds) { with(this) {	//constructor
 		addSound(p, sounds[p].ext, sounds[p].vol);
 }}
 Audio.prototype = {
-	_mainVolume					: DEFAULT_VOLUME,
+	_mainVolume					: RULES.initialVolume,
 	_muted						: false,
 	_sounds						: null,
 	addSound: function(name, ext, volume) { with(this) {	//when new is called, add all sounds in _sounds let, 2nd arg volume is optional
