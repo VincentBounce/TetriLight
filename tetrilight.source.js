@@ -1930,52 +1930,52 @@ ListAutoIndex.prototype = {
 	}},
 };
 //TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
-function Timer(func, timerPeriod) {	//args never used here, so removed
-	this._func					= func;
-	this._timerPeriod			= timerPeriod;	//_args = args;
-}
-Timer.prototype = {
-	_paused 					: false,
-	_beginTime					: null,
-	_pauseTime					: null,
-	_func						: null,
-	_timerPeriod				: null,
-	_args						: null,
-	_timeOut					: null,
-	_running					: false,
-	runTimer: function() { //return true if killing previous
+class Timer {
+	constructor(func, timerPeriod) {	//args never used here, so removed
+		this._funcAtTimeOut			= func;
+		this._timerPeriod			= timerPeriod;	//_args = args;
+		this._paused 				= false;
+		this._running				= false;
+		this._beginTime;
+		this._pauseTime;
+		this._funcAtTimeOut;
+		this._timerPeriod;
+		this._args;
+		this._timeOut;
+	}
+	runTimer() { //return true if killing previous
 		let needToKill			= this.finishTimer();
 		this._running			= true;
-		this._beginTime 			= getTime();
-		this._timeOut 				= setTimeout(this._func, this._timerPeriod); //setInterval is useless here, not used
+		this._beginTime 		= getTime();
+		this._timeOut 			= setTimeout(this._funcAtTimeOut, this._timerPeriod); //setInterval is useless here, not used
 		return needToKill;
-	},
-	isRunning: function() {
+	}
+	isRunning() {
 		return this._running;
-	},
-	pauseOrResume: function() { //works only if running, if not do nothing
+	}
+	pauseOrResume() { //works only if running, if not do nothing
 		if (this._running) { //if paused, resume and return false
 			if (this._paused) { //if not paused, pause and return true
-				this._paused			= false;
-				this._timeOut 		= setTimeout(this._func, this._timerPeriod-(this._pauseTime-this._beginTime));
+				this._paused	= false;
+				this._timeOut 	= setTimeout(this._funcAtTimeOut, this._timerPeriod-(this._pauseTime-this._beginTime));
 			} else {
 				clearTimeout(this._timeOut);
-				this._paused			= true;
-				this._pauseTime		= getTime();
+				this._paused	= true;
+				this._pauseTime	= getTime();
 			}
 			return				this._paused;
 		}
-	},
-	finishTimer: function() { //return true if killing previous timer
-		this._paused					= false; //turn pause off, necessary ?
+	}
+	finishTimer() { //return true if killing previous timer
+		this._paused			= false; //turn pause off, necessary ?
 		if (this._running) {
 			clearTimeout(this._timeOut);
-			this._running			= false;
+			this._running		= false;
 			return				true
 		} else
 			return				false;
-	},
-	setPeriod: function(timerPeriod) { //timer can be changed when running
+	}
+	setPeriod(timerPeriod) { //timer can be changed when running
 		this._timerPeriod = timerPeriod;
 	}
 };
