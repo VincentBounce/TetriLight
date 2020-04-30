@@ -178,7 +178,8 @@ const RULES 						= {				//tetris rules
 	verticalBoxesCount				: 21, 			//default 21 = (20 visible + 1 hidden) #DEBUG
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
 	levelStepScoreCount				: 1000,			//default 1000 pts, score count before next level, decrease for #DEBUG
-	risingRowsHolesCountMaxRatio	: 0.3 };		//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
+	risingRowsHolesCountMaxRatio	: 0.3,			//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
+	fps								: 60/1000 };	//default 60/1000 = 60frames per 1000ms, browser frame rate
 const DURATIONS						= {				//tetris durations, periods in ms
 	pentominoesModeDuration			: 10000,		//5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
 	movingGridsDuration				: 350,			//0350 ms
@@ -2379,7 +2380,7 @@ function Animation(att) { with(this) {
 	endAnimFunc_						= att.endAnimFunc;
 	timingAnimFunc_						= att.timingAnimFunc;
 	_duration							= att.animDuration;
-	//if (att.maxFps) _maxFps				= att.maxFps;	//for score display, we limit to 15-30fps
+	//if (att.maxFps) RULES.fps				= att.maxFps;	//for score display, we limit to 15-30fps
 }}
 Animation.prototype = {
 	startAnimFunc_						: null,		//optional function when begin animation, value = null or defined
@@ -2392,69 +2393,68 @@ Animation.prototype = {
 	_paused								: false,
 	_elapsedFrames						: 0,
 	_plannedFrames						: null,
-	_varInTimingAnimFunc				: null,		//current x before timingAnimFunc_
-	_maxFps								: 60/1000,	//max frame rate, default 60/1000 = 60frames per 1000ms
+	//_varInTimingAnimFunc				: null,		//current x before timingAnimFunc_
 	_beginTime							: null,
 	_pauseTime							: null,
-	_timeOut							: null,
+	_windowNextFrameId					: null,
 	reset_: function() { with(this) {
 		_paused							= false;
 		_animating						= false;
 		_elapsedFrames					= 0;
 	}},
 	makeNextFrame_: function() { with(this) {
-		animateFunc_();					//draw frame on display, as defined in defined instance of Animation
-		_elapsedFrames++;
-		let elapsedTime					= performance.now() - _beginTime; //performance.now() is more precise than getTime()
-		let remainingTime 				= _duration - elapsedTime;	console.log(_elapsedFrames/elapsedTime); //#DEBUG
-		_plannedFrames					= Math.min(_maxFps, _elapsedFrames/elapsedTime) * remainingTime;
-		_timeTick						= remainingTime / _plannedFrames;
-		_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
-		if (_varInTimingAnimFunc < 1) {	//0 < _varInTimingAnimFunc < 1
-			animOutput					= timingAnimFunc_(_varInTimingAnimFunc);
+		animateFunc_(); //draw frame on display, as defined in defined instance of Animation
+		//_elapsedFrames++;
+		//let elapsedTime				= performance.now() - _beginTime; //performance.now() is more precise than getTime()
+		//let remainingTime 			= _duration - elapsedTime;	//console.log(_elapsedFrames/elapsedTime); //#DEBUG 60fps
+		//_plannedFrames				= Math.min(RULES.fps, _elapsedFrames/elapsedTime) * remainingTime;
+		//_timeTick						= remainingTime / _plannedFrames;
+		//_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
+		if ( (++_elapsedFrames) < _plannedFrames) {
+			animOutput					= timingAnimFunc_( _elapsedFrames / _plannedFrames ); //input [0;1] animOutput have any value
 			//_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick); //slow on Firefox, even with 1000/60
-			_timeOut					= window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2015 feature, fast on Firefox
+			_windowNextFrameId			= window.requestAnimationFrame(function(){ makeNextFrame_(); }); //new 2015 feature, fast on Firefox
 		} else
 			finish();
 	}},
-	isAnimating: function() { with(this) {
-		return _animating;
-	}},
-	begin: function() { with(this) {	//start animation, optional arguments are stocked in the 'arguments' array
+	isAnimating: function() {
+		return this._animating;
+	},
+	begin: function() { with(this) { //start animation, optional arguments are stocked in the 'arguments' array
 		let needToKill 					= finish();	//return true if killing previous
 		_animating						= true;
 		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
 		_beginTime						= performance.now();
-		_plannedFrames					= _maxFps * _duration;
-		animOutput						= timingAnimFunc_(1 / _plannedFrames); //input [0;1] animOutput have any value
-		_timeTick						= _duration / _plannedFrames; //time elapsed between 2 frames
+		_plannedFrames					= RULES.fps * _duration;
+		animOutput						= timingAnimFunc_( (++_elapsedFrames) / _plannedFrames ); //input [0;1] animOutput have any value
+		//_timeTick						= _duration / _plannedFrames; //time elapsed between 2 frames
 		makeNextFrame_();
 		return needToKill;
 	}},
-	pauseOrResume: function() { with(this) {
-		if (_animating) {	//if animating running
-			if (_paused) {	//if paused
+	pauseOrResume: function() { with(this) { //bug rare when often pause/resume
+		if (_animating) { //if animating running
+			if (_paused) { //if paused, resume
 				_paused 				= false;
 				_beginTime 				+= performance.now()-_pauseTime;
 				makeNextFrame_();
-			} else {
+			} else { //if playing, pausing
 				_paused 				= true;
 				_pauseTime 				= performance.now();
 				//clearTimeout(_timeOut);
-				window.cancelAnimationFrame(_timeOut);
+				window.cancelAnimationFrame(_windowNextFrameId);
 			}
 			return _paused;
 		}
 	}},
-	setDuration: function(duration) { with(this) {	//can't set duration while animation running; return true if set correctly
+	setDuration: function(duration) { with(this) { //can't set duration while animation running; return true if set correctly
 		if (_animating) return false;
 		_duration = duration; return true;
 	}},
-	finish: function() { with(this) {	//return true if killing previous
+	finish: function() { with(this) { //return true if killing previous
 		if (_animating) {
 			//clearTimeout(_timeOut);
-			window.cancelAnimationFrame(_timeOut);
-			reset_();					//_animating needs to be set to false to consider grid not busy
+			window.cancelAnimationFrame(_windowNextFrameId);
+			reset_(); //_animating needs to be set to false to consider grid not busy
 			endAnimFunc_();
 			return true;
 		} else
