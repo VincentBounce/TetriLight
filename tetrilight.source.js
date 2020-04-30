@@ -169,7 +169,7 @@ Examples of listAutoIndex: _gridsListAuto
 let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
 const RULES 						= {				//tetris rules
-	gameSpeedRatio					: 1,			//default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+	gameSpeedRatio					: 1.5,			//default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
 	initialVolume					: 0.1,			//default 0.6, 0 to 1, if #DEBUG
 	transferRowsCountMin			: 1, 			//default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
 	pentominoesRowsCountMin			: 1, 			//default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
@@ -1559,8 +1559,7 @@ LockedBlocks.prototype = {
 		for (let p in _lockedBlocksArray)
 			if (_lockedBlocksArray[p] != undefined)
 				toProcessList.putInList(_lockedBlocksArray[p]._blockIndex, _lockedBlocksArray[p]);
-		let groups = [];
-		//below we makes groups
+		let groups = []; //below we make isolated groups
 		while (toProcessList.listSize > 0) { //equivalent to while (toProcessList.listSize)
 			block = toProcessList.unList(); //block impossible to be null
 			//block = toProcessList.listTable.shift(); toProcessList.listSize--;$$$$$$$$$$$$$
@@ -1573,45 +1572,45 @@ LockedBlocks.prototype = {
 				|| mode == SEARCH_MODE.up )
 				groups.push(group);
 		};
-		//here we decide, we have at least 1 group equivalent if (groups.length > 0). Message not appeared for now, and never appeared in IE11 version
-		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan');
-		_grid._lockedShapes = [];
-		groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
-		//old: if (mode == SEARCH_MODE.down)
-		let jEquals = []; let group, shape; //[if shape blocks color]			
-		while (groups.length > 0) { //equivalent to while (groups.length)
-			group = groups.shift(); //lower block
-			shape = new Shape(_grid, group); //creating new dropable shape based on locked blocks ready to run drop animation
-			_grid._lockedShapes[shape._shapeIndex] = shape; //add
-			if (mode == SEARCH_MODE.down) { //[if shape blocks color] to sort equals
-				if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
-					jEquals.push({jMin: group.jMin, shape: shape});
-				else {
-					tryMoveShapesSamejEquals(jEquals);
-					jEquals = [{jMin: group.jMin, shape: shape}]; //[if shape blocks color]
+		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan'); //Message appeared on 2020 04 30 (DOWN mode ok), and never appeared in IE11 version earlier
+		if (groups.length > 0) { //here we decide, we have at least 1 group equivalent. Normally, if (groups.length == 0) the mode == SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
+			_grid._lockedShapes = [];
+			groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
+			let jEquals = []; let group, shape; //[if shape blocks color]			
+			while (groups.length > 0) { //equivalent to while (groups.length)
+				group = groups.shift(); //lower block
+				shape = new Shape(_grid, group); //creating new dropable shape based on locked blocks ready to run drop animation
+				_grid._lockedShapes[shape._shapeIndex] = shape; //add
+				if (mode == SEARCH_MODE.down) { //[if shape blocks color] to sort equals
+					if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
+						jEquals.push({jMin: group.jMin, shape: shape});
+					else {
+						tryMoveShapesSamejEquals(jEquals);
+						jEquals = [{jMin: group.jMin, shape: shape}]; //[if shape blocks color]
+					}
 				}
 			}
-		}
-		if (mode == SEARCH_MODE.down) {
-			tryMoveShapesSamejEquals(jEquals);
-			_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-			_grid._anims.shapeHardDropAnim.begin();
-		} else { //mode == SEARCH_MODE.up
-			_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
-			for (let p in _grid._lockedShapes)
-				if (_grid._lockedShapes[p]._jPosition == 0) { //sub first row : j = 0
-					_grid._lockedShapes[p]._jVector = 1;
-					_grid._lockedShapes[p].shapesHitIfMove(0, 1);
-				}
-			_grid.moveShapesInMatrix(_grid._lockedShapes);
-			if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
-				_grid.gridAnimsStackPush(_grid, _grid.lost);
-			else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
-				_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
+			if (mode == SEARCH_MODE.down) {
+				tryMoveShapesSamejEquals(jEquals);
 				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-			} else {
-				_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
-				_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
+				_grid._anims.shapeHardDropAnim.begin();
+			} else { //mode == SEARCH_MODE.up
+				_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
+				for (let p in _grid._lockedShapes)
+					if (_grid._lockedShapes[p]._jPosition == 0) { //sub first row : j = 0
+						_grid._lockedShapes[p]._jVector = 1;
+						_grid._lockedShapes[p].shapesHitIfMove(0, 1);
+					}
+				_grid.moveShapesInMatrix(_grid._lockedShapes);
+				if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
+					_grid.gridAnimsStackPush(_grid, _grid.lost);
+				else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
+					_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
+					_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
+				} else {
+					_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
+					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.run);
+				}
 			}
 		}
 	}},
@@ -1757,7 +1756,7 @@ function Score(grid) { with(this) {
 			return -(x-2*Math.sqrt(x));
 		},
 		animDuration: DURATIONS.displayingScoreDuration,
-		maxFps: 30/1000 //because animation need to displays digits slowly
+		//maxFps: 30/1000 //because animation need to displays digits slowly
 	});
 	writeScore(_scoreShowed);
 }}
@@ -2379,7 +2378,7 @@ function Animation(att) { with(this) {
 	endAnimFunc_						= att.endAnimFunc;
 	timingAnimFunc_						= att.timingAnimFunc;
 	_duration							= att.animDuration;
-	if (att.maxFps) _maxFps				= att.maxFps;	//for score display, we limit to 15-30fps
+	//if (att.maxFps) _maxFps				= att.maxFps;	//for score display, we limit to 15-30fps
 }}
 Animation.prototype = {
 	startAnimFunc_						: null,		//optional function when begin animation, value = null or defined
