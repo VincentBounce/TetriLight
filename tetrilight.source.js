@@ -1758,7 +1758,6 @@ function Score(grid) { with(this) {
 			return -(x-2*Math.sqrt(x));
 		},
 		animDuration: DURATIONS.displayingScoreDuration,
-		//maxFps: 30/1000 //because animation need to displays digits slowly
 	});
 	writeScore(_scoreShowed);
 }}
@@ -2380,7 +2379,6 @@ function Animation(att) { with(this) {
 	endAnimFunc_						= att.endAnimFunc;
 	timingAnimFunc_						= att.timingAnimFunc;
 	_duration							= att.animDuration;
-	//if (att.maxFps) RULES.fps				= att.maxFps;	//for score display, we limit to 15-30fps
 }}
 Animation.prototype = {
 	startAnimFunc_						: null,		//optional function when begin animation, value = null or defined
@@ -2393,7 +2391,6 @@ Animation.prototype = {
 	_paused								: false,
 	_elapsedFrames						: 0,
 	_plannedFrames						: null,
-	//_varInTimingAnimFunc				: null,		//current x before timingAnimFunc_
 	_beginTime							: null,
 	_pauseTime							: null,
 	_windowNextFrameId					: null,
@@ -2403,16 +2400,9 @@ Animation.prototype = {
 		_elapsedFrames					= 0;
 	}},
 	makeNextFrame_: function() { with(this) {
-		animateFunc_(); //draw frame on display, as defined in defined instance of Animation
-		//_elapsedFrames++;
-		//let elapsedTime				= performance.now() - _beginTime; //performance.now() is more precise than getTime()
-		//let remainingTime 			= _duration - elapsedTime;	//console.log(_elapsedFrames/elapsedTime); //#DEBUG 60fps
-		//_plannedFrames				= Math.min(RULES.fps, _elapsedFrames/elapsedTime) * remainingTime;
-		//_timeTick						= remainingTime / _plannedFrames;
-		//_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
+		animateFunc_(); //draw frame on display, as defined in the instance of Animation
 		if ( (++_elapsedFrames) < _plannedFrames) {
 			animOutput					= timingAnimFunc_( _elapsedFrames / _plannedFrames ); //input [0;1] animOutput have any value
-			//_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick); //slow on Firefox, even with 1000/60
 			_windowNextFrameId			= window.requestAnimationFrame(function(){ makeNextFrame_(); }); //new 2015 feature, fast on Firefox
 		} else
 			finish();
@@ -2427,7 +2417,6 @@ Animation.prototype = {
 		_beginTime						= performance.now();
 		_plannedFrames					= RULES.fps * _duration;
 		animOutput						= timingAnimFunc_( (++_elapsedFrames) / _plannedFrames ); //input [0;1] animOutput have any value
-		//_timeTick						= _duration / _plannedFrames; //time elapsed between 2 frames
 		makeNextFrame_();
 		return needToKill;
 	}},
@@ -2440,7 +2429,6 @@ Animation.prototype = {
 			} else { //if playing, pausing
 				_paused 				= true;
 				_pauseTime 				= performance.now();
-				//clearTimeout(_timeOut);
 				window.cancelAnimationFrame(_windowNextFrameId);
 			}
 			return _paused;
@@ -2452,7 +2440,6 @@ Animation.prototype = {
 	}},
 	finish: function() { with(this) { //return true if killing previous
 		if (_animating) {
-			//clearTimeout(_timeOut);
 			window.cancelAnimationFrame(_windowNextFrameId);
 			reset_(); //_animating needs to be set to false to consider grid not busy
 			endAnimFunc_();
