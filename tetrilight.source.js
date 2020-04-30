@@ -26,7 +26,7 @@ $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
 ====================CHANGES FROM ECMAScript 5 (2009)====================
-window.requestAnimationFrame : Firefox 23 / IE 10 / Chrome / Safari 7
+window.requestAnimationFrame, window.cancelAnimationFrame : Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
 	(`Level ${_grid._level}`)
 	var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
@@ -2413,7 +2413,7 @@ Animation.prototype = {
 		if (_varInTimingAnimFunc < 1) {	//0 < _varInTimingAnimFunc < 1
 			animOutput					= timingAnimFunc_(_varInTimingAnimFunc);	//window.setInterval not good, because need to test before each call, not automatic
 			//_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick); //slow on Firefox, even with 1000/60
-			window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2017 feature, fast on Firefox, need to finish$$$$
+			_timeOut					= window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2017 feature, fast on Firefox, need to finish$$$$
 		} else
 			finish();
 	}},
@@ -2423,11 +2423,11 @@ Animation.prototype = {
 	begin: function() { with(this) {	//start animation, optional arguments are stocked in the 'arguments' array
 		let needToKill 					= finish();	//return true if killing previous
 		_animating						= true;
-		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments);	//launch startAnimFunc_ function, arguments is array
+		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
 		_beginTime						= getTime();
 		_plannedFrames					= _maxFps * _duration;
-		animOutput						= timingAnimFunc_(1 / _plannedFrames);	//input [0;1] animOutput have any value
-		_timeTick						= _duration / _plannedFrames;	//time elapsed between 2 frames
+		animOutput						= timingAnimFunc_(1 / _plannedFrames); //input [0;1] animOutput have any value
+		_timeTick						= _duration / _plannedFrames; //time elapsed between 2 frames
 		makeNextFrame_();
 		return needToKill;
 	}},
@@ -2440,7 +2440,8 @@ Animation.prototype = {
 			} else {
 				_paused 				= true;
 				_pauseTime 				= getTime();
-				clearTimeout(_timeOut);
+				//clearTimeout(_timeOut);
+				window.cancelAnimationFrame(_timeOut);
 			}
 			return _paused;
 		}
