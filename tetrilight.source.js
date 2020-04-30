@@ -2373,13 +2373,13 @@ VectorGfx.prototype = {
 	}}
 };
 //ANIMATION Class, to prepare an animation
-function Animation(att) { with(this) {
-	startAnimFunc_						= att.startAnimFunc;
-	animateFunc_						= att.animateFunc;
-	endAnimFunc_						= att.endAnimFunc;
-	timingAnimFunc_						= att.timingAnimFunc;
-	_duration							= att.animDuration;
-}}
+function Animation(att) {
+	this.startAnimFunc_					= att.startAnimFunc;
+	this.animateFunc_					= att.animateFunc;
+	this.endAnimFunc_					= att.endAnimFunc;
+	this.timingAnimFunc_				= att.timingAnimFunc;
+	this._duration						= att.animDuration;
+}
 Animation.prototype = {
 	startAnimFunc_						: null,		//optional function when begin animation, value = null or defined
 	animateFunc_						: null,		//function to set THE movement to execute
@@ -2394,11 +2394,11 @@ Animation.prototype = {
 	_beginTime							: null,
 	_pauseTime							: null,
 	_windowNextFrameId					: null,
-	reset_: function() { with(this) {
-		_paused							= false;
-		_animating						= false;
-		_elapsedFrames					= 0;
-	}},
+	reset_: function() {
+		this._paused					= false;
+		this._animating					= false;
+		this._elapsedFrames				= 0;
+	},
 	makeNextFrame_: function() { with(this) {
 		animateFunc_(); //draw frame on display, as defined in the instance of Animation
 		if ( (++_elapsedFrames) < _plannedFrames) {
@@ -2434,17 +2434,17 @@ Animation.prototype = {
 			return _paused;
 		}
 	}},
-	setDuration: function(duration) { with(this) { //can't set duration while animation running; return true if set correctly
-		if (_animating) return false;
-		_duration = duration; return true;
-	}},
-	finish: function() { with(this) { //return true if killing previous
-		if (_animating) {
-			window.cancelAnimationFrame(_windowNextFrameId);
-			reset_(); //_animating needs to be set to false to consider grid not busy
-			endAnimFunc_();
+	setDuration: function(duration) { //can't set duration while animation running; return if set correctly
+		if (this._animating) 			return false;
+		else							{ this._duration = duration; return true; }
+	},
+	finish: function() { //return true if killing previous
+		if (this._animating) {
+			window.cancelAnimationFrame(this._windowNextFrameId);
+			this.reset_(); //_animating needs to be set to false to consider grid not busy
+			this.endAnimFunc_();
 			return true;
 		} else
 			return false
-	}}
+	}
 };
