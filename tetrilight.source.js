@@ -101,6 +101,7 @@ privateMethodBody_: private method body called only by 1 method
 publicMethod: public method (Lower Camel Case)
 publicVariable: public variable (Lower Camel Case)
 destroyMyClass: class destructor function
+let myVariable is local variable in the fonction
 var x, y are positions on browser, in pixels (x -> right, y -> down)
 var i, j are positions of blocks into grid (i -> right, j -> up)
 var o is generic object
@@ -154,7 +155,7 @@ Examples of list: toProcessList / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
 //GLOBAL VARIABLES, each one handle one class instance only
-var BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
+let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
 const RULES 						= {				//tetris rules
 	transferRowsCountMin			: 1, 			//default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
@@ -215,7 +216,7 @@ function init() {
 }
 //MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { with(this) { //queue or stack
-	var commands = {
+	let commands = {
 		rotate: function(grid) {
 			if ( (GAME._gameState == GAME_STATES.running) && !grid.isBusy() )
 				grid._fallingShape.fallingShapeTriesRotate();
@@ -269,7 +270,7 @@ MainMenu.prototype = {
 	    event.preventDefault();
 	}},
 	keyCapture_: function(event) { with(this) {
-		//var s='';for (let p in event) {s += p+' '+event[p]+'\n'};
+		//let s='';for (let p in event) {s += p+' '+event[p]+'\n'};
 		MAIN_MENU.cancelEvent_(event);
 		switch (event.keyCode) {
 			case 'P'.charCodeAt(0):
@@ -299,13 +300,13 @@ function Browser() { with(this) {
 }}
 Browser.prototype = {
 	getTransformProperty: function() { with(this) {
-	    var properties = [
+	    let properties = [
 	        ['transform', 'transform'],
 	        ['WebkitTransform', '-webkit-transform'],			//chrome 11 OK, Opera, Safari -webkit-transform
 	        ['msTransform', '-ms-transform']					//IE 9 OK -ms-transform
 	    ];
-	    var p;
-	    var elt = document.createElement('div');
+	    let p;
+	    let elt = document.createElement('div');
 	    while (p = properties.shift())
 	        if (isDefined(elt.style[p[0]]))
 	            return p[0];
@@ -325,7 +326,7 @@ Audio.prototype = {
 	_mainVolume					: DEFAULT_VOLUME,
 	_muted						: false,
 	_sounds						: null,
-	addSound: function(name, ext, volume) { with(this) {	//when new is called, add all sounds in _sounds var, 2nd arg volume is optional
+	addSound: function(name, ext, volume) { with(this) {	//when new is called, add all sounds in _sounds let, 2nd arg volume is optional
 		_sounds[name] = {};
 		_sounds[name].sound = document.createElement('audio');
 		document.body.appendChild(_sounds[name].sound);
@@ -358,7 +359,7 @@ Audio.prototype = {
 			audioPlay(name);
 	}},
 	changeVolume: function(up) { with(this) {	//-1 or +1, return false if not changed
-		var volume = _mainVolume + up*0.1;
+		let volume = _mainVolume + up*0.1;
 		if ((volume < 0) || (volume > 1))
 			return false;						//we can't change
 		else {
@@ -495,7 +496,7 @@ GameGraphics.prototype = {
 			_height: '_pxFullGridHeight',
 			_nocache: true,
 			draw_: function(c, x, y, a) { //context, x, y, args
-				var col = _colors[a.col];
+				let col = _colors[a.col];
 				c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y); //left border
 				c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
 				c.lineTo(x,y+_pxFullGridHeight);
@@ -522,12 +523,12 @@ GameGraphics.prototype = {
 			_height: '_pxFullGridHeight',
 			_nocache: true,
 			draw_: function(c, x, y, a) {			//context, x, y, args
-				var col = _colors[a.col];
+				let col = _colors[a.col];
 				c.fillStyle='#111';c.fillRect(x,y,_pxGridWidth,_pxGridHeight);
-				var colo = ['#000','#222'];
+				let colo = ['#000','#222'];
 				for (let p=colo.length-1;p>=0;p--) {
 					c.beginPath();
-					var margin = -(p*_pxGridLineWidth)+_pxGridLineWidth/2;
+					let margin = -(p*_pxGridLineWidth)+_pxGridLineWidth/2;
 					for (let i=1;i < RULES.verticalBoxesCount;i++) {
 						c.moveTo(x, y+_pxBoxSize*i+margin);
 						c.lineTo(x+_pxGridWidth, y+(_pxBoxSize)*i+margin);
@@ -552,7 +553,7 @@ GameGraphics.prototype = {
 			_width:	'_pxPreviewBlockSize',
 			_height: '_pxPreviewBlockSize',
 			draw_: function(c, x, y, a) {	//context, x, y, args
-				var col = _colors[a.col]; //c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); //useful if we don't erase previous value
+				let col = _colors[a.col]; //c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); //useful if we don't erase previous value
 				c.fillStyle=(a.__onOff?
 					linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, rgbaTxt(col.dark), 1, rgbaTxt(col.light))
 					:rgbaTxt(col.medium, _previewOpacity)
@@ -565,7 +566,7 @@ GameGraphics.prototype = {
 			_width: '_pxPreviewBlockSize',
 			_height: '_pxPreviewBlockSize',
 			draw_: function(c, x, y, a) {	//context, x, y, args
-				var col = _colors[a.col];
+				let col = _colors[a.col];
 				c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y);		//left border
 				c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
 				c.lineTo(x,y+_pxFullGridHeight);
@@ -578,9 +579,9 @@ GameGraphics.prototype = {
 			_width: '_pxBlockSize',
 			_height: '_pxBlockSize',
 			draw_: function(c, x, y, a) {	//context, x, y, args
-				var half = Math.round(_pxBlockSize/2);
-				var margin = Math.round(_pxBlockSize/7);
-				var col = _colors[a.col];
+				let half = Math.round(_pxBlockSize/2);
+				let margin = Math.round(_pxBlockSize/7);
+				let col = _colors[a.col];
 				c.fillStyle=rgbaTxt(col.medium);
 				c.fillRect(x,y,_pxBlockSize,_pxBlockSize);
 				c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+_pxBlockSize,y);
@@ -627,13 +628,13 @@ function Game() { with(this) {
 	_anims.moveGridsAnim = new Animation({	//make tetris grid coming and leaving
 		animateFunc: function() { with(this) {
 			_gridsListAuto.resetNext();
-			var grid;
+			let grid;
 			while (grid = _gridsListAuto.next())
 				grid._domNode.moveTemporaryRelatively(grid._vector[0]*animOutput, grid._vector[1]*animOutput)
 		}},
 		endAnimFunc: function() { with(this) {
 			_gridsListAuto.resetNext();
-			var grid;
+			let grid;
 			while (grid = _gridsListAuto.next()) {
 				grid._domNode.moveRelatively(grid._vector[0], grid._vector[1]);
 				grid._vector = [0, 0];
@@ -722,11 +723,11 @@ Game.prototype = {
 	addGridBody_: function() { with(this) {	//return true if added
 		if (_freeColors.listSize > 0) {
 			_playersCount ++;
-			var p; for (p in _keyboards)
+			let p; for (p in _keyboards)
 				if ( _keyboards[p].free)
 					break;
 			_keyboards[p].free = false;
-			var grid = new Grid( _keyboards[p], _freeColors.unListN( Math.floor(Math.random()*_freeColors.listSize)) );
+			let grid = new Grid( _keyboards[p], _freeColors.unListN( Math.floor(Math.random()*_freeColors.listSize)) );
 			//old: grid._gridId = (_playersCount%2)?_gridsListAuto.putFirst(grid):_gridsListAuto.putLast(grid);	//from left or right
 			organizeGrids({newGrid:grid});
 			return grid;
@@ -745,7 +746,7 @@ Game.prototype = {
 	organizeGrids: function(att) { with(this) {	//horizontal organization only, zoomToFit makes the correct zoom
 		GFX.zoomToFit(_playersCount);
 		MAIN_MENU._domNode._childs.background.redrawNode();	//redraw background
-		var realIntervalX = (GFX._pxGameWidth-(GFX._pxFullGridWidth*_playersCount)) / (_playersCount+1);
+		let realIntervalX = (GFX._pxGameWidth-(GFX._pxFullGridWidth*_playersCount)) / (_playersCount+1);
 		if (att.newGrid || att.oldGrid) {
 			if (att.newGrid)
 				if (_playersCount%2) {	//from left or right
@@ -756,8 +757,8 @@ Game.prototype = {
 					att.newGrid._domNode.moveCenterTo(GFX._pxGameWidth+GFX._pxFullGridWidth, null);				
 				}
 			_gridsListAuto.resetNext();
-			var grid;
-			var count = 0;
+			let grid;
+			let count = 0;
 			while (grid = _gridsListAuto.next()) {
 				count++;
 				grid._domNode.redrawNode();				//we change all sizes
@@ -771,8 +772,8 @@ Game.prototype = {
 			if (att.newGrid)
 				att.newGrid.startGrid();	//enqueue?
 		} else {
-			var grid;
-			var count = 0;
+			let grid;
+			let count = 0;
 			_gridsListAuto.resetNext();
 			while (grid = _gridsListAuto.next()) {
 				count++;
@@ -783,9 +784,9 @@ Game.prototype = {
 		}
 	}},
 	averageBlocksByPlayingGrid: function() { with(this) {
-		var allGridsBlocksCount = 0;
-		var playingGridsCount = 0;
-		var grid;
+		let allGridsBlocksCount = 0;
+		let playingGridsCount = 0;
+		let grid;
 		_gridsListAuto.resetNext();
 		while (grid = _gridsListAuto.next())
 			if (grid._gridState == GRID_STATES.playing) {
@@ -803,7 +804,7 @@ Game.prototype = {
 		_gridsListAuto.runForEachListElement( function(o){ o.chooseAction(event); } );
 	}},
 	transferRows: function(from, count) { with(this) {	//from grid
-		var toGrid = [];
+		let toGrid = [];
 		for (let p in _gridsListAuto.listAutoTable)
 			if ( (_gridsListAuto.listAutoTable[p] != from) && (_gridsListAuto.listAutoTable[p]._gridState == GRID_STATES.playing) )
 				toGrid.push(_gridsListAuto.listAutoTable[p]);
@@ -1097,7 +1098,7 @@ Grid.prototype = {
 	}},
 	gridAnimsStackPop: function() { with(this) {
 		while (!isBusy() && (_animsStack.length > 0)) {//unstack only when not busy, 2nd condition equivalent to while (_animsStack.length)
-			var last = _animsStack.pop();
+			let last = _animsStack.pop();
 			last[1].call(last[0], last[2]);
 		}
 		if (_animsStack.length == 0) //dequeue at end of anims stack, equivalent to (!_animsStack.length), #DEBUG before
@@ -1362,12 +1363,12 @@ Shape.prototype = {
 	}},
 	canMoveFromPlacedToPlaced: function(iRight, jUp) { with(this) { //can move into grid
 		shapeSwitchFromTestToPlaced(false);
-		var result = canMoveToPlaced(iRight, jUp);
+		let result = canMoveToPlaced(iRight, jUp);
 		shapeSwitchFromTestToPlaced(true);
 		return result;
 	}},
 	canMoveToPlaced: function(iRight, jUp) { with(this) {
-		var result = true;
+		let result = true;
 		for (let b=0;b < _shapeBlocks.length;b++)
 			if (!_shapeBlocks[b].isFreeSlot(_shapeBlocks[b]._iPosition + iRight, _shapeBlocks[b]._jPosition + jUp)) {
 				result = false;
@@ -1433,8 +1434,8 @@ Shape.prototype = {
 	}},
 	shapesHitIfMove: function(iRight, jUp) { with(this) {	//if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
 		shapeSwitchFromTestToPlaced(false);
-		var shapesHit = [];
-		var blockHit;
+		let shapesHit = [];
+		let blockHit;
 		for (let b=0;b < _shapeBlocks.length;b++) {
 			blockHit = _grid._matrix[_shapeBlocks[b]._iPosition + iRight][_shapeBlocks[b]._jPosition + jUp];
 			if ( ( blockHit != null) && (blockHit._shape._jVector != 1) ) {	//check if jvector not +1
@@ -1623,7 +1624,7 @@ LockedBlocks.prototype = {
 		}
 	}},
 	chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { //recursive
-		var block = _grid._matrix
+		let block = _grid._matrix
 			[blockFrom._iPosition + _searchDirections[dir][0]]
 			[blockFrom._jPosition + _searchDirections[dir][1]];
 		if (block && toProcessList.listTable[block._blockIndex]	//[if shape blocks contact]
@@ -1636,11 +1637,11 @@ LockedBlocks.prototype = {
 		}
 	}},
 	tryMoveShapesSamejEquals: function(jEquals) { with(this) { //if shape blocks color
-		var changed = true;
+		let changed = true;
 		while (changed) {
 			changed = false;
 			for (let p in jEquals) {
-				var j = jEquals[p].shape.getjVectorUnderShape();
+				let j = jEquals[p].shape.getjVectorUnderShape();
 				if (j != 0) { //getjVectorUnderShape() negative or zero, equivalent if (j) or if (j < 0)
 					jEquals[p].shape._jVector = j;
 					jEquals[p].shape.removeShapeFromPlaced();
@@ -1654,8 +1655,8 @@ LockedBlocks.prototype = {
 		_grid._anims.shapeRotateAnim.finish();
 		_grid._dropTimer.finish();
 		_grid._softDropTimer.finish();
-		var rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
-		var risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
+		let rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
+		let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount).fill(true); //we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
@@ -1839,7 +1840,7 @@ List.prototype = {
 	listTable 		: null,	//public read only
 	listSize 		: 0,	//public read only
 	getNthIndex_: function(n) { with(this) {
-		var orderedIndex = [];
+		let orderedIndex = [];
 		for (let p in listTable)
 			orderedIndex.push(p)
 		orderedIndex.sort();
@@ -1863,13 +1864,13 @@ List.prototype = {
 	unList: function() { with(this) {			//not ordered
 		/*listSize--;
 		console.log(listTable);
-		var pp = listTable.pop();
+		let pp = listTable.pop();
 		console.log(listTable);
 		console.log(listSize);
 		return (pp);*/
 		for (let p in listTable) {//$$$$$$$$$$
 			//console.log(p);
-			var item = listTable[p];
+			let item = listTable[p];
 			//console.log(listTable);
 			eraseItemFromList(p);
 			//console.log(listTable);
@@ -1878,8 +1879,8 @@ List.prototype = {
 		}	//return null;	//useless
 	}},
 	unListN: function(n) { with(this) {			//ordered
-		var index = getNthIndex_(n);
-		var item = listTable[index];				//old: get(index)
+		let index = getNthIndex_(n);
+		let item = listTable[index];				//old: get(index)
 		eraseItemFromList(index);
 		return item;
 	}}
@@ -1916,7 +1917,7 @@ ListAutoIndex.prototype = {
 	}},*/
 	runForEachListElement: function(func, arg1) { with(this) {//allow to run a function on all list items
 		resetNext();
-		var item;
+		let item;
 		while (item = next())
 			func(item, arg1);	//voir call, [args]
 	}},
@@ -1924,7 +1925,7 @@ ListAutoIndex.prototype = {
 		_seek = _firstIndex-1;
 		_nextCount = 0;
 	}},
-	next: function() { with(this) {			//var item; resetNext(); while (item = myList.next());
+	next: function() { with(this) {			//let item; resetNext(); while (item = myList.next());
 		if (_nextCount < _listSize) {
 			_nextCount++;
 			_seek++;
@@ -1950,7 +1951,7 @@ Timer.prototype = {
 	_timeOut					: null,
 	_running					: false,
 	run: function() { with(this) { //return true if killing previous
-		var needToKill			= finish();
+		let needToKill			= finish();
 		_running				= true;
 		_beginTime 				= getTime();
 		_timeOut 				= setTimeout(_func, _timerPeriod); //setInterval is useless here, not used
@@ -2004,7 +2005,7 @@ EventsQueue.prototype = {
 	dequeue: function() { with(this) {
 		_busy = false;
 		while (!_busy && _funcsQueue.length) {	//dequeue only when not busy
-			var first = _funcsQueue.shift();
+			let first = _funcsQueue.shift();
 			_busy = true;
 			first[1].apply(first[0], first[2]);
 		}
@@ -2016,14 +2017,14 @@ function rgbaTxt(color, alpha) {
 }
 //Graphic function, to make a linear gradient
 function linearGradient(ctx, startX, startY, vectorX, vectorY) {
-var grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
+let grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
 	for (let p=5;p < arguments.length;p+=2) 
 		grad.addColorStop(arguments[p], arguments[p+1]);
 	return grad;
 }
 //Graphic function, to make a radial  gradient
 function radialGradient(ctx, startX, startY, startRadius, vectorX, vectorY, endRadius) {
-	var grad = ctx.createRadialGradient(startX, startY, startRadius, startX+vectorX, startY+vectorY, endRadius);
+	let grad = ctx.createRadialGradient(startX, startY, startRadius, startX+vectorX, startY+vectorY, endRadius);
 	for (let p=7;p < arguments.length;p+=2) 
 		grad.addColorStop(arguments[p], arguments[p+1]);
 	return grad;
@@ -2144,44 +2145,44 @@ DomNode.prototype = {
 	delTransform: function() { with(this) {
 		_o.style[_transformProp] = '';
 	}},
-	drawGfx: function(att) { with(this) {				//MAIN_MENU FUNCTION to draw a graphic
-		if (!att) var att = {};
-		var copyAtt = {};								//recording process to redraw
+	drawGfx: function(attributes=false) { with(this) {	//MAIN FUNCTION to draw a graphic, following attributes
+		let att = attributes ? attributes : {}; //if attributes not supplied, we make new Object
+		let copyAtt = {}; //recording process to redraw
 		for (let p in att)
 			copyAtt[p] = att[p];
 		if (!att.gfx) att.gfx = _vectorGfx;
-		if (!att.x) att.x = 0; 							//px, int
-		if (!att.y) att.y = 0; 							//px, int
+		if (!att.x) att.x = 0; //px, int
+		if (!att.y) att.y = 0; //px, int
 		if (isValued(att.fx))
 			att.x += att.gfx.fx(att.fx);
 		if (isValued(att.fy))
 			att.y += att.gfx.fy(att.fy);
-		delete att.fx;									//xy found, deleting functions
+		delete att.fx; //xy found, deleting functions
 		delete att.fy;
-		_drawStack[getSortedXYArgs_(att)] = copyAtt;	//remember xy only for index for redrawing
-		var sortedArgs = getSortedArgs_(att);
+		_drawStack[getSortedXYArgs_(att)] = copyAtt; //remember xy only for index for redrawing
+		let sortedArgs = getSortedArgs_(att);
 		if (!att.gfx.hasImageData(sortedArgs)) {
 			_ctx.beginPath();
 			att.gfx.draw_(_ctx, att.x, att.y, att, getWidth(), getHeight());
 			_ctx.closePath();
 		}
 		if (att.gfx.hasImageData(sortedArgs)) {
-			var imageData = att.gfx.getImageData(sortedArgs);
+			let imageData = att.gfx.getImageData(sortedArgs);
 			_ctx.putImageData(imageData, att.x, att.y);			//scaling position
 		} else if (!att.gfx._nocache) {
-			var imageData = _ctx.getImageData(att.x, att.y, att.gfx.getWidth(), att.gfx.getHeight());
+			let imageData = _ctx.getImageData(att.x, att.y, att.gfx.getWidth(), att.gfx.getHeight());
 			att.gfx.putImageData(sortedArgs, imageData);
 		}
 	}},
 	getSortedArgs_: function(att) { with(this) { //return sorted args as String
-		var result = [];
+		let result = [];
 		for (let p in att)
 			if (p!='x' && p!='y' && p!='fx' && p!='fy' && p!='gfx')
 				result.push(p + att[p]);
 		return GFX._scaleFactor + result.sort().join();		//we can put separator char in args here
 	}},
 	getSortedXYArgs_: function(att) { with(this) { //return sorted coord args as String
-		var result = [];
+		let result = [];
 		for (let p in att)
 			if (p=='x' || p=='y')
 				result.push(p + att[p]);
@@ -2207,7 +2208,7 @@ DomNode.prototype = {
 	redrawCanvas_: function(newWidth, newHeight) { with(this) {	//redraw at new size, no moving
 		_o.width = newWidth?newWidth:getWidth();
 		_o.height = newHeight?newHeight:getHeight();
-		var redrawStack = {}
+		let redrawStack = {}
 		for (let p in _drawStack)						//copy stack
 			redrawStack[p] = _drawStack[p];
 		_drawStack = {};
@@ -2289,7 +2290,7 @@ DomNode.prototype = {
 		if (y) setY(Math.round(y-getHeight()/2));
 	}},
 	newChild: function(att) { with(this) {						//returns pointer to child
-		var id = getUId_();
+		let id = getUId_();
 		return (_childs[id] = new DomNode(att, this, id));
 		//return _childs[att.name?att.name:id] = new DomNode(att, this, att.name?att.name:id);
 	}},
@@ -2305,8 +2306,8 @@ DomNode.prototype = {
 	}},
 	createText: function(font, fontWeight, color, textShadow, textCharCountWidthMin) { with(this) {
 		_textCharCountWidthMin = textCharCountWidthMin?textCharCountWidthMin:1; 
-		var table = document.createElement('table');
-		var tr = document.createElement('tr');
+		let table = document.createElement('table');
+		let tr = document.createElement('tr');
 		_text = document.createElement('td');
 		table.style.width = '100%';
 		table.style.height = '100%';
@@ -2413,8 +2414,8 @@ Animation.prototype = {
 	makeNextFrame_: function() { with(this) {
 		animateFunc_();					//draw frame on display, as defined in defined instance of Animation
 		_elapsedFrames++;
-		var elapsedTime					= getTime() - _beginTime;
-		var remainingTime 				= _duration - elapsedTime;	//console.log(_elapsedFrames/elapsedTime); //#DEBUG
+		let elapsedTime					= getTime() - _beginTime;
+		let remainingTime 				= _duration - elapsedTime;	//console.log(_elapsedFrames/elapsedTime); //#DEBUG
 		_plannedFrames					= Math.min(_maxFps, _elapsedFrames/elapsedTime) * remainingTime;
 		_timeTick						= remainingTime / _plannedFrames;
 		_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
@@ -2428,7 +2429,7 @@ Animation.prototype = {
 		return _animating;
 	}},
 	begin: function() { with(this) {	//start animation, optional arguments are stocked in the 'arguments' array
-		var needToKill 					= finish();	//return true if killing previous
+		let needToKill 					= finish();	//return true if killing previous
 		_animating						= true;
 		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments);	//launch startAnimFunc_ function, arguments is array
 		_beginTime						= getTime();
