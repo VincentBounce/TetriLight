@@ -73,11 +73,11 @@ myArray.forEach() browse each index (NOT properties)
 myArray = New Array(6).fill(null).forEach() browse each index
 	browse also ones with null and undefined values
 delete myArray[4] makes the 5th slot Empty
-myArray.forEach() return nothing WARNING
+myArray.forEach() return nothing WARNING, first argument is READ ONLY WARNING
 myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it refers to same for each slot filled!
 	KO:	_matrix = [...[new Array(RULES.horizontalBoxesCount+2).fill(null).forEach( (column, index, matrix)=>{
 			column = []; //column is READ ONLY, use matrix[index] instead
-			for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) column[j] = null; //height -1 to +(2x20)	})]]; //column is READ ONLY, use matrix[index][j] instead
+			for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) column[j] = null; //height -1 to +(2x20)	})]]; //WARNING column is READ ONLY, use matrix[index][j] instead
 	OK:	_matrix = new Array(RULES.horizontalBoxesCount+2).fill(null); //need to fill whole table, to make forEach browsing all slots
 		_matrix.forEach( (column, index, matrix)=>{ //left and right boxes as margins columns, program fail if removed
 			matrix[index] = [];
@@ -159,15 +159,14 @@ let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
 const RULES 						= {				//tetris rules
 	gameSpeedRatio					: 1,			//default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
-	initialVolume					: 0.3,			//default 0.6, 0 to 1, if #DEBUG
+	initialVolume					: 0.1,			//default 0.6, 0 to 1, if #DEBUG
 	transferRowsCountMin			: 1, 			//default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
 	pentominoesRowsCountMin			: 1, 			//default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
 	horizontalBoxesCount			: 5,			//default 10, min 5 #DEBUG
 	verticalBoxesCount				: 21, 			//default 21 = (20 visible + 1 hidden) #DEBUG
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
 	levelStepScoreCount				: 1000,			//default 1000 pts, score count before next level, decrease for #DEBUG
-	risingRowsHolesCountMaxRatio	: 0.3			//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
-};
+	risingRowsHolesCountMaxRatio	: 0.3 };		//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
 const DURATIONS						= {				//tetris durations, periods in ms
 	pentominoesModeDuration			: 10000,		//5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
 	movingGridsDuration				: 350,			//0350 ms
@@ -180,12 +179,8 @@ const DURATIONS						= {				//tetris durations, periods in ms
 	hardDropDuration				: 200,			//0200 ms, increase for #DEBUG
 	lostMessageDuration				: 3500,			//3500 ms, period to display score
 	softDropPeriod 					: 50,			//0050 ms, if this is max DropDuration
-	beginDropPeriod					: 1100	 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-};
-const FONTS							= {
-	scoreFont						: 'Ubuntu',
-	messageFont						: 'Rock Salt'
-};
+	beginDropPeriod					: 1100 }; 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+const FONTS							= {	scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS						= {
 	landFX: 						{ext:'wav'},
 	rotateFX:						{ext:'wav'},
@@ -193,8 +188,7 @@ const SOUNDS						= {
 	clearFX:						{ext:'wav'},
 	quadrupleFX:					{ext:'wav'},
 	selectFX:						{ext:'wav'},
-	musicMusic:						{ext:'mp3', vol:0.5}
-};
+	musicMusic:						{ext:'mp3', vol:0.5} };
 //values > 0 to avoid (value == false == 0)
 const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
 const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not started
