@@ -97,8 +97,9 @@ merge 2 objects with different properties: myNewObject = Object.assign(firstOjec
 
 ====================CODE GITHUB====================
 remove a remote: git remote rm old
-rename a branch: git branch -m es5-fit-ie9 es5-fit-ie11
-rename a branch: git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
+rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
+rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
+solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
 
 ====================NAMING CONVENTION====================
 //#DEBUG: to track bug
@@ -2404,15 +2405,15 @@ Animation.prototype = {
 	makeNextFrame_: function() { with(this) {
 		animateFunc_();					//draw frame on display, as defined in defined instance of Animation
 		_elapsedFrames++;
-		let elapsedTime					= getTime() - _beginTime;
-		let remainingTime 				= _duration - elapsedTime;	//console.log(_elapsedFrames/elapsedTime); //#DEBUG
+		let elapsedTime					= performance.now() - _beginTime; //performance.now() is more precise than getTime()
+		let remainingTime 				= _duration - elapsedTime;	console.log(_elapsedFrames/elapsedTime); //#DEBUG
 		_plannedFrames					= Math.min(_maxFps, _elapsedFrames/elapsedTime) * remainingTime;
 		_timeTick						= remainingTime / _plannedFrames;
 		_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
 		if (_varInTimingAnimFunc < 1) {	//0 < _varInTimingAnimFunc < 1
-			animOutput					= timingAnimFunc_(_varInTimingAnimFunc);	//window.setInterval not good, because need to test before each call, not automatic
+			animOutput					= timingAnimFunc_(_varInTimingAnimFunc);
 			//_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick); //slow on Firefox, even with 1000/60
-			_timeOut					= window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2017 feature, fast on Firefox, need to finish$$$$
+			_timeOut					= window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2015 feature, fast on Firefox
 		} else
 			finish();
 	}},
@@ -2423,7 +2424,7 @@ Animation.prototype = {
 		let needToKill 					= finish();	//return true if killing previous
 		_animating						= true;
 		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
-		_beginTime						= getTime();
+		_beginTime						= performance.now();
 		_plannedFrames					= _maxFps * _duration;
 		animOutput						= timingAnimFunc_(1 / _plannedFrames); //input [0;1] animOutput have any value
 		_timeTick						= _duration / _plannedFrames; //time elapsed between 2 frames
@@ -2434,11 +2435,11 @@ Animation.prototype = {
 		if (_animating) {	//if animating running
 			if (_paused) {	//if paused
 				_paused 				= false;
-				_beginTime 				+= getTime()-_pauseTime;
+				_beginTime 				+= performance.now()-_pauseTime;
 				makeNextFrame_();
 			} else {
 				_paused 				= true;
-				_pauseTime 				= getTime();
+				_pauseTime 				= performance.now();
 				//clearTimeout(_timeOut);
 				window.cancelAnimationFrame(_timeOut);
 			}
