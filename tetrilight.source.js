@@ -26,7 +26,7 @@ $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
 ====================CHANGES FROM ECMAScript 5 (2009)====================
-window.requestAnimationFrame, window.cancelAnimationFrame : Firefox 23 / IE 10 / Chrome / Safari 7
+window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
 	(`Level ${_grid._level}`)
 	var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
@@ -2452,7 +2452,8 @@ Animation.prototype = {
 	}},
 	finish: function() { with(this) {	//return true if killing previous
 		if (_animating) {
-			clearTimeout(_timeOut);
+			//clearTimeout(_timeOut);
+			window.cancelAnimationFrame(_timeOut);
 			reset_();					//_animating needs to be set to false to consider grid not busy
 			endAnimFunc_();
 			return true;
