@@ -762,7 +762,7 @@ Game.prototype = {
 					0	];
 			}
 			//old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.begin); //#DEBUG above, $alert(att);
-			_anims.moveGridsAnim.begin();
+			_anims.moveGridsAnim.beginAnim();
 			if (att.newGrid)
 				att.newGrid.startGrid();	//enqueue?
 		} else {
@@ -815,13 +815,13 @@ Game.prototype = {
 //PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 function PentominoesBriefMode() { with(this) {
 	_briefModeTimer = new Timer ( function() {
-		finish();	//run in this class, because not with this for Timer, to delete$$$$$
+		finishPentoMode();	//run in this class, because not with this for Timer, to delete$$$$$
 	}, 0 );
 }}
 PentominoesBriefMode.prototype = {
 	_briefModeTimer						: null,
 	/*destroyPentoMode: function() { with(this) { //to replace by anim timer
-		_briefModeTimer.finish();
+		_briefModeTimer.finishTimer();
 	}},*/
 	pauseOrResume: function() { with(this) {
 		_briefModeTimer.pauseOrResume();
@@ -829,8 +829,8 @@ PentominoesBriefMode.prototype = {
 	isRunning: function() { with (this) {
 		return (_briefModeTimer.isRunning());
 	}},
-	finish: function() { with(this) {
-		_briefModeTimer.finish();
+	finishPentoMode: function() { with(this) {
+		_briefModeTimer.finishTimer();
 		GAME._gridsListAuto.runForEachListElement(function(myGrid){
 			if (myGrid._gridState == GRID_STATES.playing) {
 				myGrid._playedPolyominoesType = 'tetrominoes'
@@ -840,8 +840,8 @@ PentominoesBriefMode.prototype = {
 			}
 		});
 	}},
-	run: function(gridWichTriggeredPentoMode, clearedLinesCount) { with(this) {
-		if (isRunning()) finish();
+	runPentoMode: function(gridWichTriggeredPentoMode, clearedLinesCount) { with(this) {
+		if (isRunning()) finishPentoMode();
 		GAME._gridsListAuto.runForEachListElement(function(myGrid){	//here, argument is used
 			if (myGrid._gridState == GRID_STATES.playing) {
 				myGrid._playedPolyominoesType = (myGrid != gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
@@ -851,9 +851,9 @@ PentominoesBriefMode.prototype = {
 			}
 		}, gridWichTriggeredPentoMode);							//this way to pass argument1 to pointed function
 		_briefModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount);	//*3 for 3 lines cleared, *4 for 4 lines cleared
-		_briefModeTimer.run();
+		_briefModeTimer.runTimer();
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
-		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.begin();
+		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.beginAnim();
 	}}
 };
 //TETRIS GRID Class
@@ -974,10 +974,10 @@ function Grid(keyboard, colorTxt) { with(this) {
 					._domNode.destroyDomNode();
 			}
 			_lockedShapes = [];
-			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.begin); //we stack _anims.quakeAnim.begin();
+			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.begin); //we stack _anims.quakeAnim.beginAnim();
 			gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); //we stack AUDIO.audioPlay('landFX');
 			gridAnimsStackPop();
-			//old: _anims.quakeAnim.begin();
+			//old: _anims.quakeAnim.beginAnim();
 			//old: gridAnimsStackPop();
 		}},
 		timingAnimFunc: function(x) {
@@ -1123,7 +1123,7 @@ Grid.prototype = {
 			_fallingShape.moveShapeToPlaced(0, 0) //only place with call without previous removeShapeFromPlace()
 				.drawShape()
 				.drawGhostAfterCompute();
-			_dropTimer.run();
+			_dropTimer.runTimer();
 		} else { //it's lost
 			_fallingShape.drawShape()
 				.clearGhostBlocks()
@@ -1136,8 +1136,8 @@ Grid.prototype = {
 		_lockedShapes = []; //release for garbage collector
 		_lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
 		if (!_fallingShape.finishSoftDropping(false)); //drop timer stopped without running again
-			_dropTimer.finish(); //drop timer stopped, others to end?
-		_anims.shapeRotateAnim.finish(); //because made by drop period
+			_dropTimer.finishTimer(); //drop timer stopped, others to end?
+		_anims.shapeRotateAnim.finishAnim(); //because made by drop period
 		moveShapesInMatrix(_lockedShapes);
 		if (_fallingShape._jVector == 0) { //if played single falling shape
 			_fallingShape.putShapeInRealBlocksNode()
@@ -1166,12 +1166,12 @@ Grid.prototype = {
 			if (rowsToClearCount >= RULES.transferRowsCountMin)	//if 2 rows cleared, tranfer rule
 				GAME.transferRows(this, rowsToClearCount);
 			if (rowsToClearCount >= RULES.pentominoesRowsCountMin) {//if 3 rows cleared, pentominoes rule: player have 3 blocks per shape, and others players have 5 blocks per shape
-				GAME._pentominoesBriefMode.run(this, rowsToClearCount);//duration of pentominoes is proportional to rowsToClearCount, 3 or 4, it auto stops by timer
+				GAME._pentominoesBriefMode.runPentoMode(this, rowsToClearCount);//duration of pentominoes is proportional to rowsToClearCount, 3 or 4, it auto stops by timer
 				AUDIO.audioPlay('quadrupleFX');
 			} else
 				AUDIO.audioPlay('clearFX');
 			_fallingShape = null; //to avoid combo reset scores
-			_anims.clearRowsAnim.begin();
+			_anims.clearRowsAnim.beginAnim();
 		} else {
 			_score.displays(); //to refresh score
 			if (_fallingShape)
@@ -1326,7 +1326,7 @@ Shape.prototype = {
 		return this;
 	}},
 	moveFalling: function(iRight, jUp) { with(this) {	//iRight == 0 or jUp == 0, jUp negative to fall
-		_grid._anims.shapeRotateAnim.finish();			//comment/remove this line to continue animating rotation when drop #DEBUG
+		_grid._anims.shapeRotateAnim.finishAnim();			//comment/remove this line to continue animating rotation when drop #DEBUG
 		_iPosition += iRight;
 		_jPosition += jUp;
 		removeShapeFromPlaced();
@@ -1373,7 +1373,7 @@ Shape.prototype = {
 	fallingShapeTriesMove: function(iRight, jUp) { with(this) {		//return true if moved (not used), called by left/right/timer
 		if (canMoveFromPlacedToPlaced(iRight, jUp)) {
 			if (iRight == 0)
-				_grid._dropTimer.run();					//shape go down, new period
+				_grid._dropTimer.runTimer();					//shape go down, new period
 			else										//shape move side
 				if (_grid._softDropping)				//if falling
 					finishSoftDropping(true);
@@ -1417,10 +1417,10 @@ Shape.prototype = {
 	fallingShapeTriesRotate: function() { with(this) { //do rotation if possible, else nothing
 		finishSoftDropping(true); //stopping fall by continuing normal timer
 		if (canShapeRotate()) { //+_pivotsCount before modulo % ?
-			_grid._anims.shapeRotateAnim.finish();
+			_grid._anims.shapeRotateAnim.finishAnim();
 			rotateDataInMatrix();
 			drawShape();
-			_grid._anims.shapeRotateAnim.begin();
+			_grid._anims.shapeRotateAnim.beginAnim();
 			drawGhostAfterCompute();
 			AUDIO.audioPlay('rotateFX');
 		}
@@ -1462,26 +1462,26 @@ Shape.prototype = {
 		return this;
 	}},
 	softDropping: function() { with(this) {					//full falling iterative
-		_grid._dropTimer.finish();
+		_grid._dropTimer.finishTimer();
 		_grid._softDropping = true;			
 		if (canMoveFromPlacedToPlaced(0, -1)) {
 			moveFalling(0, -1);
-			_grid._softDropTimer.run();
+			_grid._softDropTimer.runTimer();
 		} else
 			finishSoftDropping(true);						//ends fall and launching drop timer
 		return this;
 	}},
 	finishSoftDropping: function(keep) { with(this) {		//stop fall in all cases, keep if new period, return false if not falling
 		if (_grid._softDropping) {
-			_grid._softDropTimer.finish();
+			_grid._softDropTimer.finishTimer();
 			_grid._softDropping = false;
 			if (keep)
-				_grid._dropTimer.run();						//shape can move after fall or stopped
+				_grid._dropTimer.runTimer();						//shape can move after fall or stopped
 		}
 		return this; //_grid._softDropping;
 	}},
 	hardDropping: function() { with(this) {
-		_grid._dropTimer.finish();
+		_grid._dropTimer.finishTimer();
 		finishSoftDropping();
 		_grid.lockFallingShapePrepareMoving();
 		return this;
@@ -1595,7 +1595,7 @@ LockedBlocks.prototype = {
 			if (mode == SEARCH_MODE.down) {
 				tryMoveShapesSamejEquals(jEquals);
 				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-				_grid._anims.shapeHardDropAnim.begin();
+				_grid._anims.shapeHardDropAnim.beginAnim();
 			} else { //mode == SEARCH_MODE.up
 				_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
 				for (let p in _grid._lockedShapes)
@@ -1645,9 +1645,9 @@ LockedBlocks.prototype = {
 		}
 	}},
 	put1NewRisingRow: function() { with(this) { //will stack all countandclearrows callee
-		_grid._anims.shapeRotateAnim.finish();
-		_grid._dropTimer.finish();
-		_grid._softDropTimer.finish();
+		_grid._anims.shapeRotateAnim.finishAnim();
+		_grid._dropTimer.finishTimer();
+		_grid._softDropTimer.finishTimer();
 		let rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
 		let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalBoxesCount);
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount).fill(true); //we fill all table with any value, 10 slots
@@ -1657,7 +1657,7 @@ LockedBlocks.prototype = {
 			tempBlock = new Block(BLOCK_TYPES.orphan, _grid, slotIndex+1, 0, 'grey'); }); //iPosition=[1-10], jPosition=0 just under game
 		//end of prepareNewRisingRowAt_jPos0
 		chainSearchOrphan(SEARCH_MODE.up); //old: _grid._ghostBlocksNode.hide(); hide before rising, not necessary
-		_grid._anims.rising1RowAnim.begin();
+		_grid._anims.rising1RowAnim.beginAnim();
 	}}
 };
 //TETRIS BLOCK Class
@@ -1773,10 +1773,10 @@ Score.prototype = {
 	_level								: 1,											//for later
 	displays: function() { with(this) {
 		if (_delta) {						//if delta changed != 0
-			_grid._anims.score.finish();	//need to end before setting variables
+			_grid._anims.score.finishAnim();	//need to end before setting variables
 			_scoreShowed = _score;
 			_score += _delta;
-			_grid._anims.score.begin();
+			_grid._anims.score.beginAnim();
 		}
 		if ((Math.floor(_score/RULES.levelStepScoreCount) > _grid._level)	//check if bug when display message and lost $$$
 			&& (_grid._level < RULES.topLevel)) {	//if not top level ; small scores like fall are not displayed. step:1000 ; max:20000
@@ -1786,7 +1786,7 @@ Score.prototype = {
 				DURATIONS.softDropPeriod,
 				Math.round(DURATIONS.beginDropPeriod * (1-_grid._level/RULES.topLevel))
 			));	//changing timerPeriod, approaching _softDropPeriod
-			_grid._anims.messageAnim.begin(
+			_grid._anims.messageAnim.beginAnim(
 				//(_grid._level < RULES.topLevel) ? (`Level ${_grid._level}`) : (`<BR/>MAX<BR/> level ${_grid._level}`), //fit ES6
 				((_grid._level < RULES.topLevel) ? 'Level ' : '<BR/>MAX<BR/> level ') + _grid._level, //fit ES5
 				5); //last arg: higher for smaller text, not to queue, each new one replace previous one
@@ -1806,7 +1806,7 @@ Score.prototype = {
 		_combos ++;
 		if (_combos >= 1) {
 			_delta += 50 * _combos;
-			_grid._anims.messageAnim.begin(_combos+((_combos<2)?' combo':' x'));
+			_grid._anims.messageAnim.beginAnim(_combos+((_combos<2)?' combo':' x'));
 			//$$$sound of coins
 		}
 	}},
@@ -1942,8 +1942,8 @@ Timer.prototype = {
 	_args						: null,
 	_timeOut					: null,
 	_running					: false,
-	run: function() { with(this) { //return true if killing previous
-		let needToKill			= finish();
+	runTimer: function() { with(this) { //return true if killing previous
+		let needToKill			= finishTimer();
 		_running				= true;
 		_beginTime 				= getTime();
 		_timeOut 				= setTimeout(_func, _timerPeriod); //setInterval is useless here, not used
@@ -1965,7 +1965,7 @@ Timer.prototype = {
 			return				_paused;
 		}
 	}},
-	finish: function() { with(this) { //return true if killing previous timer
+	finishTimer: function() { with(this) { //return true if killing previous timer
 		_paused					= false; //turn pause off, necessary ?
 		if (_running) {
 			clearTimeout(_timeOut);
@@ -2372,79 +2372,74 @@ VectorGfx.prototype = {
 		return !!_imagesData[sortedArgs];
 	}}
 };
+"use strict";
 //ANIMATION Class, to prepare an animation
-function Animation(att) {
-	this.startAnimFunc_					= att.startAnimFunc;
-	this.animateFunc_					= att.animateFunc;
-	this.endAnimFunc_					= att.endAnimFunc;
-	this.timingAnimFunc_				= att.timingAnimFunc;
-	this._duration						= att.animDuration;
-}
-Animation.prototype = {
-	startAnimFunc_						: null,		//optional function when begin animation, value = null or defined
-	animateFunc_						: null,		//function to set THE movement to execute
-	endAnimFunc_						: null,		//function to set the last position after animation
-	timingAnimFunc_						: null,		//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput!
-	animOutput							: null,		//public value of f(x), current animation position after timingAnimFunc_, any value possible
-	_duration							: null,
-	_animating							: false,
-	_paused								: false,
-	_elapsedFrames						: 0,
-	_plannedFrames						: null,
-	_beginTime							: null,
-	_pauseTime							: null,
-	_windowNextFrameId					: null,
-	reset_: function() {
+class Animation {
+	constructor(att) {
+		this.startAnimFunc_				= att.startAnimFunc;	//optional function when begin animation, value = null or defined
+		this.animateFunc_				= att.animateFunc;		//function to set THE movement to execute
+		this.endAnimFunc_				= att.endAnimFunc;		//function to set the last position after animation
+		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput!
+		this._duration					= att.animDuration;		//duration of animation
+		this.animOutput					= null;					//public value of f(x), current animation position after timingAnimFunc_, any value possible
+		this._duration					= null;
+		this._animating					= false;
+		this._paused					= false;
+		this._elapsedFrames				= 0;
+		this._plannedFrames				= null;
+		this._beginTime					= null;
+		this._pauseTime					= null;
+		this._windowNextFrameId			= null;
+	}
+	reset_() {
 		this._paused					= false;
 		this._animating					= false;
 		this._elapsedFrames				= 0;
-	},
-	makeNextFrame_: function() { with(this) {
-		animateFunc_(); //draw frame on display, as defined in the instance of Animation
-		if ( (++_elapsedFrames) < _plannedFrames) {
-			animOutput					= timingAnimFunc_( _elapsedFrames / _plannedFrames ); //input [0;1] animOutput have any value
-			_windowNextFrameId			= window.requestAnimationFrame(function(){ makeNextFrame_(); }); //new 2015 feature, fast on Firefox
+	}
+	makeNextFrame_() {
+		console.log(this);
+		this.animateFunc_(); //draw frame on display, as defined in the instance of Animation
+		if ( (++this._elapsedFrames) < this._plannedFrames) {
+			this.animOutput					= this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); //input [0;1] animOutput have any value
+			this._windowNextFrameId			= window.requestAnimationFrame(this.makeNextFrame_); //new 2015 feature, fast on Firefox, 60fps
 		} else
-			finish();
-	}},
-	isAnimating: function() {
+			this.finishAnim();
+	}
+	isAnimating() {
 		return this._animating;
-	},
-	begin: function() { with(this) { //start animation, optional arguments are stocked in the 'arguments' array
-		let needToKill 					= finish();	//return true if killing previous
-		_animating						= true;
-		if (startAnimFunc_)				startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
-		_beginTime						= performance.now();
-		_plannedFrames					= RULES.fps * _duration;
-		animOutput						= timingAnimFunc_( (++_elapsedFrames) / _plannedFrames ); //input [0;1] animOutput have any value
-		makeNextFrame_();
-		return needToKill;
-	}},
-	pauseOrResume: function() { with(this) { //bug rare when often pause/resume
-		if (_animating) { //if animating running
-			if (_paused) { //if paused, resume
-				_paused 				= false;
-				_beginTime 				+= performance.now()-_pauseTime;
+	}
+	beginAnim() { //start animation, optional arguments are stocked in the 'arguments' array, return true if kill previous same anim
+		this.finishAnim();	//return true if killing previous
+		this._animating					= true;
+		if (this.startAnimFunc_)		this.startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
+		this._beginTime					= performance.now();
+		this._plannedFrames				= RULES.fps * this._duration;
+		this.animOutput					= this.timingAnimFunc_( (++this._elapsedFrames) / this._plannedFrames ); //input [0;1] animOutput have any value
+		this.makeNextFrame_();
+	}
+	pauseOrResume() { //bug rare when often pause/resume
+		if (this._animating) { //if animating running
+			if (this._paused) { //if paused, resume
+				this._paused 			= false;
+				this._beginTime 		+= performance.now()-this._pauseTime;
 				makeNextFrame_();
 			} else { //if playing, pausing
-				_paused 				= true;
-				_pauseTime 				= performance.now();
-				window.cancelAnimationFrame(_windowNextFrameId);
+				this._paused 			= true;
+				this._pauseTime 		= performance.now();
+				window.cancelAnimationFrame(this._windowNextFrameId);
 			}
-			return _paused;
+			return this._paused;
 		}
-	}},
-	setDuration: function(duration) { //can't set duration while animation running; return if set correctly
+	}
+	setDuration(duration) { //can't set duration while animation running; return if set correctly
 		if (this._animating) 			return false;
 		else							{ this._duration = duration; return true; }
-	},
-	finish: function() { //return true if killing previous
+	}
+	finishAnim() { //return true if killing previous
 		if (this._animating) {
 			window.cancelAnimationFrame(this._windowNextFrameId);
 			this.reset_(); //_animating needs to be set to false to consider grid not busy
 			this.endAnimFunc_();
-			return true;
-		} else
-			return false
+		}
 	}
 };
