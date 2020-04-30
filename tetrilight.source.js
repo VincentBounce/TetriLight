@@ -1816,14 +1816,11 @@ Score.prototype = {
 	}}
 };
 //VARIOUS BASIC FUNCTIONS
-function getTime() {
-	return (new Date).getTime();
+function isValued(item) { //requires declared and defined not to null
+	return (isDeclaredAndDefined(item) && (item != null));
 }
-function isValued(item) {
-	return (isDefined(item) && item != null);
-}
-function isDefined(item) {
-	return (typeof item != 'undefined');
+function isDeclaredAndDefined(item) {
+	return (typeof item !== 'undefined');
 }
 //LIST Class, to manage elements by index, indexed by string or number >=0 with size
 function List() { with(this) {
@@ -1922,7 +1919,9 @@ ListAutoIndex.prototype = {
 		if (_nextCount < _listSize) {
 			_nextCount++;
 			_seek++;
-			while (!isDefined(listAutoTable[_seek]))
+			console.log(listAutoTable);
+			while (!isDeclaredAndDefined(listAutoTable[_seek]))
+			//while (  listAutoTable[_seek] !== void 0);
 				_seek++;
 			return listAutoTable[_seek];
 		} else
@@ -1946,7 +1945,7 @@ class Timer {
 	runTimer() { //return true if killing previous
 		let needToKill			= this.finishTimer();
 		this._running			= true;
-		this._beginTime 		= getTime();
+		this._beginTime 		= (new Date).getTime();
 		this._timeOut 			= setTimeout(this._funcAtTimeOut, this._timerPeriod); //setInterval is useless here, not used
 		return needToKill;
 	}
@@ -1961,7 +1960,7 @@ class Timer {
 			} else {
 				clearTimeout(this._timeOut);
 				this._paused	= true;
-				this._pauseTime	= getTime();
+				this._pauseTime	= (new Date).getTime();
 			}
 			return				this._paused;
 		}
