@@ -166,6 +166,7 @@ MainMenu [1 instance]
 Examples of list: toProcessList / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
+//"use strict";
 //GLOBAL VARIABLES, each one handle one class instance only
 let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;			//GFX: GameGraphics
 //GLOBAL CONSTANTS
@@ -945,8 +946,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 			//		_matrix[i][_rowsToClearArray[r]]._domNode.setScale(animOutput); //with blocks' _domNodes, programs goes here for each block of each row to clear
 			for (let r in _rowsToClearList.listTable) //for each row to clear
 				for (let i=1;i <= RULES.horizontalBoxesCount;i++)
-					with (_matrix[i][r]._domNode) //with blocks' _domNodes 
-						setScale(animOutput); //programs goes here for each block of each row to clear
+					_matrix[i][r]._domNode.setScale(animOutput); //with blocks' _domNodes, programs goes here for each block of each row to clear
 		}},
 		endAnimFunc: function() { with(this) { //NOT GRAPHIC PROCESS
 			//_rowsToClearArray.forEach(function(myRow) {
@@ -1574,7 +1574,8 @@ LockedBlocks.prototype = {
 				|| mode == SEARCH_MODE.up )
 				groups.push(group);
 		};
-		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) never called, go back to git chainSearchOrphan'); //Message appeared on 2020 04 30 (DOWN mode ok), and never appeared in IE11 version earlier
+		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) to call with mode 1');
+		//Message appeared on 2020 05 01 (1 DOWN mode ok), 2020 04 30 (1 DOWN mode ok), and never appeared in IE11 version earlier
 		if (groups.length > 0) { //here we decide, we have at least 1 group equivalent. Normally, if (groups.length == 0) the mode == SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
 			_grid._lockedShapes = [];
 			groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
@@ -2372,7 +2373,6 @@ VectorGfx.prototype = {
 		return !!_imagesData[sortedArgs];
 	}}
 };
-"use strict";
 //ANIMATION Class, to prepare an animation
 class Animation {
 	constructor(att) {
@@ -2396,7 +2396,6 @@ class Animation {
 		this._elapsedFrames				= 0;
 	}
 	makeNextFrame_() {
-		//console.log(this);
 		this.animateFunc_(); //draw frame on display, as defined in the instance of Animation
 		if ( (++this._elapsedFrames) < this._plannedFrames) {
 			this.animOutput					= this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); //input [0;1] animOutput have any value
