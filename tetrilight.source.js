@@ -815,23 +815,23 @@ Game.prototype = {
 };
 //PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 function PentominoesBriefMode() { with(this) {
-	_briefModeTimer = new Timer ( function() {
+	_pentoModeTimer = new Timer( function() {
 		finishPentoMode();	//run in this class, because not with this for Timer, to delete$$$$$
 	}, 0 );
 }}
 PentominoesBriefMode.prototype = {
-	_briefModeTimer						: null,
+	_pentoModeTimer						: null,
 	/*destroyPentoMode: function() { with(this) { //to replace by anim timer
-		_briefModeTimer.finishTimer();
+		_pentoModeTimer.finishTimer();
 	}},*/
 	pauseOrResume: function() { with(this) {
-		_briefModeTimer.pauseOrResume();
+		_pentoModeTimer.pauseOrResume();
 	}},
-	isRunning: function() { with (this) {
-		return (_briefModeTimer.isRunning());
+	isRunning: function() { with(this) {
+		return (_pentoModeTimer.isRunning());
 	}},
 	finishPentoMode: function() { with(this) {
-		_briefModeTimer.finishTimer();
+		_pentoModeTimer.finishTimer();
 		GAME._gridsListAuto.runForEachListElement(function(myGrid){
 			if (myGrid._gridState == GRID_STATES.playing) {
 				myGrid._playedPolyominoesType = 'tetrominoes'
@@ -851,8 +851,8 @@ PentominoesBriefMode.prototype = {
 				myGrid._nextShapePreview.mark(myGrid._nextShape);
 			}
 		}, gridWichTriggeredPentoMode);							//this way to pass argument1 to pointed function
-		_briefModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount);	//*3 for 3 lines cleared, *4 for 4 lines cleared
-		_briefModeTimer.runTimer();
+		_pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount);	//*3 for 3 lines cleared, *4 for 4 lines cleared
+		_pentoModeTimer.runTimer();
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.beginAnim();
 	}}
@@ -1930,10 +1930,10 @@ ListAutoIndex.prototype = {
 	}},
 };
 //TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
-function Timer(func, timerPeriod) { with(this) {	//args never used here, so removed
-	_func						= func;
-	_timerPeriod				= timerPeriod;	//_args = args;
-}}
+function Timer(func, timerPeriod) {	//args never used here, so removed
+	this._func					= func;
+	this._timerPeriod			= timerPeriod;	//_args = args;
+}
 Timer.prototype = {
 	_paused 					: false,
 	_beginTime					: null,
@@ -1943,41 +1943,41 @@ Timer.prototype = {
 	_args						: null,
 	_timeOut					: null,
 	_running					: false,
-	runTimer: function() { with(this) { //return true if killing previous
-		let needToKill			= finishTimer();
-		_running				= true;
-		_beginTime 				= getTime();
-		_timeOut 				= setTimeout(_func, _timerPeriod); //setInterval is useless here, not used
+	runTimer: function() { //return true if killing previous
+		let needToKill			= this.finishTimer();
+		this._running			= true;
+		this._beginTime 			= getTime();
+		this._timeOut 				= setTimeout(this._func, this._timerPeriod); //setInterval is useless here, not used
 		return needToKill;
-	}},
-	isRunning: function() { with(this) {
-		return _running;
-	}},
-	pauseOrResume: function() { with(this) { //works only if running, if not do nothing
-		if (_running) { //if paused, resume and return false
-			if (_paused) { //if not paused, pause and return true
-				_paused			= false;
-				_timeOut 		= setTimeout(_func, _timerPeriod-(_pauseTime-_beginTime));
+	},
+	isRunning: function() {
+		return this._running;
+	},
+	pauseOrResume: function() { //works only if running, if not do nothing
+		if (this._running) { //if paused, resume and return false
+			if (this._paused) { //if not paused, pause and return true
+				this._paused			= false;
+				this._timeOut 		= setTimeout(this._func, this._timerPeriod-(this._pauseTime-this._beginTime));
 			} else {
-				clearTimeout(_timeOut);
-				_paused			= true;
-				_pauseTime		= getTime();
+				clearTimeout(this._timeOut);
+				this._paused			= true;
+				this._pauseTime		= getTime();
 			}
-			return				_paused;
+			return				this._paused;
 		}
-	}},
-	finishTimer: function() { with(this) { //return true if killing previous timer
-		_paused					= false; //turn pause off, necessary ?
-		if (_running) {
-			clearTimeout(_timeOut);
-			_running			= false;
+	},
+	finishTimer: function() { //return true if killing previous timer
+		this._paused					= false; //turn pause off, necessary ?
+		if (this._running) {
+			clearTimeout(this._timeOut);
+			this._running			= false;
 			return				true
 		} else
 			return				false;
-	}},
-	setPeriod: function(timerPeriod) { with(this) {
-		_timerPeriod = timerPeriod;
-	}}
+	},
+	setPeriod: function(timerPeriod) { //timer can be changed when running
+		this._timerPeriod = timerPeriod;
+	}
 };
 //EVENTS QUEUE Class
 function EventsQueue() { with(this) {
@@ -2373,6 +2373,7 @@ VectorGfx.prototype = {
 		return !!_imagesData[sortedArgs];
 	}}
 };
+"use strict";
 //ANIMATION Class, to prepare an animation
 class Animation {
 	constructor(att) {
@@ -2381,14 +2382,15 @@ class Animation {
 		this.endAnimFunc_				= att.endAnimFunc;		//function to set the last position after animation
 		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput!
 		this._duration					= att.animDuration;		//duration of animation
-		this.animOutput					= null;					//public value of f(x), current animation position after timingAnimFunc_, any value possible
-		this._animating					= false;
-		this._paused					= false;
-		this._elapsedFrames				= 0;
-		this._plannedFrames				= null;
-		this._beginTime					= null;
-		this._pauseTime					= null;
-		this._windowNextFrameId			= null;
+		this.animOutput;										//public value of f(x), current animation position after timingAnimFunc_, any value possible
+		this._paused;
+		this._animating;
+		this._elapsedFrames;
+		this._plannedFrames;
+		this._beginTime;
+		this._pauseTime;
+		this._windowNextFrameId;
+		this.reset_();
 	}
 	reset_() {
 		this._paused					= false;
@@ -2429,7 +2431,7 @@ class Animation {
 			return this._paused;
 		}
 	}
-	setDuration(duration) { //can't set duration while animation running; return if set correctly
+	setDuration(duration) { //can't set duration while animation running; return (if set correctly?) boolean
 		if (this._animating) 			return false;
 		else							{ this._duration = duration; return true; }
 	}
