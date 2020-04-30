@@ -26,16 +26,15 @@ $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
 ====================CHANGES FROM ECMAScript 5 (2009)====================
-ECMAScript 2015: let, const, Transform: IE11 OK
 window.requestAnimationFrame : Firefox 23 / IE 10 / Chrome / Safari 7
-IE11 KO:
+IE11 (standard with Windows 10) not working with:
 	(`Level ${_grid._level}`)
 	var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
 	cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
 	func(arg=false)
 	myArray.fill()
-ECMAScript 2017:
-	Added Async functions
+ECMAScript 2015: let, const, Transform: IE11 OK
+ECMAScript 2017: async await
 
 ====================CODE JS====================
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
@@ -2397,7 +2396,7 @@ Animation.prototype = {
 	_maxFps								: 60/1000,	//max frame rate, default 60/1000 = 60frames per 1000ms
 	_beginTime							: null,
 	_pauseTime							: null,
-	_timeOut							: null,		//_disabled: true,//set to true TO DISABLE ALL ANIMATIONS #DEBUG
+	_timeOut							: null,
 	reset_: function() { with(this) {
 		_paused							= false;
 		_animating						= false;
@@ -2413,7 +2412,8 @@ Animation.prototype = {
 		_varInTimingAnimFunc			= (elapsedTime + _timeTick) / _duration; //% of achievement of anim
 		if (_varInTimingAnimFunc < 1) {	//0 < _varInTimingAnimFunc < 1
 			animOutput					= timingAnimFunc_(_varInTimingAnimFunc);	//window.setInterval not good, because need to test before each call, not automatic
-			_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick);
+			//_timeOut 					= setTimeout(function() {makeNextFrame_()}, _timeTick); //slow on Firefox, even with 1000/60
+			window.requestAnimationFrame(function() {makeNextFrame_()}); //new 2017 feature, fast on Firefox, need to finish$$$$
 		} else
 			finish();
 	}},
