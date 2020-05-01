@@ -33,8 +33,9 @@ $$$ ListAutoIndex called 1x, useless?
 $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
-!= became !==, 10min tested: stable
 
+!= became !==, 10min tested: stable
+== became ===, 10min tested: stable
 
  **************** CHANGES FROM ECMAScript 5 (2009) ****************
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
@@ -57,9 +58,9 @@ Debugger: Chrome with CTRL+SHIFT+I
 delete myObject.myAttribute: not exist anymore, [undefined], then garbage collector comes
 myObject.myAttribute = null: value is [null], then garbage collector comes
 var = cond ? if_true : if_false
-var x = {}; x = null (typeof == "object") / x = undefined (typeof == "undefined")
+var x = {}; x = null (typeof === "object") / x = undefined (typeof === "undefined")
 typeof: item[undefined, boolean, number, string, object[array, set], function]
-'' == "" == `` / item <> element
+'' === "" === `` / item <> element
 console.log() to log object into console (F12 key) on Chrome;
 console.clear() to clear before
 console.table() to have a clear table
@@ -68,7 +69,7 @@ callee function (appelée), calling function (appelante)
 (function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
 => to define a func <> >= operator
 only Object or Array variables can be assigned by references
-myMethod.call(this, arg1, arg2...) == myMethod.apply(this, [arg1, arg2...])
+myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 
 **************** CODE JS ARRAY ****************
 queue(fifo) / gridAnimsStackPush(filo)
@@ -78,7 +79,7 @@ myArray.shift(): remove the slot from the table, even an Empty slot
 for (let p in MyArray) delete myArray[p]: set to undefined / not Empty slots
 instrument = [...instrument, 'violin', 'guitar'] // same as push violin, push guitar
 instrument = ['violin', 'guitar', ...instrument] // same as unshift violin, unshift guitar
-objectName.propertyName == objectName["propertyName"]
+objectName.propertyName === objectName["propertyName"]
 myArray = new Array(6) adds an array of 6 Empty slots, from 0 to 5
 WARNING:
     Empty: without value
@@ -214,7 +215,7 @@ const SOUNDS                          = {
     quadrupleFX:                      {ext:'wav'},
     selectFX:                         {ext:'wav'},
     musicMusic:                       {ext:'mp3', vol:0.5} };
-// values > 0 to avoid (value == false == 0)
+// values > 0 to avoid (value === 0 == false)
 const GAME_STATES                     = {paused: 1, running: 2, waiting: 3};
 const GRID_STATES                     = {connected: 1, playing: 2, lost: 3}; // connected but not started
 const BLOCK_TYPES                     = {ghost: 1, inShape: 2, orphan: 3};
@@ -237,19 +238,19 @@ function init() {
 function MainMenu() { with(this) { // queue or stack
     let commands = {
         rotate: function(grid) {
-            if ( (GAME._gameState == GAME_STATES.running) && !grid.isBusy() )
+            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
                 grid._fallingShape.fallingShapeTriesRotate();
         },
         softdrop: function(grid) {
-            if ( (GAME._gameState == GAME_STATES.running) && !grid.isBusy() )
+            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
                 grid._fallingShape.beginSoftDropping(true);
         },
         left: function(grid) {
-            if ( (GAME._gameState == GAME_STATES.running) && !grid.isBusy() )
+            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
                 grid._fallingShape.fallingShapeTriesMove(-1,0);
         },
         right: function(grid) {
-            if ( (GAME._gameState == GAME_STATES.running) && !grid.isBusy() )
+            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
                 grid._fallingShape.fallingShapeTriesMove(1,0);
         },
         pauseOrResume: function() {
@@ -297,7 +298,7 @@ MainMenu.prototype = {
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
-                if (GAME._gameState == GAME_STATES.running) {
+                if (GAME._gameState === GAME_STATES.running) {
                     GAME.chooseAction(event);
                 }
                 break;
@@ -319,7 +320,7 @@ function Browser() { with(this) {
 }}
 Browser.prototype = {
     isFullScreen: function() { with(this) {
-        return (innerWidth == screen.width && innerHeight > screen.height-5); // Firefox use 1px in height
+        return (innerWidth === screen.width && innerHeight > screen.height-5); // Firefox use 1px in height
     }}
 };
 // AUDIO Class (for sounds)
@@ -615,7 +616,7 @@ function Game() { with(this) {
         _gameShapesWithRotations[s]    = new Array(quarters);
         for (let pivot=0;pivot < quarters;pivot++) {                         // creating all shapes rotations: browsing rotations
             _gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
-            if(pivot == 0)
+            if(pivot === 0)
                 for (let b=0;b < shapeBlocksCount;b++)                        // browsing 4 blocks
                     _gameShapesWithRotations[s][pivot][b] = [
                         _storedPolyominoes[s].blocks[b][0],
@@ -717,7 +718,7 @@ Game.prototype = {
         // _pentominoesBriefMode.destroyPentoMode();// old, remove all timers
     }},
     pauseOrResume: function() { with(this) {// pause or resume
-        _gameState = (_gameState == GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
+        _gameState = (_gameState === GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
         AUDIO.pauseOrResume('musicMusic');    // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX');        // always play sound FX for pause or resume
         _pentominoesBriefMode.pauseOrResume();    // if pentominoes mode, pause it
@@ -795,7 +796,7 @@ Game.prototype = {
         let grid;
         _gridsListAuto.resetNext();
         while (grid = _gridsListAuto.next())
-            if (grid._gridState == GRID_STATES.playing) {
+            if (grid._gridState === GRID_STATES.playing) {
                 playingGridsCount ++;
                 allGridsBlocksCount += grid._lockedBlocks._blocksCount;
             }
@@ -812,7 +813,7 @@ Game.prototype = {
     transferRows: function(from, count) { with(this) {    // from grid
         let toGrid = [];
         for (let p in _gridsListAuto.listAutoTable)
-            if ( (_gridsListAuto.listAutoTable[p] !== from) && (_gridsListAuto.listAutoTable[p]._gridState == GRID_STATES.playing) )
+            if ( (_gridsListAuto.listAutoTable[p] !== from) && (_gridsListAuto.listAutoTable[p]._gridState === GRID_STATES.playing) )
                 toGrid.push(_gridsListAuto.listAutoTable[p]);
         if (toGrid.length)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
@@ -844,7 +845,7 @@ class PentominoesBriefMode {
         this._pentoModeTimer.finishTimer();
         GAME._gridsListAuto.runForEachListElement(
             (myGrid)=>{
-                if (myGrid._gridState == GRID_STATES.playing) {
+                if (myGrid._gridState === GRID_STATES.playing) {
                     myGrid._playedPolyominoesType = 'tetrominoes'
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
                     myGrid._nextShape = new Shape(myGrid); // previous falling shape is garbage collected
@@ -856,7 +857,7 @@ class PentominoesBriefMode {
         if (this.isRunning()) this.finishPentoMode();
         GAME._gridsListAuto.runForEachListElement(
             (myGrid)=>{ // here, argument is used
-                if (myGrid._gridState == GRID_STATES.playing) {
+                if (myGrid._gridState === GRID_STATES.playing) {
                     myGrid._playedPolyominoesType = (myGrid !== gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
                     myGrid._nextShape = new Shape(myGrid); // previous falling shape is garbage collected
@@ -1107,11 +1108,11 @@ Grid.prototype = {
             let last = _animsStack.pop();
             last[1].call(last[0], last[2]);
         }
-        if (_animsStack.length == 0) // dequeue at end of anims stack, equivalent to (!_animsStack.length), #DEBUG before
+        if (_animsStack.length === 0) // dequeue at end of anims stack, equivalent to (!_animsStack.length), #DEBUG before
             _gridEventsQueue.dequeue();
     }},
     startGrid: function() { with(this) {
-        if (GAME._gameState == GAME_STATES.waiting)
+        if (GAME._gameState === GAME_STATES.waiting)
             GAME.startGame();
         _gridState = GRID_STATES.playing
         _nextShape = new Shape(this);
@@ -1122,7 +1123,7 @@ Grid.prototype = {
         while (myRowsCount-- > 0) // we put same quanity of rows
             _gridEventsQueue.execNowOrEnqueue(_lockedBlocks, _lockedBlocks.put1NewRisingRow);
         // end putRowsAtStart
-        if (GAME._gameState == GAME_STATES.paused)
+        if (GAME._gameState === GAME_STATES.paused)
             pauseOrResume();
     }},
     newFallingShape: function() { with(this) {
@@ -1151,7 +1152,7 @@ Grid.prototype = {
             _dropTimer.finishTimer(); // drop timer stopped, others to end?
         _anims.shapeRotateAnim.endAnim(); // because made by drop period
         moveShapesInMatrix(_lockedShapes);
-        if (_fallingShape._jVector == 0) { // if played single falling shape
+        if (_fallingShape._jVector === 0) { // if played single falling shape
             _fallingShape.putShapeInRealBlocksNode()
                 ._domNode.destroyDomNode();
             // AUDIO.audioPlay('landFX');
@@ -1224,16 +1225,16 @@ Grid.prototype = {
             _matrix[i][jRow].destroyBlock();
     }},
     chooseAction: function(event) { with(this) {
-        if (event.type == 'keyup') {                                // touche relevée
-            if (event.keyCode == _keyboard.keys[1]) 
+        if (event.type === 'keyup') {                                // touche relevée
+            if (event.keyCode === _keyboard.keys[1]) 
                 _softDroppingReloaded = true;
         }
         else if (!isBusy())
             switch (event.keyCode) {
-                case _keyboard.keys[0]: _fallingShape.fallingShapeTriesRotate();    break; // up
-                case _keyboard.keys[1]: _fallingShape.beginSoftDropping();            break; // down
-                case _keyboard.keys[2]: _fallingShape.fallingShapeTriesMove(-1,0);    break; // left
-                case _keyboard.keys[3]: _fallingShape.fallingShapeTriesMove(1,0);    break; // right
+                case _keyboard.keys[0]: _fallingShape.fallingShapeTriesRotate();  break; // up
+                case _keyboard.keys[1]: _fallingShape.beginSoftDropping();        break; // down
+                case _keyboard.keys[2]: _fallingShape.fallingShapeTriesMove(-1,0);break; // left
+                case _keyboard.keys[3]: _fallingShape.fallingShapeTriesMove(1,0); break; // right
             }
     }},
     pauseOrResume: function() { with(this) {    // pause or resume this grid
@@ -1312,7 +1313,7 @@ class Shape {
         return this;
     }
     putShapeNodeIn() {
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); // this == Shape context necessary fot this._domNode
+        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); // this === Shape context necessary fot this._domNode
         return this;
     }
     drawShape() { // show hidden shapes
@@ -1326,7 +1327,7 @@ class Shape {
                 this._ghostBlocks[b]._iPosition = this._shapeBlocks[b]._iPosition;
                 this._ghostBlocks[b]._jPosition = this._shapeBlocks[b]._jPosition + this._jVector;
                 this._ghostBlocks[b].drawBlock();
-            }, this) // this = Window context by default, puting this here makes this == Shape
+            }, this) // this = Window context by default, puting this here makes this === Shape
         }
         return this;
     }
@@ -1337,14 +1338,14 @@ class Shape {
         }
         return this;
     }
-    moveFalling(iRight, jUp) { // iRight == 0 or jUp == 0, jUp negative to fall
+    moveFalling(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
         this._grid._anims.shapeRotateAnim.endAnim(); // comment/remove this line to continue animating rotation when drop #DEBUG
         this._iPosition += iRight;
         this._jPosition += jUp;
         this.removeShapeFromPlaced();
         this.moveAndPutShapeToPlaced(iRight, jUp, DROP_TYPES.soft);
         this.drawShape();
-        if (jUp == 0) this.drawGhostAfterCompute(); // if we move left or right
+        if (jUp === 0) this.drawGhostAfterCompute(); // if we move left or right
         else this._jVector -= jUp; // if ghostshape covered, new block layer hides it
         AUDIO.audioPlay('moveFX');
         return this;
@@ -1386,7 +1387,7 @@ class Shape {
     }
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
-            if (iRight == 0)
+            if (iRight === 0)
                 this._grid._dropTimer.runTimer(); // shape go down, new period
             else // shape move side
                 if (this._grid._softDropping) // if falling
@@ -1411,7 +1412,7 @@ class Shape {
         return this;
     }
     canShapeRotate() { // 1 is clockwiseQuarters
-        if (this._pivotsCount == 1)
+        if (this._pivotsCount === 1)
             return false;
         else {
             let result = true;
@@ -1546,8 +1547,8 @@ LockedBlocks.prototype = {
         _blocksCount++; // we increment
         _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
         _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++; // we increment
-         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount ) // if full row to clear
-         // if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) == -1)// $$$$$$$ if value not found
+         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalBoxesCount ) // if full row to clear
+         // if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) === -1)// $$$$$$$ if value not found
             _grid._rowsToClearList.putInList(block._jPosition, true); // true to put something
             // _grid._rowsToClearArray.push(block._jPosition); // preparing rows to clear, not negative values
     }},
@@ -1556,14 +1557,14 @@ LockedBlocks.prototype = {
         delete _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
         _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--; // we decrement
         _blocksCount--; // we decrement
-         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
+         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalBoxesCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
             _grid._rowsToClearList.eraseItemFromList(block._jPosition);
         // _grid._rowsToClearArray.splice( // necessary for correct exection
         //         _grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); // we remove position of block._jPosition in _rowsToClearArra
                 
     }},
     chainSearchOrphan: function(mode) { with(this) {
-        if (mode == SEARCH_MODE.up)
+        if (mode === SEARCH_MODE.up)
             _grid._fallingShape.shapeSwitchFromTestToPlaced(false);// falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
@@ -1581,11 +1582,11 @@ LockedBlocks.prototype = {
             group.shape.push(block);
             for (let dir=0;dir < 4;dir++)
                 chainSearch3Ways(block, group, toProcessList, dir); // chainSearch3Ways is recursive
-            if ((( mode == SEARCH_MODE.down) && (group.jMin >= 2 ))
-                || mode == SEARCH_MODE.up )
+            if ((( mode === SEARCH_MODE.down) && (group.jMin >= 2 ))
+                || mode === SEARCH_MODE.up )
                 groups.push(group);
-        }; // below, (groups.length == 0) occured 3 times between 2020 05 01 and 2020 04 30 with SEARCH_MODE.down == 1, no pb
-        if (groups.length > 0) { // here we decide, we have at least 1 group equivalent. Normally, if (groups.length == 0) the mode == SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
+        }; // below, (groups.length === 0) occured 3 times between 2020 05 01 and 2020 04 30 with SEARCH_MODE.down === 1, no pb
+        if (groups.length > 0) { // here we decide, we have at least 1 group equivalent. Normally, if (groups.length === 0) the mode === SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
             _grid._lockedShapes = [];
             groups.sort(function(a, b) {return a.jMin - b.jMin;}); // regular sort: lines full disapear
             let jEquals = []; let group, shape; // [if shape blocks color]            
@@ -1593,8 +1594,8 @@ LockedBlocks.prototype = {
                 group = groups.shift(); // lower block
                 shape = new Shape(_grid, group); // creating new dropable shape based on locked blocks ready to run drop animation
                 _grid._lockedShapes[shape._shapeIndex] = shape; // add
-                if (mode == SEARCH_MODE.down) { // [if shape blocks color] to sort equals
-                    if ( !jEquals.length || (group.jMin == jEquals[jEquals.length-1].jMin) )
+                if (mode === SEARCH_MODE.down) { // [if shape blocks color] to sort equals
+                    if ( !jEquals.length || (group.jMin === jEquals[jEquals.length-1].jMin) )
                         jEquals.push({jMin: group.jMin, shape: shape});
                     else {
                         tryMoveShapesSamejEquals(jEquals);
@@ -1602,14 +1603,14 @@ LockedBlocks.prototype = {
                     }
                 }
             }
-            if (mode == SEARCH_MODE.down) {
+            if (mode === SEARCH_MODE.down) {
                 tryMoveShapesSamejEquals(jEquals);
                 _grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); // countAndClearRows()
                 _grid._anims.shapeHardDropAnim.startAnim();
-            } else { // mode == SEARCH_MODE.up
+            } else { // mode === SEARCH_MODE.up
                 _grid._fallingShape.shapeSwitchFromTestToPlaced(true); // falling is back
                 for (let p in _grid._lockedShapes)
-                    if (_grid._lockedShapes[p]._jPosition == 0) { // sub first row : j = 0
+                    if (_grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
                         _grid._lockedShapes[p]._jVector = 1;
                         _grid._lockedShapes[p].shapesHitIfMove(0, 1);
                     }
@@ -1631,7 +1632,7 @@ LockedBlocks.prototype = {
             [blockFrom._iPosition + _searchDirections[dir][0]]
             [blockFrom._jPosition + _searchDirections[dir][1]];
         if (block && toProcessList.listTable[block._blockIndex] // [if shape blocks contact]
-        && (blockFrom._color == block._color) ) { // [if shape blocks color]
+        && (blockFrom._color === block._color) ) { // [if shape blocks color]
             toProcessList.eraseItemFromList(block._blockIndex); // call del from list
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
@@ -1720,11 +1721,11 @@ class Block {
     }
     isFreeSlot(i, j)  { // can move on placed grid, put this into grid
         return (
-            ( (j >= 1) || (j >= this._jPosition) ) // j==0 is floor level, _jPosition useless$$$$$$$, same bug
+            ( (j >= 1) || (j >= this._jPosition) ) // j === 0 is floor level, _jPosition useless$$$$$$$, same bug
             //    (j >= 1) // j=0 is floor level
             && (i >= 1) // i=0 is left wall
-            && (i <=RULES.horizontalBoxesCount) // i==11 is right wall
-            && (this._grid._matrix[i][j] == null) // _matrix[i][j]==null means free
+            && (i <=RULES.horizontalBoxesCount) // i === 11 is right wall
+            && (this._grid._matrix[i][j] === null) // _matrix[i][j] === null means free
         );
     }
     drawBlock() { // here you can hide top block outside grid
@@ -1796,7 +1797,7 @@ class Score {
         this.computeLevel_(sweptRowsCount);
     }
     computePerfectClear_(sweptRowsCount) {
-        if (this._grid._lockedBlocks._blocksCount == sweptRowsCount * RULES.horizontalBoxesCount) { // means same cleared blocks qty than grid currently had
+        if (this._grid._lockedBlocks._blocksCount === sweptRowsCount * RULES.horizontalBoxesCount) { // means same cleared blocks qty than grid currently had
             this._grid._anims.messageAnim.startAnim({text: 'Perfect<BR/>clear'});
             this._delta += this._factors[2] * (this._level+1);
         }
@@ -2048,7 +2049,7 @@ function DomNode(att, parent, id) { with(this) {                                
     } else if (parent)
         _parent._o.appendChild(_o);
     if (isValued(att.width))
-        if (typeof att.width == 'number') {
+        if (typeof att.width === 'number') {
             _o.style.width = att.width+'%';    // all window
             _width = getWidth();
         } else {
@@ -2063,7 +2064,7 @@ function DomNode(att, parent, id) { with(this) {                                
             setWidth(0);
     }
     if (isValued(att.height))
-        if (typeof att.height == 'number') {
+        if (typeof att.height === 'number') {
             _o.style.height = att.height+'%';            // all window
             _height = getHeight();
         } else {
@@ -2091,7 +2092,7 @@ function DomNode(att, parent, id) { with(this) {                                
     delete att.y;
     delete att.width;
     delete att.height;    
-    if (_domNodeType == 'canvas') {
+    if (_domNodeType === 'canvas') {
         if (att.gfx) {
             _vectorGfx = att.gfx;
             delete att.gfx;
@@ -2200,9 +2201,9 @@ DomNode.prototype = {
             if (_moveStepStack)                                 // positionned with fx
                 moveToStep.apply(this, _moveStepStack);
         }
-        if (_domNodeType == 'canvas')
+        if (_domNodeType === 'canvas')
             redrawCanvas_(_width, _height);
-        else {                                                        // type == div
+        else {                                                        // type === div
             if (_text)
                 resizeText_();
             for (let p in _childs)
@@ -2301,7 +2302,7 @@ DomNode.prototype = {
     putChild: function(canvas) { with(this) {
         if (canvas._parent)
             delete canvas._parent._childs[canvas._id];            // manage parent
-        if ( !canvas._id || (typeof (canvas._id) == 'number') )
+        if ( !canvas._id || (typeof canvas._id === 'number') )
             canvas._id = getUId_();// ++ _count;
         _childs[canvas._id] = canvas;                            // manage parent
         canvas._parent = this;                                    // manage parent
@@ -2362,7 +2363,7 @@ class VectorGfx {
         this._height;
         this._nocache;
         for (let p in funcs)
-            if (p == '_nocache')
+            if (p === '_nocache')
                 this._nocache = !!funcs[p];
             else
                 this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p]; // to reproduce sames functions fy: 'fx'
