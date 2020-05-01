@@ -1673,35 +1673,35 @@ LockedBlocks.prototype = {
 	}}
 };
 //TETRIS BLOCK Class
-function Block(blockType, shapeOrGrid, i, j, blockColorTxt) { with(this) {
-	_blockType						= blockType;
-	_iPosition						= i;
-	_jPosition						= j;
-	createNode();
-	setColor(blockColorTxt);
-	switch (_blockType) {
-		case BLOCK_TYPES.ghost: //ghost shape
-			_grid = shapeOrGrid; //old: _grid = _shape._grid;
-			putBlockNodeIn(_grid._ghostBlocksNode);
-			_domNode.set({opacity: GFX._ghostShapeOpacity});
+function Block(blockType, belongToShapeOrGrid, i, j, blockColorTxt)  {
+	this._blockType						= blockType;
+	this._iPosition						= i;
+	this._jPosition						= j;
+	this.createNode();
+	this.setColor(blockColorTxt);
+	switch (this._blockType) {
+		case BLOCK_TYPES.ghost: //ghost shape for display only, no block index
+			this._grid = belongToShapeOrGrid;
+			this.putBlockNodeIn(this._grid._ghostBlocksNode);
+			this._domNode.set({opacity: GFX._ghostShapeOpacity});
 			break;
 		case BLOCK_TYPES.inShape: //falling ghape
-			_shape = shapeOrGrid;
-			_grid  = _shape._grid;
-			putBlockNodeIn(_shape._domNode);
-			_blockIndex = GAME._newBlockId++;
+			this._shape = belongToShapeOrGrid;
+			this._grid = this._shape._grid;
+			this.putBlockNodeIn(this._shape._domNode);
+			this._blockIndex = GAME._newBlockId++;
 			break;
 		case BLOCK_TYPES.orphan: //rising row coming from level j=0
-			_grid  = shapeOrGrid;
-			putBlockInRealBlocksNode();
-			_blockIndex = GAME._newBlockId++;
-			_grid.putBlockInMatrix(this);
-			_grid._lockedBlocks.putBlockInLockedBlocks(this);
-			drawBlock();
+			this._grid  = belongToShapeOrGrid;
+			this.putBlockInRealBlocksNode();
+			this._blockIndex = GAME._newBlockId++;
+			this._grid.putBlockInMatrix(this);
+			this._grid._lockedBlocks.putBlockInLockedBlocks(this);
+			this.drawBlock();
 			break;
-		default: console.log(this) //bug here! #DEBUG
+		default: console.log(this) //bug if this case occurs #DEBUG
 	}
-}}
+}
 Block.prototype = {
 	_grid							: null,		//undefined or null, overwise object not exist
 	_shape							: null,
@@ -1711,40 +1711,40 @@ Block.prototype = {
 	_colorTxt						: null,
 	_color							: null,
 	_blockIndex						: null,		//block index
-	destroyBlock: function() { with(this) {		//destructor, remove block anywhere
-		_domNode.destroyDomNode();
-	    _grid.removeBlockFromMatrix(this);
-		_grid._lockedBlocks.removeBlockFromLockedBlocks(this);
-	}},
-	createNode: function() { with(this) {
-		_domNode = new DomNode({type:'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx:GFX._gfxBlock});
-	}},
-	setColor: function(colorTxt) { with(this) {
-		_colorTxt						= colorTxt;
-		_color							= GFX._colors[colorTxt];
-		_domNode.drawGfx({col:_colorTxt});
-	}},
-	isFreeSlot: function(i, j) { with(this) { //can move on placed grid, put this into grid
+	destroyBlock: function()  {		//destructor, remove block anywhere
+		this._domNode.destroyDomNode();
+		this._grid.removeBlockFromMatrix(this);
+		this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
+	},
+	createNode: function()  {
+		this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx: GFX._gfxBlock});
+	},
+	setColor: function(colorTxt)  {
+		this._colorTxt = colorTxt;
+		this._color = GFX._colors[this.colorTxt];
+		this._domNode.drawGfx({col: this._colorTxt});
+	},
+	isFreeSlot: function(i, j)  { //can move on placed grid, put this into grid
 		return (
-			( (j >= 1) || (j >= _jPosition) ) //j==0 is floor level, _jPosition useless$$$$$$$, same bug
+			( (j >= 1) || (j >= this._jPosition) ) //j==0 is floor level, _jPosition useless$$$$$$$, same bug
 			//   (j >= 1) //j=0 is floor level
 			&& (i >= 1) //i=0 is left wall
 			&& (i <=RULES.horizontalBoxesCount) //i==11 is right wall
-			&& (_grid._matrix[i][j] == null) //_matrix[i][j]==null means free
+			&& (this._grid._matrix[i][j] == null) //_matrix[i][j]==null means free
 		);
-	}},
+	},
 	drawBlock: function() { //here you can hide top block outside grid
 		this._domNode.moveToStep(this._iPosition, this._jPosition);
 	},
-	blockSwitchFromTestToPlaced: function(fromTestToPlaced) { with(this) { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
+	blockSwitchFromTestToPlaced: function(fromTestToPlaced)  { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
 		if (fromTestToPlaced) {
-			_grid.putBlockInMatrix(this);
-			_grid._lockedBlocks.putBlockInLockedBlocks(this)
+			this._grid.putBlockInMatrix(this);
+			this._grid._lockedBlocks.putBlockInLockedBlocks(this)
 		} else {
-			_grid.removeBlockFromMatrix(this);
-			_grid._lockedBlocks.removeBlockFromLockedBlocks(this)
+			this._grid.removeBlockFromMatrix(this);
+			this._grid._lockedBlocks.removeBlockFromLockedBlocks(this)
 		}
-	}},
+	},
 	putBlockInRealBlocksNode: function() {
 		this._grid._realBlocksNode.putChild(this._domNode);
 	},
