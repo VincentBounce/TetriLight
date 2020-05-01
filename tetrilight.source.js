@@ -179,7 +179,7 @@ const RULES 						= {				//tetris rules
 	horizontalBoxesCount			: 5,			//default 10, min 5 #DEBUG
 	verticalBoxesCount				: 21, 			//default 21 = (20 visible + 1 hidden) #DEBUG
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
-	levelStepScoreCount				: 1000,			//default 1000 pts, score count before next level, decrease for #DEBUG
+	levelStepScoreCount				: 300,			//default 1000 pts, score count before next level, decrease for #DEBUG
 	risingRowsHolesCountMaxRatio	: 0.3,			//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
 	fps								: 60/1000 };	//default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
 const DURATIONS						= {				//tetris durations, periods in ms
@@ -909,14 +909,16 @@ function Grid(keyboard, colorTxt) { with(this) {
 	_ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks; //shortcut
 	_domNode._childs.frameZone._childs.back._childs.background.drawGfx({col:_colorTxt});
 	_domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', rgbaTxt(_color.light), '0 0 0.4em '+rgbaTxt(_color.light));	//_textCharCountWidthMin : 1 or 7
-	_domNode._childs.controlZone.setText(_keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3], 8);	//up down left right
+	_domNode._childs.controlZone.setTextIntoSizedField({
+		text: _keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3],
+		fieldCharCount: 8 }); //up down left right
 	_domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', rgbaTxt(_color.light), '0 0 0.4em '+rgbaTxt(_color.light), 3);
 	_domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', rgbaTxt(_color.light), '0.05em 0.05em 0em '+rgbaTxt(_color.dark));
 	_nextShapePreview = new NextShapePreview(this);
 	_anims = {};	//need to initialize before creating new score which contains anim
 	_score = new Score(this);	//contains animation, 
 	_anims.quakeAnim = new Animation({
-		animateFunc: function() { with(this) {							//to use context of this Animation
+		animateFunc: function(animOutput) { with(this) {							//to use context of this Animation
 			_domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, GFX._pxBoxSize*2/4*animOutput);	//default 2/4 or 3/4, proportionaly to deep 20 _domNode use context of this Grid
 		}},
 		endAnimFunc: function() { with(this) {
@@ -929,7 +931,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		animDuration: DURATIONS.gridQuakeDuration
 	});
 	_anims.pentominoesModeAnim = new Animation({
-		animateFunc: function() { with(this) {							//to use context of this Animation //console.log(animOutput); $alert(animOutput);
+		animateFunc: function(animOutput) { with(this) {							//to use context of this Animation //console.log(animOutput); $alert(animOutput);
 			_domNode._childs.frontZone.set({opacity: Math.abs(animOutput)});
 		}},
 		endAnimFunc: function() { with(this) {
@@ -941,7 +943,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		animDuration: 0	//need to set duration for this animation before running
 	});
 	_anims.clearRowsAnim = new Animation({ //loading animation to use later
-		animateFunc: function() { with(this) { //called n times recursively, this: current object AND Animation
+		animateFunc: function(animOutput) { with(this) { //called n times recursively, this: current object AND Animation
 			//for (let r in _rowsToClearArray) //for each row to clear
 			//	for (let i=1;i <= RULES.horizontalBoxesCount;i++) //for each column
 			//		_matrix[i][_rowsToClearArray[r]]._domNode.setScale(animOutput); //with blocks' _domNodes, programs goes here for each block of each row to clear
@@ -963,7 +965,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		animDuration: DURATIONS.movingGridsDuration
 	});
 	_anims.shapeHardDropAnim = new Animation({	//animation for 1 shape, falling or after clearing
-		animateFunc: function() { with(this) {
+		animateFunc: function(animOutput) { with(this) {
 			for (let p in _lockedShapes)
 				_lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
 		}},
@@ -987,7 +989,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		animDuration: DURATIONS.hardDropDuration
 	});
 	_anims.rising1RowAnim = new Animation({
-		animateFunc: function() { with(this) {		//"this" display animation instancied object
+		animateFunc: function(animOutput) { with(this) {		//"this" display animation instancied object
 			for (let p in _lockedShapes)
 				_lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
 		}},
@@ -1010,7 +1012,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 		startAnimFunc: function() { with(this) {
 			_fallingShape._domNode.setTransformOrigin(GFX._gfxBlock.fx(_fallingShape._iPosition+0.5)+"px "+GFX._gfxBlock.fy(_fallingShape._jPosition-0.5)+"px");
 		}},
-		animateFunc: function() { with(this) {
+		animateFunc: function(animOutput) { with(this) {
 			if ((_fallingShape._pivotsCount==2) && (_fallingShape._pivot==0))
 				_fallingShape._domNode.setRotate(-90 + animOutput);
 			else
@@ -1024,13 +1026,11 @@ function Grid(keyboard, colorTxt) { with(this) {
 		},
 		animDuration: DURATIONS.rotatingDuration
 	});
-
 	_anims.messageAnim = new Animation({
-		startAnimFunc: function() { with(this) {
-			_domNode._childs.messageZone.setText.apply(_domNode._childs.messageZone, arguments);
+		startAnimFunc: function(textInfos) { with(this) {
+			_domNode._childs.messageZone.setTextIntoSizedField.call(_domNode._childs.messageZone, textInfos);
 		}},
-		animateFunc: function() { with(this) {
-			//console.log(animOutput);	$alert(animOutput);
+		animateFunc: function(animOutput) { with(this) {
 			_domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*GFX._pxBoxSize);//_YMessagePosition);
 			_domNode._childs.messageZone.set({opacity: 1-Math.abs(animOutput)});	//animOutput from -1 to +1
 		}},
@@ -1184,7 +1184,10 @@ Grid.prototype = {
 	lose: function() { with(this) {	//lives during _score duration
 		_score.displays();
 		_anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); //empty queues necessary?
-		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.startAnim, ['You<BR/>lose', 4]);
+		_gridMessagesQueue.execNowOrEnqueue(
+			_anims.messageAnim,
+			_anims.messageAnim.startAnim,
+			[{text: 'You<BR/>lose', fieldCharCount: 4}]);
 		_gridMessagesQueue.execNowOrEnqueue(this, afterLost_);
 		//AUDIO.audioStop('musicMusic');
 		_gridState = GRID_STATES.lost;
@@ -1575,9 +1578,7 @@ LockedBlocks.prototype = {
 			if ((( mode == SEARCH_MODE.down) && (group.jMin >= 2 ))
 				|| mode == SEARCH_MODE.up )
 				groups.push(group);
-		};
-		if ((groups.length == 0)) console.log('Mode : '+mode+' #DEBUG shapeSwitchFromTestToPlaced(true) to call with mode 1');
-		//Message appeared on 2020 05 01 (1 DOWN mode ok), 2020 04 30 (1 DOWN mode ok), and never appeared in IE11 version earlier
+		}; //below, (groups.length == 0) occured 3 times between 2020 05 01 and 2020 04 30 with SEARCH_MODE.down == 1, no pb
 		if (groups.length > 0) { //here we decide, we have at least 1 group equivalent. Normally, if (groups.length == 0) the mode == SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
 			_grid._lockedShapes = [];
 			groups.sort(function(a, b) {return a.jMin - b.jMin;}); //regular sort: lines full disapear
@@ -1789,9 +1790,9 @@ class Score {
 				DURATIONS.softDropPeriod,
 				Math.round(DURATIONS.beginDropPeriod * (1-this._grid._level/RULES.topLevel))
 			));	//changing timerPeriod, approaching _softDropPeriod
-			this._grid._anims.messageAnim.startAnim(
-				(this._grid._level < RULES.topLevel) ? (`Level ${this._grid._level}`) : (`<BR/>MAX<BR/> level ${this._grid._level}`), //fit ES6
-				5); //last arg: higher for smaller text, not to queue, each new one replace previous one
+			this._grid._anims.messageAnim.startAnim({
+				text: (this._grid._level < RULES.topLevel) ? (`Level ${this._grid._level}`) : (`<BR/>MAX<BR/> level ${this._grid._level}`), //fit ES6
+				fieldCharCount: 5 }); //last arg: higher for smaller text, not to queue, each new one replace previous one
 		}
 	}
 	computeScoreDuringDrop(slotTraveledCount, dropType) {
@@ -1808,12 +1809,12 @@ class Score {
 		this._combos++;
 		if (this._combos >= 1) {
 			this._delta += 50 * this._combos;
-			this._grid._anims.messageAnim.startAnim(this._combos+((this._combos<2)?' combo':' x'));
+			this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
 			//$$$sound of coins
 		}
 	}
-	writeScore(text) {
-		this._grid._domNode._childs.scoreZone.setText(text); //here all program write score, just comment for #DEBUG
+	writeScore(scoreText) {
+		this._grid._domNode._childs.scoreZone.setTextIntoSizedField({text: scoreText}); //here all program write score, just comment for #DEBUG
 	}
 }
 //VARIOUS BASIC FUNCTIONS
@@ -2310,13 +2311,12 @@ DomNode.prototype = {
 		table.appendChild(tr);
 		_o.appendChild(table);
 	}},
-	setText: function(text, textCharCountWidth) { with(this) {
-		if (textCharCountWidth)
-			_textCharCountWidth = textCharCountWidth;
-		else
-			_textCharCountWidth = (''+text).length; //to convert if text is a number
-		_text.innerHTML = text; //replace document.createTextNode('')
-		resizeText_(); //
+	setTextIntoSizedField: function(textInfos) { with(this) {
+		_textCharCountWidth = isValued(textInfos.fieldCharCount)
+			? textInfos.fieldCharCount //value >= text.length, example, 3 chars represents 100% of width of this HTML Node
+			: (''+textInfos.text).length; //to convert if text is a number
+		_text.innerHTML = textInfos.text;
+		resizeText_(); //resize field
 	}},
 	resizeText_: function() { with(this) {
 		//_o.style.width = 'auto';
@@ -2375,12 +2375,12 @@ VectorGfx.prototype = {
 //ANIMATION Class, to prepare an animation
 class Animation {
 	constructor(att) {
-		this.startAnimFunc_				= att.startAnimFunc;	//optional function when begin animation, value = null or defined
+		this.startAnimFunc_ = isValued(att.startAnimFunc) ? att.startAnimFunc : false; //optional function when begin animation, value = null or defined
 		this.animateFunc_				= att.animateFunc;		//function to set THE movement to execute
 		this.endAnimFunc_				= att.endAnimFunc;		//function to set the last position after animation
 		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
 		this._duration					= att.animDuration;		//duration of animation
-	this._animOwner = (isValued(att.optionalAnimOwner)) ? att.optionalAnimOwner : this; //because score anim not declared in grid
+		this._animOwner = isValued(att.optionalAnimOwner) ? att.optionalAnimOwner : this; //because score anim not declared in grid
 		this.animOutput;										//public value of f(x), current animation position after timingAnimFunc_, any value possible
 		this._paused;
 		this._animating;
@@ -2412,7 +2412,7 @@ class Animation {
 		this.endAnim();	//return true if killing previous
 		this._animating					= true;
 		//if (this.startAnimFunc_)		this.startAnimFunc_.apply(arguments); //launch optional startAnimFunc_ function, arguments is array
-		if (this.startAnimFunc_) this.startAnimFunc_.apply(this._animOwner, arguments); //launch optional startAnimFunc_ function, arguments is array
+		if (this.startAnimFunc_)		 this.startAnimFunc_.apply(this._animOwner, arguments); //launch optional startAnimFunc_ function, arguments is array
 		this._beginTime					= performance.now();
 		this._plannedFrames				= RULES.fps * this._duration;
 		this.animOutput					= this.timingAnimFunc_( (++this._elapsedFrames) / this._plannedFrames ); //input [0;1] animOutput have any value
@@ -2441,7 +2441,7 @@ class Animation {
 			window.cancelAnimationFrame(this._windowNextFrameId);
 			this.reset_(); //_animating needs to be set to false to consider grid not busy
 			//this.endAnimFunc_();
-			this.endAnimFunc_.call(this._animOwner); //because score anim not declared in grid
+			this.endAnimFunc_.apply(this._animOwner, arguments); //because score anim not declared in grid
 		}
 	}
 }
