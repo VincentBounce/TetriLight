@@ -630,7 +630,7 @@ function Game() { with(this) {
 		if (p != 'grey')
 			_freeColors.putInList(p, p);//to know available colors
 	_anims.moveGridsAnim = new Animation({	//make tetris grid coming and leaving
-		animateFunc: function() { with(this) {
+		animateFunc: function(animOutput) { with(this) {
 			_gridsListAuto.resetNext();
 			let grid;
 			while (grid = _gridsListAuto.next())
