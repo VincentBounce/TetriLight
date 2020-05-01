@@ -202,7 +202,7 @@ const DURATIONS						= {				//tetris durations, periods in ms
 	hardDropDuration				: 200,			//0200 ms, increase for #DEBUG
 	lostMessageDuration				: 3500,			//3500 ms, period to display score
 	softDropPeriod 					: 50,			//0050 ms, if this is max DropDuration
-	initialDropPeriod					: 1100 }; 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+	initialDropPeriod				: 1100 }; 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 const FONTS							= {	scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS						= {
 	landFX: 						{ext:'wav'},
@@ -2356,15 +2356,15 @@ DomNode.prototype = {
 //use nomage: __funcToDoThis (intern)
 //no '_' in String value of arguments
 //for called functions : use one input parameter not object or array (String, Number, Boolean)
-function VectorGfx(funcs) { with(this) {
-	_imagesData = [];													//to work with _imagesData
+function VectorGfx(funcs) {
+	this._imagesData = []; //to work with _imagesData
 	for (let p in funcs) {
 		if (p == '_nocache')
-			_nocache = !!funcs[p];
+			this._nocache = !!funcs[p];
 		else
-			this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p];		//to reproduce sames functions fy: 'fx'
+			this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p]; //to reproduce sames functions fy: 'fx'
 	}
-}}
+}
 VectorGfx.prototype = {
 	draw_							: null,			//context, x, y, args
 	fx								: null,
@@ -2373,21 +2373,21 @@ VectorGfx.prototype = {
 	_width							: null,
 	_height							: null,
 	_nocache						: null,
-	getWidth: function() { with(this) {
-		return GFX[_width];
-	}},
-	getHeight: function() { with(this) {
-		return GFX[_height];
-	}},
-	getImageData: function(sortedArgs) { with(this) {			//return {imageData, xD, yD}, no check if exist
-		return _imagesData[sortedArgs];
-	}},
-	putImageData: function(sortedArgs, imageData) { with(this) {		//no check if already exist
-		_imagesData[sortedArgs] = imageData;
-	}},
-	hasImageData: function(sortedArgs) { with(this) {		//return boolean
-		return !!_imagesData[sortedArgs];
-	}}
+	getWidth: function() {
+		return GFX[this._width];
+	},
+	getHeight: function() {
+		return GFX[this._height];
+	},
+	getImageData: function(sortedArgs) { //return {imageData, xD, yD}, no check if exist
+		return this._imagesData[sortedArgs];
+	},
+	putImageData: function(sortedArgs, imageData) { //no check if already exist
+		this._imagesData[sortedArgs] = imageData;
+	},
+	hasImageData: function(sortedArgs) {		//return boolean
+		return !!this._imagesData[sortedArgs];
+	}
 };
 //"use strict";
 //ANIMATION Class, to prepare an animation
