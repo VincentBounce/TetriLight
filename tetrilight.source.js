@@ -57,6 +57,7 @@ callee function (appelée), calling function (appelante)
 (function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
 => to define a func <> >= operator
 only Object or Array variables can be assigned by references
+myMethod.call(this, arg1, arg2...) == myMethod.apply(this, [arg1, arg2...])
 
 ====================CODE JS ARRAY====================
 queue(fifo) / gridAnimsStackPush(filo)
@@ -263,7 +264,7 @@ function MainMenu() { with(this) { //queue or stack
 		});
 	_domNode._childs.background.drawGfx();
 	_domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
-	_domNode._childs.message1.setText('totototo');
+	//_domNode._childs.message1.setTex('totototo');
 	_domNode._o.addEventListener('click',
 		function(event) {
 			if ((event.offsetX < GFX._pxButtonSize) && (event.offsetY < GFX._pxButtonSize))
@@ -762,8 +763,8 @@ Game.prototype = {
 					count*realIntervalX + (count-1)*GFX._pxFullGridWidth - grid._domNode.getX(),
 					0	];
 			}
-			//old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.beginAnim); //#DEBUG above, $alert(att);
-			_anims.moveGridsAnim.beginAnim();
+			//old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.startAnim); //#DEBUG above, $alert(att);
+			_anims.moveGridsAnim.startAnim();
 			if (att.newGrid)
 				att.newGrid.startGrid();	//enqueue?
 		} else {
@@ -854,7 +855,7 @@ PentominoesBriefMode.prototype = {
 		_pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount);	//*3 for 3 lines cleared, *4 for 4 lines cleared
 		_pentoModeTimer.runTimer();
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
-		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.beginAnim();
+		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.startAnim();
 	}}
 };
 //TETRIS GRID Class
@@ -974,10 +975,10 @@ function Grid(keyboard, colorTxt) { with(this) {
 					._domNode.destroyDomNode();
 			}
 			_lockedShapes = [];
-			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.beginAnim); //we stack _anims.quakeAnim.beginAnim();
+			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.startAnim); //we stack _anims.quakeAnim.startAnim();
 			gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); //we stack AUDIO.audioPlay('landFX');
 			gridAnimsStackPop();
-			//old: _anims.quakeAnim.beginAnim();
+			//old: _anims.quakeAnim.startAnim();
 			//old: gridAnimsStackPop();
 		}},
 		timingAnimFunc: function(x) {
@@ -1023,9 +1024,10 @@ function Grid(keyboard, colorTxt) { with(this) {
 		},
 		animDuration: DURATIONS.rotatingDuration
 	});
+
 	_anims.messageAnim = new Animation({
 		startAnimFunc: function() { with(this) {
-			_domNode._childs.messageZone.setText.apply(_domNode._childs.messageZone, arguments);	//old: this.setText.apply(this, arguments);
+			_domNode._childs.messageZone.setText.apply(_domNode._childs.messageZone, arguments);
 		}},
 		animateFunc: function() { with(this) {
 			//console.log(animOutput);	$alert(animOutput);
@@ -1137,7 +1139,7 @@ Grid.prototype = {
 		_lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
 		if (!_fallingShape.finishSoftDropping(false)); //drop timer stopped without running again
 			_dropTimer.finishTimer(); //drop timer stopped, others to end?
-		_anims.shapeRotateAnim.finishAnim(); //because made by drop period
+		_anims.shapeRotateAnim.endAnim(); //because made by drop period
 		moveShapesInMatrix(_lockedShapes);
 		if (_fallingShape._jVector == 0) { //if played single falling shape
 			_fallingShape.putShapeInRealBlocksNode()
@@ -1146,7 +1148,7 @@ Grid.prototype = {
 			_gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);	//exec countAndClearRows immediately
 		} else { //if locked shapes to drop, have to make animation before next counting
 			gridAnimsStackPush(this, countAndClearRows); //firstly stack countAndClearRows for later
-			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.beginAnim); //secondly exec hard drop anim immediately
+			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.startAnim); //secondly exec hard drop anim immediately
 			//sound played before after hardDrop and before Quake
 		}
 	}},
@@ -1171,7 +1173,7 @@ Grid.prototype = {
 			} else
 				AUDIO.audioPlay('clearFX');
 			_fallingShape = null; //to avoid combo reset scores
-			_anims.clearRowsAnim.beginAnim();
+			_anims.clearRowsAnim.startAnim();
 		} else {
 			_score.displays(); //to refresh score
 			if (_fallingShape)
@@ -1182,7 +1184,7 @@ Grid.prototype = {
 	lose: function() { with(this) {	//lives during _score duration
 		_score.displays();
 		_anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); //empty queues necessary?
-		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.beginAnim, ['You<BR/>lose', 4]);
+		_gridMessagesQueue.execNowOrEnqueue(_anims.messageAnim, _anims.messageAnim.startAnim, ['You<BR/>lose', 4]);
 		_gridMessagesQueue.execNowOrEnqueue(this, afterLost_);
 		//AUDIO.audioStop('musicMusic');
 		_gridState = GRID_STATES.lost;
@@ -1195,7 +1197,7 @@ Grid.prototype = {
 	}},
 	afterLost_: function() { with(this) {
 		GAME._gameEventsQueue.execNowOrEnqueue(this, setVectorLost_);
-		GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.beginAnim);	//prepare move up
+		GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.startAnim);	//prepare move up
 		GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);	//prepare remove
 	}},
 	putBlockInMatrix: function(block) { with(this) { //only put placed block on grid, not testing one, set to block
@@ -1326,7 +1328,7 @@ Shape.prototype = {
 		return this;
 	}},
 	moveFalling: function(iRight, jUp) { with(this) {	//iRight == 0 or jUp == 0, jUp negative to fall
-		_grid._anims.shapeRotateAnim.finishAnim();			//comment/remove this line to continue animating rotation when drop #DEBUG
+		_grid._anims.shapeRotateAnim.endAnim();			//comment/remove this line to continue animating rotation when drop #DEBUG
 		_iPosition += iRight;
 		_jPosition += jUp;
 		removeShapeFromPlaced();
@@ -1417,10 +1419,10 @@ Shape.prototype = {
 	fallingShapeTriesRotate: function() { with(this) { //do rotation if possible, else nothing
 		finishSoftDropping(true); //stopping fall by continuing normal timer
 		if (canShapeRotate()) { //+_pivotsCount before modulo % ?
-			_grid._anims.shapeRotateAnim.finishAnim();
+			_grid._anims.shapeRotateAnim.endAnim();
 			rotateDataInMatrix();
 			drawShape();
-			_grid._anims.shapeRotateAnim.beginAnim();
+			_grid._anims.shapeRotateAnim.startAnim();
 			drawGhostAfterCompute();
 			AUDIO.audioPlay('rotateFX');
 		}
@@ -1596,7 +1598,7 @@ LockedBlocks.prototype = {
 			if (mode == SEARCH_MODE.down) {
 				tryMoveShapesSamejEquals(jEquals);
 				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
-				_grid._anims.shapeHardDropAnim.beginAnim();
+				_grid._anims.shapeHardDropAnim.startAnim();
 			} else { //mode == SEARCH_MODE.up
 				_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
 				for (let p in _grid._lockedShapes)
@@ -1646,7 +1648,7 @@ LockedBlocks.prototype = {
 		}
 	}},
 	put1NewRisingRow: function() { with(this) { //will stack all countandclearrows callee
-		_grid._anims.shapeRotateAnim.finishAnim();
+		_grid._anims.shapeRotateAnim.endAnim();
 		_grid._dropTimer.finishTimer();
 		_grid._softDropTimer.finishTimer();
 		let rowFilledSlots, tempBlock; //prepareNewRisingRowAt_jPos0
@@ -1658,7 +1660,7 @@ LockedBlocks.prototype = {
 			tempBlock = new Block(BLOCK_TYPES.orphan, _grid, slotIndex+1, 0, 'grey'); }); //iPosition=[1-10], jPosition=0 just under game
 		//end of prepareNewRisingRowAt_jPos0
 		chainSearchOrphan(SEARCH_MODE.up); //old: _grid._ghostBlocksNode.hide(); hide before rising, not necessary
-		_grid._anims.rising1RowAnim.beginAnim();
+		_grid._anims.rising1RowAnim.startAnim();
 	}}
 };
 //TETRIS BLOCK Class
@@ -1742,79 +1744,78 @@ Block.prototype = {
 	}
 };
 //TETRIS SCORE Class
-function Score(grid) { with(this) {
-	_grid = grid;
-	_grid._anims.score = new Animation({	//here because it's easier to access to score
-		startAnimFunc: function() { with(this) {
-			_deltaShowed = _delta;
-			_delta = 0;
-		}},
-		animateFunc: function() { with(this) {
-			writeScore(Math.ceil(_scoreShowed + animOutput*_deltaShowed));
-		}},
-		endAnimFunc: function() { with(this) {
-			writeScore(_scoreShowed += _deltaShowed);
-		}},
-		timingAnimFunc: function(x) {
-			return -(x-2*Math.sqrt(x));
-		},
-		animDuration: DURATIONS.displayingScoreDuration,
-	});
-	writeScore(_scoreShowed);
-}}
-Score.prototype = {
-	_grid								: null,
-	_combos								: -1,
-	_score								: 0,											//public real score
-	_scoreShowed						: 0,
-	_delta								: 0,
-	_deltaShowed						: null,
-	_factor								: [1, 2.5, 2.5*3, 2.5*3*4, 2.5*3*4*6],			//1 unique instance : 40 points for 4 block and 1 row, 100 for 2 rows
-	_previousAnimDelta					: 0,
-	_level								: 1,											//for later
-	displays: function() { with(this) {
-		if (_delta) {						//if delta changed != 0
-			_grid._anims.score.finishAnim();	//need to end before setting variables
-			_scoreShowed = _score;
-			_score += _delta;
-			_grid._anims.score.beginAnim();
+class Score {
+	constructor(grid) {
+		this._grid = grid;
+		this._combos = -1;
+		this._score = 0; //public real score
+		this._scoreShowed = 0;
+		this._delta = 0;
+		this._deltaShowed;
+		this._factors = [1, 2.5, 2.5*3, 2.5*3*4, 2.5*3*4*6]; //1 unique instance : 40 points for 4 block and 1 row, 100 for 2 rows
+		this._previousAnimDelta	= 0;
+		this._level = 1; //for later
+		this._grid._anims.score = new Animation({ //anim here because it's easier to access to score properties
+			startAnimFunc: function() {
+				this._deltaShowed = this._delta;
+				this._delta = 0;
+			},
+			animateFunc: function(animOutput) {
+				this.writeScore(Math.ceil(this._scoreShowed + animOutput*this._deltaShowed));
+			},
+			endAnimFunc: function() {
+				this.writeScore(this._scoreShowed += this._deltaShowed);
+			},
+			timingAnimFunc: function(x) {
+				return -(x-2*Math.sqrt(x));
+			},
+			animDuration: DURATIONS.displayingScoreDuration,
+			optionalAnimOwner: this //because score anim not declared in grid
+		});
+		this.writeScore(this._scoreShowed);
+	}
+	displays() {
+		if (this._delta) {						//if delta changed != 0
+			this._grid._anims.score.endAnim();	//need to end before setting variables
+			this._scoreShowed = this._score;
+			this._score += this._delta;
+			this._grid._anims.score.startAnim();
 		}
-		if ((Math.floor(_score/RULES.levelStepScoreCount) > _grid._level)	//check if bug when display message and lost $$$
-			&& (_grid._level < RULES.topLevel)) {	//if not top level ; small scores like fall are not displayed. step:1000 ; max:20000
-			_grid._level++;	//increasing level
+		if ((Math.floor(this._score/RULES.levelStepScoreCount) > this._grid._level)	//check if bug when display message and lost $$$
+			&& (this._grid._level < RULES.topLevel)) {	//if not top level ; small scores like fall are not displayed. step:1000 ; max:20000
+				this._grid._level++;	//increasing level
 			//sound new level! $$$
-			_grid._dropTimer.setPeriod(Math.max(
+			this._grid._dropTimer.setPeriod(Math.max(
 				DURATIONS.softDropPeriod,
-				Math.round(DURATIONS.beginDropPeriod * (1-_grid._level/RULES.topLevel))
+				Math.round(DURATIONS.beginDropPeriod * (1-this._grid._level/RULES.topLevel))
 			));	//changing timerPeriod, approaching _softDropPeriod
-			_grid._anims.messageAnim.beginAnim(
-				//(_grid._level < RULES.topLevel) ? (`Level ${_grid._level}`) : (`<BR/>MAX<BR/> level ${_grid._level}`), //fit ES6
-				((_grid._level < RULES.topLevel) ? 'Level ' : '<BR/>MAX<BR/> level ') + _grid._level, //fit ES5
+			this._grid._anims.messageAnim.startAnim(
+				(this._grid._level < RULES.topLevel) ? (`Level ${this._grid._level}`) : (`<BR/>MAX<BR/> level ${this._grid._level}`), //fit ES6
 				5); //last arg: higher for smaller text, not to queue, each new one replace previous one
 		}
-	}},
-	computeScoreDuringDrop: function(slotTraveledCount, dropType) { with(this) {
-		_delta += dropType * slotTraveledCount;
-	}},
-	computeScoreForSweptRowsAndDisplay: function(sweptRowsCount) { with(this) {
-		_delta += 40 * _factor[sweptRowsCount-1] * _level;
-		displays();
-	}},
-	combosReset: function() { with(this) {
-		_combos = -1;
-	}},
-	combosCompute: function() { with(this) {
-		_combos ++;
-		if (_combos >= 1) {
-			_delta += 50 * _combos;
-			_grid._anims.messageAnim.beginAnim(_combos+((_combos<2)?' combo':' x'));
+	}
+	computeScoreDuringDrop(slotTraveledCount, dropType) {
+		this._delta += dropType * slotTraveledCount;
+	}
+	computeScoreForSweptRowsAndDisplay(sweptRowsCount) {
+		this._delta += 40 * this._factors[sweptRowsCount-1] * this._level;
+		this.displays();
+	}
+	combosReset() {
+		this._combos = -1;
+	}
+	combosCompute() {
+		this._combos++;
+		if (this._combos >= 1) {
+			this._delta += 50 * this._combos;
+			this._grid._anims.messageAnim.startAnim(this._combos+((this._combos<2)?' combo':' x'));
 			//$$$sound of coins
 		}
-	}},
-	writeScore: function(txt) { with(this) {
-		_grid._domNode._childs.scoreZone.setText(txt); //here all program write score, just comment for #DEBUG
-	}}
-};
+	}
+	writeScore(text) {
+		this._grid._domNode._childs.scoreZone.setText(text); //here all program write score, just comment for #DEBUG
+	}
+}
 //VARIOUS BASIC FUNCTIONS
 function isValued(item) { //requires declared and defined not to null
 	return (isDeclaredAndDefined(item) && (item != null));
@@ -1919,9 +1920,7 @@ ListAutoIndex.prototype = {
 		if (_nextCount < _listSize) {
 			_nextCount++;
 			_seek++;
-			console.log(listAutoTable);
 			while (!isDeclaredAndDefined(listAutoTable[_seek]))
-			//while (  listAutoTable[_seek] !== void 0);
 				_seek++;
 			return listAutoTable[_seek];
 		} else
@@ -1977,7 +1976,7 @@ class Timer {
 	setPeriod(timerPeriod) { //timer can be changed when running
 		this._timerPeriod = timerPeriod;
 	}
-};
+}
 //EVENTS QUEUE Class
 function EventsQueue() { with(this) {
 	_funcsQueue = [];
@@ -2315,9 +2314,9 @@ DomNode.prototype = {
 		if (textCharCountWidth)
 			_textCharCountWidth = textCharCountWidth;
 		else
-			_textCharCountWidth = (''+text).length;
+			_textCharCountWidth = (''+text).length; //to convert if text is a number
 		_text.innerHTML = text; //replace document.createTextNode('')
-		resizeText_();
+		resizeText_(); //
 	}},
 	resizeText_: function() { with(this) {
 		//_o.style.width = 'auto';
@@ -2372,15 +2371,16 @@ VectorGfx.prototype = {
 		return !!_imagesData[sortedArgs];
 	}}
 };
-"use strict";
+//"use strict";
 //ANIMATION Class, to prepare an animation
 class Animation {
 	constructor(att) {
 		this.startAnimFunc_				= att.startAnimFunc;	//optional function when begin animation, value = null or defined
 		this.animateFunc_				= att.animateFunc;		//function to set THE movement to execute
 		this.endAnimFunc_				= att.endAnimFunc;		//function to set the last position after animation
-		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput!
+		this.timingAnimFunc_			= att.timingAnimFunc;	//f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
 		this._duration					= att.animDuration;		//duration of animation
+	this._animOwner = (isValued(att.optionalAnimOwner)) ? att.optionalAnimOwner : this; //because score anim not declared in grid
 		this.animOutput;										//public value of f(x), current animation position after timingAnimFunc_, any value possible
 		this._paused;
 		this._animating;
@@ -2397,20 +2397,22 @@ class Animation {
 		this._elapsedFrames				= 0;
 	}
 	makeNextFrame_() {
-		this.animateFunc_(); //draw frame on display, as defined in the instance of Animation
+		this.animateFunc_.call(this._animOwner, this.animOutput); //because score anim not declared in grid
+		//this.animateFunc_(); //draw frame on display, as defined in the instance of Animation
 		if ( (++this._elapsedFrames) < this._plannedFrames) {
 			this.animOutput					= this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); //input [0;1] animOutput have any value
 			this._windowNextFrameId			= window.requestAnimationFrame(()=>{ this.makeNextFrame_(); }); //new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
 		} else
-			this.finishAnim();
+			this.endAnim();
 	}
 	isAnimating() {
 		return this._animating;
 	}
-	beginAnim() { //start animation, optional arguments are stocked in the 'arguments' array, return true if kill previous same anim
-		this.finishAnim();	//return true if killing previous
+	startAnim() { //start animation, optional arguments are stocked in the 'arguments' array, return true if kill previous same anim
+		this.endAnim();	//return true if killing previous
 		this._animating					= true;
-		if (this.startAnimFunc_)		this.startAnimFunc_.apply(this, arguments); //launch startAnimFunc_ function, arguments is array
+		//if (this.startAnimFunc_)		this.startAnimFunc_.apply(arguments); //launch optional startAnimFunc_ function, arguments is array
+		if (this.startAnimFunc_) this.startAnimFunc_.apply(this._animOwner, arguments); //launch optional startAnimFunc_ function, arguments is array
 		this._beginTime					= performance.now();
 		this._plannedFrames				= RULES.fps * this._duration;
 		this.animOutput					= this.timingAnimFunc_( (++this._elapsedFrames) / this._plannedFrames ); //input [0;1] animOutput have any value
@@ -2434,11 +2436,12 @@ class Animation {
 		if (this._animating) 			return false;
 		else							{ this._duration = duration; return true; }
 	}
-	finishAnim() { //return true if killing previous
+	endAnim() { //return true if killing previous
 		if (this._animating) {
 			window.cancelAnimationFrame(this._windowNextFrameId);
 			this.reset_(); //_animating needs to be set to false to consider grid not busy
-			this.endAnimFunc_();
+			//this.endAnimFunc_();
+			this.endAnimFunc_.call(this._animOwner); //because score anim not declared in grid
 		}
 	}
-};
+}
