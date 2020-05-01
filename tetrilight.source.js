@@ -1161,8 +1161,8 @@ Grid.prototype = {
 		}
 	}},
 	moveShapesInMatrix: function(myShapes) { with(this) { //move locked shapes to drop (after clearing rows) into matrix
-		myShapes.forEach((myShape)=>{ myShape.removeShapeFromPlaced(); }) //move to a tested place
-		myShapes.forEach((myShape)=>{ myShape.moveAndPutShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
+		myShapes.forEach( (myShape)=>{ myShape.removeShapeFromPlaced(); }) //move to a tested place
+		myShapes.forEach( (myShape)=>{ myShape.moveAndPutShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) //move to placed on grid
 	}},
 	countAndClearRows: function() { with(this) { //locks block and computes rows to transfer and _scores
 		//old: AUDIO.audioPlay('landFX');
@@ -1309,26 +1309,25 @@ Shape.prototype = {
 		return this;
 	},
 	putShapeInRealBlocksNode: function() {
-		this._shapeBlocks.forEach((myBlock)=>{ myBlock.putBlockInRealBlocksNode(); });
+		this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockInRealBlocksNode(); });
 		return this;
 	},
 	putShapeNodeIn: function() {
-		this._shapeBlocks.forEach((myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this);
+		this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); //this == Shape context necessary fot this._domNode
 		return this;
 	},
 	drawShape: function() { //show hidden shapes
-		this._shapeBlocks.forEach((myBlock)=>{ myBlock.drawBlock(); });//this._shapeBlocks.forEach(Block.prototype.drawBlock); //KO, how to apply drawBlock on each block?
+		this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlock(); });
 		return this;
 	},
 	drawGhostAfterCompute: function() {
 		if (this._ghostBlocks) {
-			this._jVector = this.getjVectorUnderShape();						//if not not placed so deleted so ghost deleted
-			//this._shapeBlocks.forEach(function(myBlock, b) { //this = Window, Windows context here
-			for (let b=0;b < this._shapeBlocks.length;b++) {
+			this._jVector = this.getjVectorUnderShape(); //if not not placed so deleted so ghost deleted
+			this._shapeBlocks.forEach(function(myBlock, b) {
 				this._ghostBlocks[b]._iPosition = this._shapeBlocks[b]._iPosition;
 				this._ghostBlocks[b]._jPosition = this._shapeBlocks[b]._jPosition + this._jVector;
 				this._ghostBlocks[b].drawBlock();
-			}
+			}, this) //this = Window context by default, puting this here makes this == Shape
 		}
 		return this;
 	},
@@ -1360,12 +1359,13 @@ Shape.prototype = {
 		return this;
 	},
 	moveAndPutShapeToPlaced: function(iRight, jUp, dropType=false) { //move to placed
-		this._shapeBlocks.forEach(function(myBlock){
-			myBlock._iPosition += iRight; //updating position
-			myBlock._jPosition += jUp; //updating position //after 'without this' change, this is Windows object here
-	        myBlock._grid.putBlockInMatrix(myBlock); //put to new slot
-			myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock); //put block with new position
-		});
+		this._shapeBlocks.forEach(
+			(myBlock)=>{
+				myBlock._iPosition += iRight; //updating position
+				myBlock._jPosition += jUp; //updating position //after 'without this' change, this is Windows object here
+				myBlock._grid.putBlockInMatrix(myBlock); //put to new slot
+				myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock); //put block with new position
+			});
 		if (dropType && (jUp < 0))
 			this._grid._score.computeScoreDuringDrop(-jUp, dropType); //function receive slots count traveled, and dropType
 		return this;
@@ -1459,7 +1459,7 @@ Shape.prototype = {
 		return this;
 	},
 	shapeSwitchFromTestToPlaced: function(fromTestToPlaced) {
-		this._shapeBlocks.forEach(function(myBlock){ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); })  //only called here
+		this._shapeBlocks.forEach( (myBlock)=>{ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); })  //only called here
 		return this;
 	},
 	beginSoftDropping: function(force) {		//full falling, called by keydown, call falling()
@@ -1664,7 +1664,7 @@ LockedBlocks.prototype = {
 		rowFilledSlots = new Array(RULES.horizontalBoxesCount).fill(true); //we fill all table with any value, 10 slots
 		for (let c=0 ; c < risingRowsHolesCountMax ; c++) //we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
 			delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalBoxesCount)]; //random() returns number between 0 (inclusive) and 1 (exclusive)
-		rowFilledSlots.forEach( function(tmpSlot, slotIndex){ //we skip delete rowFilledSlots
+		rowFilledSlots.forEach( (uselessArg, slotIndex)=>{ //we skip delete rowFilledSlots
 			tempBlock = new Block(BLOCK_TYPES.orphan, _grid, slotIndex+1, 0, 'grey'); }); //iPosition=[1-10], jPosition=0 just under game
 		//end of prepareNewRisingRowAt_jPos0
 		chainSearchOrphan(SEARCH_MODE.up); //old: _grid._ghostBlocksNode.hide(); hide before rising, not necessary
