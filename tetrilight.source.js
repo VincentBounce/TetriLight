@@ -7,6 +7,11 @@ Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
 Fit ECMAScript 6 (2015) + HTML5 Canvas
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
 
+====================VOCABULARY====================
+to sweep = to clear
+a row = a line
+a cell = a slot
+
 ====================GAME RULES====================
 Click upper left corner to start 1 game more #DEBUG
 When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
@@ -14,6 +19,7 @@ and others players have 5 blocks per shape, during 15 or 20 seconds (it's called
 When a player clears 2 or more (RULES.transferRowsCountMin) lines together, then he drops same quantity of bad grey lines to others players.
 Game is lost when new shape can't be placed (!_fallingShape.canMoveToPlaced).
 High hard drops + cleared rows + combos >> increase score >> increase level >> increase drop speed //$$$$$
+Game starts at level 0. Level increments 1 every 10 rows.
 
 ====================MINOR BUGS====================
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
@@ -28,7 +34,7 @@ $$$ pause doesn't pause coming grid movements
 ====================CHANGES FROM ECMAScript 5 (2009)====================
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
-	(`Level ${_grid._level}`)
+	(`Level ${this._level}`)
 	var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
 	cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
 	func(arg=false)
@@ -179,7 +185,6 @@ const RULES 						= {				//tetris rules
 	horizontalBoxesCount			: 5,			//default 10, min 5 #DEBUG
 	verticalBoxesCount				: 21, 			//default 21 = (20 visible + 1 hidden) #DEBUG
 	topLevel						: 25,			//default 25, max level (steps of drop acceleration)
-	levelStepScoreCount				: 300,			//default 1000 pts, score count before next level, decrease for #DEBUG
 	risingRowsHolesCountMaxRatio	: 0.3,			//default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
 	fps								: 60/1000 };	//default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
 const DURATIONS						= {				//tetris durations, periods in ms
@@ -194,7 +199,7 @@ const DURATIONS						= {				//tetris durations, periods in ms
 	hardDropDuration				: 200,			//0200 ms, increase for #DEBUG
 	lostMessageDuration				: 3500,			//3500 ms, period to display score
 	softDropPeriod 					: 50,			//0050 ms, if this is max DropDuration
-	beginDropPeriod					: 1100 }; 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+	initialDropPeriod					: 1100 }; 		//0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 const FONTS							= {	scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS						= {
 	landFX: 						{ext:'wav'},
@@ -209,7 +214,7 @@ const GAME_STATES					= {paused: 1, running: 2, waiting: 3};
 const GRID_STATES					= {connected: 1, playing: 2, lost: 3}; //connected but not started
 const BLOCK_TYPES					= {ghost: 1, inShape: 2, orphan: 3};
 const SEARCH_MODE					= {down: 1, up: 2};
-const DROP_TYPES					= {soft: 1, hard: 2}; //harddrop: double score
+const DROP_TYPES					= {soft: 1, hard: 2}; //1 and 2 are usefull for score: hard drop is double points
 
 //INIT called by HTML browser
 function init() {
@@ -877,7 +882,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 	}
 	_dropTimer = new Timer( function() {with(this) {
 		_fallingShape.fallingShapeTriesMove(0,-1); }},
-		DURATIONS.beginDropPeriod );
+		DURATIONS.initialDropPeriod );
 	_softDropTimer = new Timer( function() {with(this) {
 		_fallingShape.softDropping(); }},
 		DURATIONS.softDropPeriod );
@@ -1059,7 +1064,6 @@ Grid.prototype = {
 	_nextShape						: null,			//next shape about to be place
 	_nextShapePreview				: null,			//preview on top of grid
 	_score							: null,
-	_level							: 1,
 	_dropTimer						: null,
 	_softDropTimer					: null, 		//animation
 	_softDropping					: false,		//animation
@@ -1744,7 +1748,7 @@ Block.prototype = {
 		myParentNode.putChild(this._domNode);
 	}
 };
-//TETRIS SCORE Class
+//TETRIS SCORE Class, based on riginal Nintendo scoring system
 class Score {
 	constructor(grid) {
 		this._grid = grid;
@@ -1753,9 +1757,10 @@ class Score {
 		this._scoreShowed = 0;
 		this._delta = 0;
 		this._deltaShowed;
-		this._factors = [1, 2.5, 2.5*3, 2.5*3*4, 2.5*3*4*6]; //1 unique instance : 40 points for 4 block and 1 row, 100 for 2 rows
+		this._factors = [null, 40, 100, 300, 1200, 6600]; //a single line clear is worth 400 points at level 0, clearing 4 lines at once (known as a Tetris) is worth 1200, max 5 lines with pento mode
 		this._previousAnimDelta	= 0;
-		this._level = 1; //for later
+		this._totalSweptRows = 0;
+		this._level = 0;
 		this._grid._anims.score = new Animation({ //anim here because it's easier to access to score properties
 			startAnimFunc: function() {
 				this._deltaShowed = this._delta;
@@ -1782,25 +1787,32 @@ class Score {
 			this._score += this._delta;
 			this._grid._anims.score.startAnim();
 		}
-		if ((Math.floor(this._score/RULES.levelStepScoreCount) > this._grid._level)	//check if bug when display message and lost $$$
-			&& (this._grid._level < RULES.topLevel)) {	//if not top level ; small scores like fall are not displayed. step:1000 ; max:20000
-				this._grid._level++;	//increasing level
-			//sound new level! $$$
-			this._grid._dropTimer.setPeriod(Math.max(
-				DURATIONS.softDropPeriod,
-				Math.round(DURATIONS.beginDropPeriod * (1-this._grid._level/RULES.topLevel))
-			));	//changing timerPeriod, approaching _softDropPeriod
+	}
+	computeLevel_(sweptRowsCount) {
+		this._totalSweptRows += sweptRowsCount;
+		let newLevel = Math.min(Math.floor(this._totalSweptRows/10), RULES.topLevel);
+		if (this._level < newLevel) {
+			this._level = newLevel;
+			this._grid._dropTimer.setPeriod(
+				DURATIONS.softDropPeriod
+				+ (DURATIONS.initialDropPeriod - DURATIONS.softDropPeriod)
+				* (1 - this._level/RULES.topLevel ) ); //changing timerPeriod, approaching DURATIONS.softDropPeriod
 			this._grid._anims.messageAnim.startAnim({
-				text: (this._grid._level < RULES.topLevel) ? (`Level ${this._grid._level}`) : (`<BR/>MAX<BR/> level ${this._grid._level}`), //fit ES6
+				text: (this._level < RULES.topLevel) ? (`Level ${this._level}`) : (`<BR/>TOP<BR/> level ${this._level}`), //fit ES6
 				fieldCharCount: 5 }); //last arg: higher for smaller text, not to queue, each new one replace previous one
 		}
 	}
-	computeScoreDuringDrop(slotTraveledCount, dropType) {
-		this._delta += dropType * slotTraveledCount;
+	computeScoreDuringDrop(cellsTraveledCount, dropType) {
+		this._delta += dropType * cellsTraveledCount;
 	}
 	computeScoreForSweptRowsAndDisplay(sweptRowsCount) {
-		this._delta += 40 * this._factors[sweptRowsCount-1] * this._level;
+		if (this._grid._lockedBlocks._blocksCount == sweptRowsCount * RULES.horizontalBoxesCount) { //means same cleared blocks qty than grid currently had
+			this._grid._anims.messageAnim.startAnim({text: 'Perfect<BR/>clear'});
+			this._delta += this._factors[2] * (this._level+1);
+		}
+		this._delta += this._factors[sweptRowsCount] * (this._level+1);
 		this.displays();
+		this.computeLevel_(sweptRowsCount);
 	}
 	combosReset() {
 		this._combos = -1;
@@ -1808,7 +1820,7 @@ class Score {
 	combosCompute() {
 		this._combos++;
 		if (this._combos >= 1) {
-			this._delta += 50 * this._combos;
+			this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; //50% of lines swept together
 			this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
 			//$$$sound of coins
 		}
