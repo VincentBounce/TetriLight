@@ -2351,45 +2351,43 @@ DomNode.prototype = {
 		_o.style.visibility = 'inherit';
 	}}
 };
+"use strict";
 //VECTOR GFX Class, manage graphic layout
 //functions : x y fx fy gfx _nocache reserved; 1 input
 //use nomage: __funcToDoThis (intern)
 //no '_' in String value of arguments
-//for called functions : use one input parameter not object or array (String, Number, Boolean)
-function VectorGfx(funcs) {
-	this._imagesData = []; //to work with _imagesData
-	for (let p in funcs) {
-		if (p == '_nocache')
-			this._nocache = !!funcs[p];
-		else
-			this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p]; //to reproduce sames functions fy: 'fx'
+//for called functions: use one input parameter not object nor array (String, Number, Boolean)
+class VectorGfx {
+	constructor(funcs) {
+		this.draw_; //context, x, y, args
+		this.fx;
+		this.fy;
+		this._imagesData = []; //to work with _imagesData
+		this._width;
+		this._height;
+		this._nocache;
+		for (let p in funcs)
+			if (p == '_nocache')
+				this._nocache = !!funcs[p];
+			else
+				this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p]; //to reproduce sames functions fy: 'fx'
 	}
-}
-VectorGfx.prototype = {
-	draw_							: null,			//context, x, y, args
-	fx								: null,
-	fy								: null,
-	_imagesData						: null,
-	_width							: null,
-	_height							: null,
-	_nocache						: null,
-	getWidth: function() {
+	getWidth() {
 		return GFX[this._width];
-	},
-	getHeight: function() {
+	}
+	getHeight() {
 		return GFX[this._height];
-	},
-	getImageData: function(sortedArgs) { //return {imageData, xD, yD}, no check if exist
+	}
+	getImageData(sortedArgs) { //return {imageData, xD, yD}, no check if exist
 		return this._imagesData[sortedArgs];
-	},
-	putImageData: function(sortedArgs, imageData) { //no check if already exist
+	}
+	putImageData(sortedArgs, imageData) { //no check if already exist
 		this._imagesData[sortedArgs] = imageData;
-	},
-	hasImageData: function(sortedArgs) {		//return boolean
+	}
+	hasImageData(sortedArgs) { //return boolean
 		return !!this._imagesData[sortedArgs];
 	}
-};
-//"use strict";
+}
 //ANIMATION Class, to prepare an animation
 class Animation {
 	constructor(att) {
