@@ -1950,10 +1950,10 @@ ListAutoIndex.prototype = {
 //TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
 class Timer {
 	constructor(func, timerPeriod) {	//args never used here, so removed
-		this._funcAtTimeOut			= func;
-		this._timerPeriod			= timerPeriod;	//_args = args;
-		this._paused 				= false;
-		this._running				= false;
+		this._funcAtTimeOut		= func;
+		this._timerPeriod		= timerPeriod;
+		this._paused 			= false;
+		this._running			= false;
 		this._beginTime;
 		this._pauseTime;
 		this._funcAtTimeOut;
@@ -1998,29 +1998,29 @@ class Timer {
 	}
 }
 //EVENTS QUEUE Class
-function EventsQueue() { with(this) {
-	_funcsQueue = [];
-}}
+function EventsQueue() {
+	this._funcsQueue = [];
+}
 EventsQueue.prototype = {
 	_funcsQueue				: null,
 	_oCond					: null,
 	_busy					: false,
-	execNowOrEnqueue: function(o, func, argsArray) { with(this) {	//exec o.func(argsArray) or enqueue if busy
-		if (_busy)				//can't use arguments from the function, because in the call, func is just a pointer without ()
-			_funcsQueue.push([o, func, argsArray]);
+	execNowOrEnqueue: function(o, func, argsArray) { //exec o.func(argsArray) or enqueue if busy
+		if (this._busy)				//can't use arguments from the function, because in the call, func is just a pointer without ()
+		this._funcsQueue.push([o, func, argsArray]);
 		else {
-			_busy = true;				//#DEBUG before
-			func.apply(o, argsArray);	//#DEBUG after, apply() works because argsArray is [], if 1 arg it's call() instead
+			this._busy = true; //#DEBUG before
+			func.apply(o, argsArray); //#DEBUG after, apply() works because argsArray is [], if 1 arg it's call() instead
 		}
-	}},
-	dequeue: function() { with(this) {
-		_busy = false;
-		while (!_busy && _funcsQueue.length) {	//dequeue only when not busy
-			let first = _funcsQueue.shift();
-			_busy = true;
+	},
+	dequeue: function() {
+		this._busy = false;
+		while (!this._busy && this._funcsQueue.length) {	//dequeue only when not busy
+			let first = this._funcsQueue.shift();
+			this._busy = true;
 			first[1].apply(first[0], first[2]);
 		}
-	}},
+	},
 };
 //Graphic function, convert a [RGB] array + alpha value to text
 function rgbaTxt(color, alpha) {
