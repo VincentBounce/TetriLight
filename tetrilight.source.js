@@ -1673,58 +1673,56 @@ LockedBlocks.prototype = {
 	}}
 };
 //TETRIS BLOCK Class
-function Block(blockType, belongToShapeOrGrid, i, j, blockColorTxt)  {
-	this._blockType						= blockType;
-	this._iPosition						= i;
-	this._jPosition						= j;
-	this.createNode();
-	this.setColor(blockColorTxt);
-	switch (this._blockType) {
-		case BLOCK_TYPES.ghost: //ghost shape for display only, no block index
-			this._grid = belongToShapeOrGrid;
-			this.putBlockNodeIn(this._grid._ghostBlocksNode);
-			this._domNode.set({opacity: GFX._ghostShapeOpacity});
-			break;
-		case BLOCK_TYPES.inShape: //falling ghape
-			this._shape = belongToShapeOrGrid;
-			this._grid = this._shape._grid;
-			this.putBlockNodeIn(this._shape._domNode);
-			this._blockIndex = GAME._newBlockId++;
-			break;
-		case BLOCK_TYPES.orphan: //rising row coming from level j=0
-			this._grid  = belongToShapeOrGrid;
-			this.putBlockInRealBlocksNode();
-			this._blockIndex = GAME._newBlockId++;
-			this._grid.putBlockInMatrix(this);
-			this._grid._lockedBlocks.putBlockInLockedBlocks(this);
-			this.drawBlock();
-			break;
-		default: console.log(this) //bug if this case occurs #DEBUG
+class Block {
+	constructor(blockType, shapeOrGridOwnerOfThisBlock, i, j, blockColorTxt) {
+		this._blockType = blockType;
+		this._iPosition	= i;
+		this._jPosition	= j;
+		this._grid; //undefined or null, overwise object not exist
+		this._shape;
+		this._domNode;
+		this._colorTxt;
+		this._color;
+		this._blockIndex;
+		this.createNode();
+		this.setColor(blockColorTxt);
+		switch (this._blockType) {
+			case BLOCK_TYPES.ghost: //ghost shape for display only, no block index
+				this._grid = shapeOrGridOwnerOfThisBlock;
+				this.putBlockNodeIn(this._grid._ghostBlocksNode);
+				this._domNode.set({opacity: GFX._ghostShapeOpacity});
+				break;
+			case BLOCK_TYPES.inShape: //falling ghape
+				this._shape = shapeOrGridOwnerOfThisBlock;
+				this._grid = this._shape._grid;
+				this.putBlockNodeIn(this._shape._domNode);
+				this._blockIndex = GAME._newBlockId++;
+				break;
+			case BLOCK_TYPES.orphan: //rising row coming from level j=0
+				this._grid  = shapeOrGridOwnerOfThisBlock;
+				this.putBlockInRealBlocksNode();
+				this._blockIndex = GAME._newBlockId++;
+				this._grid.putBlockInMatrix(this);
+				this._grid._lockedBlocks.putBlockInLockedBlocks(this);
+				this.drawBlock();
+				break;
+			default: console.log(this) //bug if this case occurs #DEBUG
+		}
 	}
-}
-Block.prototype = {
-	_grid							: null,		//undefined or null, overwise object not exist
-	_shape							: null,
-	_iPosition						: null,
-	_jPosition						: null,
-	_domNode						: null,
-	_colorTxt						: null,
-	_color							: null,
-	_blockIndex						: null,		//block index
-	destroyBlock: function()  {		//destructor, remove block anywhere
+	destroyBlock() {		//destructor, remove block anywhere
 		this._domNode.destroyDomNode();
 		this._grid.removeBlockFromMatrix(this);
 		this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
-	},
-	createNode: function()  {
+	}
+	createNode() {
 		this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx: GFX._gfxBlock});
-	},
-	setColor: function(colorTxt)  {
+	}
+	setColor(colorTxt)  {
 		this._colorTxt = colorTxt;
 		this._color = GFX._colors[this.colorTxt];
 		this._domNode.drawGfx({col: this._colorTxt});
-	},
-	isFreeSlot: function(i, j)  { //can move on placed grid, put this into grid
+	}
+	isFreeSlot(i, j)  { //can move on placed grid, put this into grid
 		return (
 			( (j >= 1) || (j >= this._jPosition) ) //j==0 is floor level, _jPosition useless$$$$$$$, same bug
 			//   (j >= 1) //j=0 is floor level
@@ -1732,11 +1730,11 @@ Block.prototype = {
 			&& (i <=RULES.horizontalBoxesCount) //i==11 is right wall
 			&& (this._grid._matrix[i][j] == null) //_matrix[i][j]==null means free
 		);
-	},
-	drawBlock: function() { //here you can hide top block outside grid
+	}
+	drawBlock() { //here you can hide top block outside grid
 		this._domNode.moveToStep(this._iPosition, this._jPosition);
-	},
-	blockSwitchFromTestToPlaced: function(fromTestToPlaced)  { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
+	}
+	blockSwitchFromTestToPlaced(fromTestToPlaced)  { //called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
 		if (fromTestToPlaced) {
 			this._grid.putBlockInMatrix(this);
 			this._grid._lockedBlocks.putBlockInLockedBlocks(this)
@@ -1744,11 +1742,11 @@ Block.prototype = {
 			this._grid.removeBlockFromMatrix(this);
 			this._grid._lockedBlocks.removeBlockFromLockedBlocks(this)
 		}
-	},
-	putBlockInRealBlocksNode: function() {
+	}
+	putBlockInRealBlocksNode() {
 		this._grid._realBlocksNode.putChild(this._domNode);
-	},
-	putBlockNodeIn: function(myParentNode) {
+	}
+	putBlockNodeIn(myParentNode) {
 		myParentNode.putChild(this._domNode);
 	}
 };
