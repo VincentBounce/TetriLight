@@ -33,6 +33,8 @@ $$$ ListAutoIndex called 1x, useless?
 $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
+!= became !==, 10min tested: stable
+
 
  **************** CHANGES FROM ECMAScript 5 (2009) ****************
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
@@ -251,7 +253,7 @@ function MainMenu() { with(this) { // queue or stack
                 grid._fallingShape.fallingShapeTriesMove(1,0);
         },
         pauseOrResume: function() {
-            if (GAME._gameState != GAME_STATES.waiting)
+            if (GAME._gameState !== GAME_STATES.waiting)
                 GAME.pauseOrResume();
         }
     };// init below
@@ -291,7 +293,7 @@ MainMenu.prototype = {
         MAIN_MENU.cancelEvent_(event);
         switch (event.keyCode) {
             case 'P'.charCodeAt(0):
-                if ((GAME._gameState != GAME_STATES.waiting) && (event.type=='keydown'))
+                if ((GAME._gameState !== GAME_STATES.waiting) && (event.type=='keydown'))
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
@@ -627,7 +629,7 @@ function Game() { with(this) {
     }
     _freeColors = new List();
     for (let p in GFX._colors)
-        if (p != 'grey')
+        if (p !== 'grey')
             _freeColors.putInList(p, p);// to know available colors
     _anims.moveGridsAnim = new Animation({    // make tetris grid coming and leaving
         animateFunc: function(animOutput) { with(this) {
@@ -810,7 +812,7 @@ Game.prototype = {
     transferRows: function(from, count) { with(this) {    // from grid
         let toGrid = [];
         for (let p in _gridsListAuto.listAutoTable)
-            if ( (_gridsListAuto.listAutoTable[p] != from) && (_gridsListAuto.listAutoTable[p]._gridState == GRID_STATES.playing) )
+            if ( (_gridsListAuto.listAutoTable[p] !== from) && (_gridsListAuto.listAutoTable[p]._gridState == GRID_STATES.playing) )
                 toGrid.push(_gridsListAuto.listAutoTable[p]);
         if (toGrid.length)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
@@ -855,7 +857,7 @@ class PentominoesBriefMode {
         GAME._gridsListAuto.runForEachListElement(
             (myGrid)=>{ // here, argument is used
                 if (myGrid._gridState == GRID_STATES.playing) {
-                    myGrid._playedPolyominoesType = (myGrid != gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
+                    myGrid._playedPolyominoesType = (myGrid !== gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
                     myGrid._nextShape = new Shape(myGrid); // previous falling shape is garbage collected
                     myGrid._nextShapePreview.mark(myGrid._nextShape);
@@ -1084,13 +1086,13 @@ Grid.prototype = {
     _rowsToClearList                : null,            // arrays to prepare rows to clear to anim when animating clearing rows
     _vector                            : null,
     destroyGrid: function() { with(this) {
-        if (GAME._gameState != GAME_STATES.paused)
+        if (GAME._gameState !== GAME_STATES.paused)
             pauseOrResume();                        // to stop all timers, all anims
         _lockedBlocks.destroyLockedBlocks();
         _domNode.destroyDomNode();
     }},
     isBusy: function() { with(this) { // if grid is busy, doesn't care about message displaying
-        return ( (_gridState != GRID_STATES.playing) // if grid is losing/finishing, return busy
+        return ( (_gridState !== GRID_STATES.playing) // if grid is losing/finishing, return busy
             || _anims.clearRowsAnim.isAnimating()
             || _anims.shapeHardDropAnim.isAnimating()
             || _anims.rising1RowAnim.isAnimating()
@@ -1441,10 +1443,10 @@ class Shape {
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
         this.shapeSwitchFromTestToPlaced(false);
         let shapesHit = [];
-        let blockHit;
+        let blockHit; //block who was hit, === Block or null in _matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
             blockHit = this._grid._matrix[this._shapeBlocks[b]._iPosition + iRight][this._shapeBlocks[b]._jPosition + jUp];
-            if ( ( blockHit != null) && (blockHit._shape._jVector != 1) ) { // check if jvector not +1
+            if ( ( blockHit !== null) && (blockHit._shape._jVector !== 1) ) { // check if jvector not +1
                     blockHit._shape._jVector = 1;
                     this._grid._lockedShapes[blockHit._shape._shapeIndex] = blockHit._shape;
                     shapesHit.push(blockHit._shape);
@@ -1519,9 +1521,9 @@ class NextShapePreview {
 }
 // LOCKED BLOCKS Class, for locked blocks on the ground
 function LockedBlocks(grid) { with(this) {
-    _grid                 = grid;
-    _lockedBlocksArray        = [];
-    _lockedBlocksArrayByRow    = [];
+    _grid = grid;
+    _lockedBlocksArray = []; // empty or Block inside
+    _lockedBlocksArrayByRow = []; // empty or Block inside
     for (let row=GAME._matrixBottom;row <= GAME._matrixHeight;row++) {
         _lockedBlocksArrayByRow[row] = {};
         _lockedBlocksArrayByRow[row].rowBlocksCount = 0;    // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalBoxesCount+1)
@@ -1541,9 +1543,9 @@ LockedBlocks.prototype = {
     }},
     putBlockInLockedBlocks: function(block) { with(this) { // here we fill _lockedBlocksArray
         _lockedBlocksArray[block._blockIndex] = block;
-        _blocksCount++;
+        _blocksCount++; // we increment
         _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
-        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++;
+        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++; // we increment
          if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount ) // if full row to clear
          // if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) == -1)// $$$$$$$ if value not found
             _grid._rowsToClearList.putInList(block._jPosition, true); // true to put something
@@ -1552,8 +1554,8 @@ LockedBlocks.prototype = {
     removeBlockFromLockedBlocks: function(block) { with(this) {
         delete _lockedBlocksArray[block._blockIndex]; // remove block from locked blocks
         delete _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
-        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--;
-        _blocksCount--;
+        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--; // we decrement
+        _blocksCount--; // we decrement
          if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount == RULES.horizontalBoxesCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
             _grid._rowsToClearList.eraseItemFromList(block._jPosition);
         // _grid._rowsToClearArray.splice( // necessary for correct exection
@@ -1568,7 +1570,7 @@ LockedBlocks.prototype = {
         // console.log(_lockedBlocksArray);
         // console.log('bb');
         for (let p in _lockedBlocksArray)
-            if (_lockedBlocksArray[p] != undefined)
+            if (_lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has Block or empty values
                 toProcessList.putInList(_lockedBlocksArray[p]._blockIndex, _lockedBlocksArray[p]);
         let groups = []; // below we make isolated groups
         while (toProcessList.listSize > 0) { // equivalent to while (toProcessList.listSize)
@@ -1643,7 +1645,7 @@ LockedBlocks.prototype = {
             changed = false;
             for (let p in jEquals) {
                 let j = jEquals[p].shape.getjVectorUnderShape();
-                if (j != 0) { // getjVectorUnderShape() negative or zero, equivalent if (j) or if (j < 0)
+                if (j !== 0) { // getjVectorUnderShape() negative or zero, equivalent if (j) or if (j < 0)
                     jEquals[p].shape._jVector = j;
                     jEquals[p].shape.removeShapeFromPlaced();
                     jEquals[p].shape.moveAndPutShapeToPlaced(0, j, DROP_TYPES.hard);
@@ -1777,7 +1779,7 @@ class Score {
         this.writeScore_(this._scoreShowed);
     }
     displays() {
-        if (this._delta) {                        // if delta changed != 0
+        if (this._delta !== 0) {                        // if delta changed !== 0
             this._grid._anims.score.endAnim();    // need to end before setting variables
             this._scoreShowed = this._score;
             this._score += this._delta;
@@ -1829,10 +1831,10 @@ class Score {
     }
 }
 // VARIOUS BASIC FUNCTIONS
-function isValued(item) { // requires declared and defined not to null
-    return (isDeclaredAndDefined(item) && (item != null));
+function isValued (item) { // requires declared and defined not to null
+    return (isDeclaredAndDefined(item) && (item !== null));
 }
-function isDeclaredAndDefined(item) {
+function isDeclaredAndDefined (item) {
     return (typeof item !== 'undefined');
 }
 // LIST Class, to manage elements by index, indexed by string or number >=0 with size
@@ -2222,7 +2224,7 @@ DomNode.prototype = {
     }},
     set: function(att) { with(this) {
         for (let p in att)
-            if (typeof att[p] != 'object')                // if not sub type and not sub group
+            if (typeof att[p] !== 'object')                // if not sub type and not sub group
                 _o.style[p.replace(/_/,'-')] = att[p];
             else
                 _childs[p] = new DomNode(att[p], this, p);
