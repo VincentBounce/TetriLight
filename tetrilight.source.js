@@ -1998,30 +1998,30 @@ class Timer {
 	}
 }
 //EVENTS QUEUE Class
-function EventsQueue() {
-	this._funcsQueue = [];
-}
-EventsQueue.prototype = {
-	_funcsQueue				: null,
-	_oCond					: null,
-	_busy					: false,
-	execNowOrEnqueue: function(o, func, argsArray) { //exec o.func(argsArray) or enqueue if busy
+class EventsQueue {
+	constructor() {
+		this._funcsQueue;
+		this._oCond;
+		this._busy = false,
+			this._funcsQueue = [];
+	}
+	execNowOrEnqueue(o, func, argsArray) { //exec o.func(argsArray) or enqueue if busy
 		if (this._busy)				//can't use arguments from the function, because in the call, func is just a pointer without ()
 		this._funcsQueue.push([o, func, argsArray]);
 		else {
 			this._busy = true; //#DEBUG before
 			func.apply(o, argsArray); //#DEBUG after, apply() works because argsArray is [], if 1 arg it's call() instead
 		}
-	},
-	dequeue: function() {
+	}
+	dequeue() {
 		this._busy = false;
 		while (!this._busy && this._funcsQueue.length) {	//dequeue only when not busy
 			let first = this._funcsQueue.shift();
 			this._busy = true;
 			first[1].apply(first[0], first[2]);
 		}
-	},
-};
+	}
+}
 //Graphic function, convert a [RGB] array + alpha value to text
 function rgbaTxt(color, alpha) {
 	return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((arguments.length==2)?alpha:1)+')';
