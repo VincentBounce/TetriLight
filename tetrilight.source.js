@@ -1501,26 +1501,23 @@ Shape.prototype = {
 	}}
 };
 //TETRIS NEXT SHAPE PREVIEW Class
-function NextShapePreview(grid) { with(this) {
-	_grid = grid;
-	_domNode = grid._domNode._childs.nextShapePreview;
-	for (let i=-GFX._shapesSpan;i <= GFX._shapesSpan;i++) {
-		for (let j=-GFX._shapesSpan;j <= GFX._shapesSpan;j++)
-			_domNode.drawGfx({fx:i, fy:j, col:_grid._colorTxt, __onOff:false});	//off
+class NextShapePreview {
+    constructor(grid) {
+        this._grid = grid;
+        this._domNode = this._grid._domNode._childs.nextShapePreview;
+        for (let i=-GFX._shapesSpan;i <= GFX._shapesSpan;i++)
+            for (let j=-GFX._shapesSpan;j <= GFX._shapesSpan;j++)
+                this._domNode.drawGfx({fx: i, fy: j, col: this._grid._colorTxt, __onOff: false}); //off
+    }
+	mark(shape) {
+        for (let b=0;b < shape._polyominoBlocks.length;b++)
+			this._domNode.drawGfx({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: true}); //on
 	}
-}}
-NextShapePreview.prototype = {
-	_grid			: null,
-	_domNode		: null,
-	mark: function(shape) { with(this) {
+	unMark(shape) {//optimized to remove only current previewed shape, and not all preview
 		for (let b=0;b < shape._polyominoBlocks.length;b++)
-			_domNode.drawGfx({fx:shape._polyominoBlocks[b][0], fy:shape._polyominoBlocks[b][1], col:_grid._colorTxt, __onOff:true}); //on
-	}},
-	unMark: function(shape) { with(this) {	//optimized to remove only current previewed shape, and not all preview
-		for (let b=0;b < shape._polyominoBlocks.length;b++)
-			_domNode.drawGfx({fx:shape._polyominoBlocks[b][0], fy:shape._polyominoBlocks[b][1], col:_grid._colorTxt, __onOff:false }); //off
-	}}
-};
+			this._domNode.drawGfx({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: false }); //off
+	}
+}
 //LOCKED BLOCKS Class, for locked blocks on the ground
 function LockedBlocks(grid) { with(this) {
 	_grid 				= grid;
@@ -1678,13 +1675,13 @@ class Block {
 		this._blockType = blockType;
 		this._iPosition	= i;
 		this._jPosition	= j;
-		this._grid; //undefined or null, overwise object not exist
+		this._grid;
 		this._shape;
 		this._domNode;
 		this._colorTxt;
 		this._color;
 		this._blockIndex;
-		this.createNode();
+		this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx: GFX._gfxBlock}); //creating node
 		this.setColor(blockColorTxt);
 		switch (this._blockType) {
 			case BLOCK_TYPES.ghost: //ghost shape for display only, no block index
@@ -1709,13 +1706,10 @@ class Block {
 			default: console.log(this) //bug if this case occurs #DEBUG
 		}
 	}
-	destroyBlock() {		//destructor, remove block anywhere
+	destroyBlock() { //destructor, remove block anywhere
 		this._domNode.destroyDomNode();
 		this._grid.removeBlockFromMatrix(this);
 		this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
-	}
-	createNode() {
-		this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', gfx: GFX._gfxBlock});
 	}
 	setColor(colorTxt)  {
 		this._colorTxt = colorTxt;
