@@ -1,18 +1,18 @@
-/* ===========================================================================================================
-                                 TetriLight - Vincent BOURDEAU
-                                     Copyright (c) 2011-2020
- =============================================================================================================
+/******************************************************************
+****************   TetriLight - Vincent BOURDEAU   ****************
+****************           2011-2020               ****************
+*******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
-Fit ECMAScript 6 (2015) + HTML5 Canvas
+Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
 
-====================VOCABULARY====================
+**************** VOCABULARY ****************
 to sweep = to clear
 a row = a line
 a cell = a slot
 
-====================GAME RULES====================
+**************** GAME RULES ****************
 When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
 and others players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
 When a player clears 2 or more (RULES.transferRowsCountMin) lines together, then he drops same quantity of bad grey lines to others players.
@@ -24,7 +24,7 @@ Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 f
 Combos rows count formula is same * 50%
 Bonus same as 2 rows when all is cleared (Perfect clear)
 
-====================MINOR BUGS====================
+**************** MINOR BUGS ****************
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
 If top line only is cleared AND top line has blocks under, then the anim and sound of droping occurs again
 $$$ test browser when start!
@@ -34,7 +34,7 @@ $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 
-====================CHANGES FROM ECMAScript 5 (2009)====================
+ **************** CHANGES FROM ECMAScript 5 (2009) ****************
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
     (`Level ${this._level}`)
@@ -45,7 +45,7 @@ IE11 (standard with Windows 10) not working with:
 ECMAScript 2015: let, const, Transform: IE11 OK
 ECMAScript 2017: async await
 
-====================CODE JS====================
+**************** CODE JS ****************
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
     for large surface, small number of objects
 HTML5 Canvas: draw and forget, immediate mode (gradient done): CHOOSEN!
@@ -68,7 +68,7 @@ callee function (appelée), calling function (appelante)
 only Object or Array variables can be assigned by references
 myMethod.call(this, arg1, arg2...) == myMethod.apply(this, [arg1, arg2...])
 
-====================CODE JS ARRAY====================
+**************** CODE JS ARRAY ****************
 queue(fifo) / gridAnimsStackPush(filo)
 shift<<, unshift>> [array] <<push, >>pop
 delete myArray[0]: just set slot to undefined
@@ -105,13 +105,13 @@ myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it
             for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; // height -1 to +(2x20) });
 merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
 
-====================CODE GITHUB====================
+**************** CODE GITHUB ****************
 remove a remote: git remote rm old
 rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
 rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
 solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
 
-====================NAMING CONVENTION====================
+**************** NAMING CONVENTION ****************
 // #DEBUG: to track bug
 // $$$: to check or fix later
 $function: used to track bug
@@ -131,7 +131,7 @@ var p is variable to browse in object
 var event is generic event
 var item is generic item
 
-====================ANIMATIONS SEQUENCES====================
+**************** ANIMATIONS SEQUENCES ****************
 Events program, reacts to:
     timeouts after animations, after drop period on each slot
     keys pressed
@@ -143,7 +143,7 @@ messages and scores anims are not exclusive, each new one replace previous one
 0-1 means iterating from 0 to 1 time. 0-* from 0 to x times
 pauseOrResume stops every timers, music. It let FX finish. It block controls
 
-====================CLASS====================
+**************** CLASS ****************
 MainMenu [1 instance]
     DomNode [1 instance]
     GFX: GameGraphics [1 instance] ()
@@ -176,48 +176,48 @@ MainMenu [1 instance]
 Examples of list: toProcessList / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
-// "use strict";
+// "use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
 let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;            // GFX: GameGraphics
 // GLOBAL CONSTANTS
-const RULES                         = {                // tetris rules
-    gameSpeedRatio                    : 1.5,            // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
-    initialVolume                    : 0.1,            // default 0.6, 0 to 1, if #DEBUG
-    transferRowsCountMin            : 1,             // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
-    pentominoesRowsCountMin            : 1,             // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
-    horizontalBoxesCount            : 5,            // default 10, min 5 #DEBUG
+const RULES                         = { // tetris rules
+    gameSpeedRatio                    : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+    initialVolume                     : 0.1,            // default 0.6, 0 to 1, if #DEBUG
+    transferRowsCountMin              : 1,             // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
+    pentominoesRowsCountMin           : 1,             // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
+    horizontalBoxesCount              : 5,            // default 10, min 5 #DEBUG
     verticalBoxesCount                : 21,             // default 21 = (20 visible + 1 hidden) #DEBUG
-    topLevel                        : 25,            // default 25, max level (steps of drop acceleration)
-    risingRowsHolesCountMaxRatio    : 0.3,            // default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
-    fps                                : 60/1000 };    // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
-const DURATIONS                        = {                // tetris durations, periods in ms
-    pentominoesModeDuration            : 10000,        // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
-    movingGridsDuration                : 350,            // 0350 ms
-    clearingRowsDuration            : 350,            // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
+    topLevel                          : 25,            // default 25, max level (steps of drop acceleration)
+    risingRowsHolesCountMaxRatio      : 0.3,            // default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
+    fps                               : 60/1000 };    // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
+const DURATIONS                       = {                // tetris durations, periods in ms
+    pentominoesModeDuration           : 10000,        // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
+    movingGridsDuration               : 350,            // 0350 ms
+    clearingRowsDuration              : 350,            // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
     rising1RowDuration                : 150,            // 0150 ms or 250, increase for #DEBUG
-    rotatingDuration                : 400,             // 0400 ms
-    gridQuakeDuration                : 150,            // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
-    centralMessagesDuration            : 1500,            // 1500 ms, central messages displaying duration, replaced, not queued
-    displayingScoreDuration            : 1500,            // 1500 ms
-    hardDropDuration                : 200,            // 0200 ms, increase for #DEBUG
-    lostMessageDuration                : 3500,            // 3500 ms, period to display score
-    softDropPeriod                     : 50,            // 0050 ms, if this is max DropDuration
-    initialDropPeriod                : 1100 };         // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-const FONTS                            = {    scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
-const SOUNDS                        = {
-    landFX:                         {ext:'wav'},
-    rotateFX:                        {ext:'wav'},
-    moveFX:                            {ext:'wav', vol:0.2},
-    clearFX:                        {ext:'wav'},
-    quadrupleFX:                    {ext:'wav'},
-    selectFX:                        {ext:'wav'},
-    musicMusic:                        {ext:'mp3', vol:0.5} };
+    rotatingDuration                  : 400,             // 0400 ms
+    gridQuakeDuration                 : 150,            // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
+    centralMessagesDuration           : 1500,            // 1500 ms, central messages displaying duration, replaced, not queued
+    displayingScoreDuration           : 1500,            // 1500 ms
+    hardDropDuration                  : 200,            // 0200 ms, increase for #DEBUG
+    lostMessageDuration               : 3500,            // 3500 ms, period to display score
+    softDropPeriod                    : 50,            // 0050 ms, if this is max DropDuration
+    initialDropPeriod                 : 1100 };         // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+const FONTS                           = {    scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
+const SOUNDS                          = {
+    landFX:                           {ext:'wav'},
+    rotateFX:                         {ext:'wav'},
+    moveFX:                           {ext:'wav', vol:0.2},
+    clearFX:                          {ext:'wav'},
+    quadrupleFX:                      {ext:'wav'},
+    selectFX:                         {ext:'wav'},
+    musicMusic:                       {ext:'mp3', vol:0.5} };
 // values > 0 to avoid (value == false == 0)
-const GAME_STATES                    = {paused: 1, running: 2, waiting: 3};
-const GRID_STATES                    = {connected: 1, playing: 2, lost: 3}; // connected but not started
-const BLOCK_TYPES                    = {ghost: 1, inShape: 2, orphan: 3};
-const SEARCH_MODE                    = {down: 1, up: 2};
-const DROP_TYPES                    = {soft: 1, hard: 2}; // 1 and 2 are usefull for score: hard drop is double points
+const GAME_STATES                     = {paused: 1, running: 2, waiting: 3};
+const GRID_STATES                     = {connected: 1, playing: 2, lost: 3}; // connected but not started
+const BLOCK_TYPES                     = {ghost: 1, inShape: 2, orphan: 3};
+const SEARCH_MODE                     = {down: 1, up: 2};
+const DROP_TYPES                      = {soft: 1, hard: 2}; // 1 and 2 are usefull for score: hard drop is double points
 
 // INIT called by HTML browser
 function init() {
