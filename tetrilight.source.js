@@ -823,49 +823,50 @@ Game.prototype = {
 	}},
 };
 //PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
-function PentominoesBriefMode() {
-	this._pentoModeTimer = new Timer( function() {
-		GAME._pentominoesBriefMode.finishPentoMode();	//run in this class, because not with this for Timer, to delete$$$$$
-	}, 0 );
-}
-PentominoesBriefMode.prototype = {
-	_pentoModeTimer						: null,
-	/*destroyPentoMode: function() { with(this) { //to replace by anim timer
+class PentominoesBriefMode {
+	constructor() {
+		this._pentoModeTimer = new Timer( function() {
+			GAME._pentominoesBriefMode.finishPentoMode();	//run in this class, because not with this for Timer, to delete$$$$$
+		}, 0 );
+	}
+	/*destroyPentoMode() { with(this) { //to replace by anim timer
 		_pentoModeTimer.finishTimer();
-	}},*/
-	pauseOrResume: function() {
+	}*/
+	pauseOrResume() {
 		this._pentoModeTimer.pauseOrResume();
-	},
-	isRunning: function() {
+	}
+	isRunning() {
 		return (this._pentoModeTimer.isRunning());
-	},
-	finishPentoMode: function() {
+	}
+	finishPentoMode() {
 		this._pentoModeTimer.finishTimer();
-		GAME._gridsListAuto.runForEachListElement(function(myGrid){
-			if (myGrid._gridState == GRID_STATES.playing) {
-				myGrid._playedPolyominoesType = 'tetrominoes'
-				myGrid._nextShapePreview.unMark(myGrid._nextShape);			//to mark immediately next shape on preview
-				myGrid._nextShape = new Shape(myGrid);	//previous falling shape is garbage collected
-				myGrid._nextShapePreview.mark(myGrid._nextShape);
-			}
-		});
-	},
-	runPentoMode: function(gridWichTriggeredPentoMode, clearedLinesCount) {
+		GAME._gridsListAuto.runForEachListElement(
+			(myGrid)=>{
+				if (myGrid._gridState == GRID_STATES.playing) {
+					myGrid._playedPolyominoesType = 'tetrominoes'
+					myGrid._nextShapePreview.unMark(myGrid._nextShape); //to mark immediately next shape on preview
+					myGrid._nextShape = new Shape(myGrid); //previous falling shape is garbage collected
+					myGrid._nextShapePreview.mark(myGrid._nextShape);
+				}
+			});
+	}
+	runPentoMode(gridWichTriggeredPentoMode, clearedLinesCount) {
 		if (this.isRunning()) this.finishPentoMode();
-		GAME._gridsListAuto.runForEachListElement(function(myGrid){	//here, argument is used
-			if (myGrid._gridState == GRID_STATES.playing) {
-				myGrid._playedPolyominoesType = (myGrid != gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
-				myGrid._nextShapePreview.unMark(myGrid._nextShape);			//to mark immediately next shape on preview
-				myGrid._nextShape = new Shape(myGrid);	//previous falling shape is garbage collected
-				myGrid._nextShapePreview.mark(myGrid._nextShape);
-			}
-		}, gridWichTriggeredPentoMode);							//this way to pass argument1 to pointed function
-		this._pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount);	//*3 for 3 lines cleared, *4 for 4 lines cleared
+		GAME._gridsListAuto.runForEachListElement(
+			(myGrid)=>{ //here, argument is used
+				if (myGrid._gridState == GRID_STATES.playing) {
+					myGrid._playedPolyominoesType = (myGrid != gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
+					myGrid._nextShapePreview.unMark(myGrid._nextShape); //to mark immediately next shape on preview
+					myGrid._nextShape = new Shape(myGrid); //previous falling shape is garbage collected
+					myGrid._nextShapePreview.mark(myGrid._nextShape);
+				}
+			}, gridWichTriggeredPentoMode ); //this way to pass argument1 to pointed function
+		this._pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount); //*3 for 3 lines cleared, *4 for 4 lines cleared
 		this._pentoModeTimer.runTimer();
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
 		gridWichTriggeredPentoMode._anims.pentominoesModeAnim.startAnim();
 	}
-};
+}
 //TETRIS GRID Class
 function Grid(keyboard, colorTxt) { with(this) {
 	_colorTxt						= colorTxt;
