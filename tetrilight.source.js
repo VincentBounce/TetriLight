@@ -33,7 +33,6 @@ $$$ ListAutoIndex called 1x, useless?
 $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
-
 != became !==, 10min tested: stable
 == became ===, 10min tested: stable
 
@@ -67,7 +66,8 @@ console.table() to have a clear table
 var result = myClassInstance.publicMethod(); <> var myMethod = myClassInstance.publicMethod;
 callee function (appelée), calling function (appelante)
 (function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
-=> to define a func <> >= operator
+=> used to define a func 
+>= operator
 only Object or Array variables can be assigned by references
 myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 
@@ -1271,15 +1271,15 @@ class Shape {
         this._jPosition                = GAME._jPositionStart;
         this._shapeType                = GAME._playedPolyominoesType[this._grid._playedPolyominoesType].index // to reach right polyomino type
             + Math.floor(Math.random() * GAME._playedPolyominoesType[this._grid._playedPolyominoesType].count);
-        this._pivotsCount            = GAME._gameShapesWithRotations[this._shapeType].length;
+        this._pivotsCount              = GAME._gameShapesWithRotations[this._shapeType].length;
         this._pivot                    = Math.floor(Math.random() * this._pivotsCount);
-        this._colorTxt                = GAME._storedPolyominoes[this._shapeType].color;
+        this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
         this._color                    = GFX._colors[this._colorTxt];
-        this._polyominoBlocks        = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
+        this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
     newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
-        this._domNode                = this._grid._realBlocksNode.newChild({});
-        this._shapeBlocks            = group.shape;
+        this._domNode                  = this._grid._realBlocksNode.newChild({});
+        this._shapeBlocks              = group.shape;
         this._jPosition                = group.jMin;
         for (let b=0;b < this._shapeBlocks.length;b++)
             this._shapeBlocks[b]._shape = this; // link to shape
