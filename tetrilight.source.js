@@ -1242,30 +1242,28 @@ Grid.prototype = {
     }}
 };
 // TETRIS SHAPE Class
-function Shape(grid, group=false) { // default falling shape means not group argument
-    this._grid = grid;
-    this._shapeIndex = GAME._shapeIdTick++;
-    if (!group)
-        this.newControlledShape_();
-    else
-        this.newShapeForExistingLockedBlocks_(group); // old: this[shapeOrChain](group);
-}
-Shape.prototype = {
-    _grid                        : null,
-    _shapeIndex                : null,
-    _iPosition                    : null,
-    _jPosition                    : null,
-    _shapeType                    : null,
-    _pivotsCount                : null,
-    _pivot                        : null,
-    _colorTxt                    : null,
-    _color                        : null,
-    _shapeBlocks                : null,
-    _polyominoBlocks            : null, // READ ONLY, reference that points to current shape in GAME shapes store
-    _ghostBlocks                : null, // shadowed blocks
-    _domNode                    : null,
-    _jVector                    : 0, // vector upper (+) and under (-) shape
-    newControlledShape_: function() {    // pick a new shape falling ramdomly (for next part) to control fall
+class Shape {
+    constructor(grid, group=false) { // default falling shape means not group argument
+        this._grid = grid;
+        this._iPosition;
+        this._jPosition;
+        this._shapeType;
+        this._pivotsCount;
+        this._pivot;
+        this._colorTxt;
+        this._color;
+        this._shapeBlocks;
+        this._polyominoBlocks; // READ ONLY, reference that points to current shape in GAME shapes store
+        this._ghostBlocks; // shadowed blocks
+        this._domNode;
+        this._jVector = 0, // vector upper (+) and under (-) shape
+        this._shapeIndex = GAME._shapeIdTick++;
+        if (!group)
+            this.newControlledShape_();
+        else
+            this.newShapeForExistingLockedBlocks_(group); // old: this[shapeOrChain](group);
+    }
+    newControlledShape_() {    // pick a new shape falling ramdomly (for next part) to control fall
         this._iPosition                = GAME._iPositionStart;
         this._jPosition                = GAME._jPositionStart;
         this._shapeType                = GAME._playedPolyominoesType[this._grid._playedPolyominoesType].index // to reach right polyomino type
@@ -1275,21 +1273,21 @@ Shape.prototype = {
         this._colorTxt                = GAME._storedPolyominoes[this._shapeType].color;
         this._color                    = GFX._colors[this._colorTxt];
         this._polyominoBlocks        = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
-    },
-    newShapeForExistingLockedBlocks_: function(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
+    }
+    newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
         this._domNode                = this._grid._realBlocksNode.newChild({});
         this._shapeBlocks            = group.shape;
         this._jPosition                = group.jMin;
         for (let b=0;b < this._shapeBlocks.length;b++)
             this._shapeBlocks[b]._shape = this; // link to shape
         this.putShapeNodeIn();
-    },
-    getjVectorUnderShape: function() { // return negative slots count from falling shape to floor where it can be placed
+    }
+    getjVectorUnderShape() { // return negative slots count from falling shape to floor where it can be placed
         let result = 0;
         while (this.canMoveFromPlacedToPlaced(0, --result)); // compute result decrement BEFORE calling function
         return (++result); // compute result increment BEFORE calling function
-    },
-    putShapeInGame: function() {
+    }
+    putShapeInGame() {
         this._shapeBlocks = new Array(this._polyominoBlocks.length);
         this._ghostBlocks = new Array(this._shapeBlocks.length); // without putPositions
         this._domNode = this._grid._realBlocksNode.newChild({});
@@ -1306,20 +1304,20 @@ Shape.prototype = {
                 this._colorTxt);
         }
         return this;
-    },
-    putShapeInRealBlocksNode: function() {
+    }
+    putShapeInRealBlocksNode() {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockInRealBlocksNode(); });
         return this;
-    },
-    putShapeNodeIn: function() {
+    }
+    putShapeNodeIn() {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); // this == Shape context necessary fot this._domNode
         return this;
-    },
-    drawShape: function() { // show hidden shapes
+    }
+    drawShape() { // show hidden shapes
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlock(); });
         return this;
-    },
-    drawGhostAfterCompute: function() {
+    }
+    drawGhostAfterCompute() {
         if (this._ghostBlocks) {
             this._jVector = this.getjVectorUnderShape(); // if not not placed so deleted so ghost deleted
             this._shapeBlocks.forEach(function(myBlock, b) {
@@ -1329,15 +1327,15 @@ Shape.prototype = {
             }, this) // this = Window context by default, puting this here makes this == Shape
         }
         return this;
-    },
-    clearGhostBlocks: function() {
+    }
+    clearGhostBlocks() {
         if (this._ghostBlocks) { // if ghost blocks (not in chain)
             this._ghostBlocks.forEach(function(myBlock){ myBlock._domNode.destroyDomNode(); });
             this._ghostBlocks = null;
         }
         return this;
-    },
-    moveFalling: function(iRight, jUp) { // iRight == 0 or jUp == 0, jUp negative to fall
+    }
+    moveFalling(iRight, jUp) { // iRight == 0 or jUp == 0, jUp negative to fall
         this._grid._anims.shapeRotateAnim.endAnim(); // comment/remove this line to continue animating rotation when drop #DEBUG
         this._iPosition += iRight;
         this._jPosition += jUp;
@@ -1348,16 +1346,16 @@ Shape.prototype = {
         else this._jVector -= jUp; // if ghostshape covered, new block layer hides it
         AUDIO.audioPlay('moveFX');
         return this;
-    },
-    removeShapeFromPlaced: function() { // move in testing mode
+    }
+    removeShapeFromPlaced() { // move in testing mode
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 this._grid.removeBlockFromMatrix(myBlock);
                 this._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
             }, this);
         return this;
-    },
-    moveAndPutShapeToPlaced: function(iRight, jUp, dropType=false) { // move to placed
+    }
+    moveAndPutShapeToPlaced(iRight, jUp, dropType=false) { // move to placed
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 myBlock._iPosition += iRight; // updating position
@@ -1368,14 +1366,14 @@ Shape.prototype = {
         if (dropType && (jUp < 0))
             this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
         return this;
-    },
-    canMoveFromPlacedToPlaced: function(iRight, jUp) { // can move into grid
+    }
+    canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
         this.shapeSwitchFromTestToPlaced(false);
         let result = this.canMoveToPlaced(iRight, jUp);
         this.shapeSwitchFromTestToPlaced(true);
         return result;
-    },
-    canMoveToPlaced: function(iRight, jUp) {
+    }
+    canMoveToPlaced(iRight, jUp) {
         let result = true;
         for (let b=0;b < this._shapeBlocks.length;b++)
             if (!this._shapeBlocks[b].isFreeSlot(this._shapeBlocks[b]._iPosition + iRight, this._shapeBlocks[b]._jPosition + jUp)) {
@@ -1383,8 +1381,8 @@ Shape.prototype = {
                 break; // exit loop
             }
         return result;
-    },
-    fallingShapeTriesMove: function(iRight, jUp) { // return true if moved (not used), called by left/right/timer
+    }
+    fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
             if (iRight == 0)
                 this._grid._dropTimer.runTimer(); // shape go down, new period
@@ -1397,8 +1395,8 @@ Shape.prototype = {
                 this._grid.lockFallingShapePrepareMoving();
         }
         return this;
-    },
-    rotateDataInMatrix: function() { // 1 is clockwiseQuarters
+    }
+    rotateDataInMatrix() { // 1 is clockwiseQuarters
         this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount;// we test need rotating in this.canShapeRotate()
         for (let b=0;b < this._shapeBlocks.length;b++) {
             this._grid.removeBlockFromMatrix(this._shapeBlocks[b]);
@@ -1409,8 +1407,8 @@ Shape.prototype = {
             this._grid._lockedBlocks.putBlockInLockedBlocks(this._shapeBlocks[b]);
         }
         return this;
-    },
-    canShapeRotate: function() { // 1 is clockwiseQuarters
+    }
+    canShapeRotate() { // 1 is clockwiseQuarters
         if (this._pivotsCount == 1)
             return false;
         else {
@@ -1427,8 +1425,8 @@ Shape.prototype = {
             this.shapeSwitchFromTestToPlaced(true);
             return result;
         }
-    },
-    fallingShapeTriesRotate: function() { // do rotation if possible, else nothing
+    }
+    fallingShapeTriesRotate() { // do rotation if possible, else nothing
         this.finishSoftDropping(true); // stopping fall by continuing normal timer
         if (this.canShapeRotate()) { // +this._pivotsCount before modulo % ?
             this._grid._anims.shapeRotateAnim.endAnim();
@@ -1439,8 +1437,8 @@ Shape.prototype = {
             AUDIO.audioPlay('rotateFX');
         }
         return this;
-    },
-    shapesHitIfMove: function(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
+    }
+    shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
         this.shapeSwitchFromTestToPlaced(false);
         let shapesHit = [];
         let blockHit;
@@ -1456,12 +1454,12 @@ Shape.prototype = {
         while (shapesHit.length > 0) // equivalent to while (shapesHit.length)
             shapesHit.pop().shapesHitIfMove(iRight, jUp);
         return this;
-    },
-    shapeSwitchFromTestToPlaced: function(fromTestToPlaced) {
+    }
+    shapeSwitchFromTestToPlaced(fromTestToPlaced) {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); }) // only called here
         return this;
-    },
-    beginSoftDropping: function(force) { // full falling, called by keydown, call falling()
+    }
+    beginSoftDropping(force) { // full falling, called by keydown, call falling()
         if (!this._grid._softDropping && (this._grid._softDroppingReloaded || force) ) { // if not falling and reloaded
             this._grid._softDroppingReloaded = false; // keydown
             if (this.canMoveFromPlacedToPlaced(0, -1))      
@@ -1474,8 +1472,8 @@ Shape.prototype = {
                 this._grid.lockFallingShapePrepareMoving();
             } // nothing if key stay pressed
         return this;
-    },
-    startSoftDropping: function() { // full falling iterative
+    }
+    startSoftDropping() { // full falling iterative
         this._grid._dropTimer.finishTimer();
         this._grid._softDropping = true;            
         if (this.canMoveFromPlacedToPlaced(0, -1)) {
@@ -1484,23 +1482,23 @@ Shape.prototype = {
         } else
             this.finishSoftDropping(true); // ends fall and launching drop timer
         return this;
-    },
-    finishSoftDropping: function(keep) { // stop fall in all cases, keep if new period, return false if not falling
+    }
+    finishSoftDropping(keep) { // stop fall in all cases, keep if new period, return false if not falling
         if (this._grid._softDropping) {
             this._grid._softDropTimer.finishTimer();
             this._grid._softDropping = false;
             if (keep)
                 this._grid._dropTimer.runTimer(); // shape can move after fall or stopped
         }
-        return this; // this._grid._softDropping;
-    },
-    hardDropping: function() {
+        return this;
+    }
+    hardDropping() {
         this._grid._dropTimer.finishTimer();
         this.finishSoftDropping();
         this._grid.lockFallingShapePrepareMoving();
         return this;
     }
-};
+}
 // TETRIS NEXT SHAPE PREVIEW Class
 class NextShapePreview {
     constructor(grid) {
