@@ -13,13 +13,16 @@ a row = a line
 a cell = a slot
 
 ====================GAME RULES====================
-Click upper left corner to start 1 game more #DEBUG
 When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
 and others players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
 When a player clears 2 or more (RULES.transferRowsCountMin) lines together, then he drops same quantity of bad grey lines to others players.
 Game is lost when new shape can't be placed (!_fallingShape.canMoveToPlaced).
-High hard drops + cleared rows + combos >> increase score >> increase level >> increase drop speed //$$$$$
-Game starts at level 0. Level increments 1 every 10 rows.
+Game starts at level 0
+Level increments +1 every 10 rows
+Hard drops double travelled cells count
+Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then *(level + 1)
+Combos rows count formula is same * 50%
+Bonus same as 2 rows when all is cleared (Perfect clear)
 
 ====================MINOR BUGS====================
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
@@ -982,7 +985,7 @@ function Grid(keyboard, colorTxt) { with(this) {
 					._domNode.destroyDomNode();
 			}
 			_lockedShapes = [];
-			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.startAnim); //we stack _anims.quakeAnim.startAnim();
+			gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.startAnim); //startAnim() function stacked
 			gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); //we stack AUDIO.audioPlay('landFX');
 			gridAnimsStackPop();
 			//old: _anims.quakeAnim.startAnim();
@@ -1138,7 +1141,7 @@ Grid.prototype = {
 		}
 	}},
 	lockFallingShapePrepareMoving: function() { with(this) { //can be called recursively, when falling shape or locked shapes in game hit floor
-		gridAnimsStackPush(this, newFallingShape);
+		gridAnimsStackPush(this, newFallingShape); //newFallingShape()
 		_lockedShapes = []; //release for garbage collector
 		_lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
 		if (!_fallingShape.finishSoftDropping(false)); //drop timer stopped without running again
@@ -1151,8 +1154,8 @@ Grid.prototype = {
 			//AUDIO.audioPlay('landFX');
 			_gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);	//exec countAndClearRows immediately
 		} else { //if locked shapes to drop, have to make animation before next counting
-			gridAnimsStackPush(this, countAndClearRows); //firstly stack countAndClearRows for later
-			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.startAnim); //secondly exec hard drop anim immediately
+			gridAnimsStackPush(this, countAndClearRows); //firstly stack countAndClearRows() for later
+			_gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.startAnim); //secondly exec hard drop startAnim() immediately
 			//sound played before after hardDrop and before Quake
 		}
 	}},
@@ -1361,7 +1364,7 @@ Shape.prototype = {
 			_grid._lockedBlocks.putBlockInLockedBlocks(myBlock); //put block with new position
 		});
 		if (dropType && (jUp < 0))
-			_grid._score.computeScoreDuringDrop(-jUp, dropType); //computeScoreDuringDrop receive slots count traveled, and dropType
+			_grid._score.computeScoreDuringDrop(-jUp, dropType); //function receive slots count traveled, and dropType
 		return this;
 	}},
 	canMoveFromPlacedToPlaced: function(iRight, jUp) { with(this) { //can move into grid
@@ -1602,7 +1605,7 @@ LockedBlocks.prototype = {
 			}
 			if (mode == SEARCH_MODE.down) {
 				tryMoveShapesSamejEquals(jEquals);
-				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
+				_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); //countAndClearRows()
 				_grid._anims.shapeHardDropAnim.startAnim();
 			} else { //mode == SEARCH_MODE.up
 				_grid._fallingShape.shapeSwitchFromTestToPlaced(true); //falling is back
@@ -1613,13 +1616,13 @@ LockedBlocks.prototype = {
 					}
 				_grid.moveShapesInMatrix(_grid._lockedShapes);
 				if (_lockedBlocksArrayByRow[GAME._jPositionStart + GFX._shapesSpan + 1].rowBlocksCount)
-					_grid.gridAnimsStackPush(_grid, _grid.lost);
+					_grid.gridAnimsStackPush(_grid, _grid.lose); //lose()
 				else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { //if falling shape hit ground
-					_grid.gridAnimsStackPush(_grid, _grid.newFallingShape);
-					_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows);
+					_grid.gridAnimsStackPush(_grid, _grid.newFallingShape); //newFallingShape()
+					_grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); //countAndClearRows()
 				} else {
-					_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute);
-					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.runTimer);
+					_grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute); //drawGhostAfterCompute()
+					_grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.runTimer); //runTimer()
 				}
 			}
 		}
@@ -1767,10 +1770,10 @@ class Score {
 				this._delta = 0;
 			},
 			animateFunc: function(animOutput) {
-				this.writeScore(Math.ceil(this._scoreShowed + animOutput*this._deltaShowed));
+				this.writeScore_(Math.ceil(this._scoreShowed + animOutput*this._deltaShowed));
 			},
 			endAnimFunc: function() {
-				this.writeScore(this._scoreShowed += this._deltaShowed);
+				this.writeScore_(this._scoreShowed += this._deltaShowed);
 			},
 			timingAnimFunc: function(x) {
 				return -(x-2*Math.sqrt(x));
@@ -1778,7 +1781,7 @@ class Score {
 			animDuration: DURATIONS.displayingScoreDuration,
 			optionalAnimOwner: this //because score anim not declared in grid
 		});
-		this.writeScore(this._scoreShowed);
+		this.writeScore_(this._scoreShowed);
 	}
 	displays() {
 		if (this._delta) {						//if delta changed != 0
@@ -1786,6 +1789,21 @@ class Score {
 			this._scoreShowed = this._score;
 			this._score += this._delta;
 			this._grid._anims.score.startAnim();
+		}
+	}
+	computeScoreDuringDrop(cellsTraveledCount, dropType) {
+		this._delta += dropType * cellsTraveledCount;
+	}
+	computeScoreForSweptRowsAndDisplay(sweptRowsCount) {
+		this._delta += this._factors[sweptRowsCount] * (this._level+1);
+		this.computePerfectClear_(sweptRowsCount);
+		this.displays();
+		this.computeLevel_(sweptRowsCount);
+	}
+	computePerfectClear_(sweptRowsCount) {
+		if (this._grid._lockedBlocks._blocksCount == sweptRowsCount * RULES.horizontalBoxesCount) { //means same cleared blocks qty than grid currently had
+			this._grid._anims.messageAnim.startAnim({text: 'Perfect<BR/>clear'});
+			this._delta += this._factors[2] * (this._level+1);
 		}
 	}
 	computeLevel_(sweptRowsCount) {
@@ -1802,18 +1820,6 @@ class Score {
 				fieldCharCount: 5 }); //last arg: higher for smaller text, not to queue, each new one replace previous one
 		}
 	}
-	computeScoreDuringDrop(cellsTraveledCount, dropType) {
-		this._delta += dropType * cellsTraveledCount;
-	}
-	computeScoreForSweptRowsAndDisplay(sweptRowsCount) {
-		if (this._grid._lockedBlocks._blocksCount == sweptRowsCount * RULES.horizontalBoxesCount) { //means same cleared blocks qty than grid currently had
-			this._grid._anims.messageAnim.startAnim({text: 'Perfect<BR/>clear'});
-			this._delta += this._factors[2] * (this._level+1);
-		}
-		this._delta += this._factors[sweptRowsCount] * (this._level+1);
-		this.displays();
-		this.computeLevel_(sweptRowsCount);
-	}
 	combosReset() {
 		this._combos = -1;
 	}
@@ -1825,7 +1831,7 @@ class Score {
 			//$$$sound of coins
 		}
 	}
-	writeScore(scoreText) {
+	writeScore_(scoreText) {
 		this._grid._domNode._childs.scoreZone.setTextIntoSizedField({text: scoreText}); //here all program write score, just comment for #DEBUG
 	}
 }
