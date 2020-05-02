@@ -977,9 +977,9 @@ function Grid(keyboard, colorTxt) { with(this) {
         },
         animDuration: DURATIONS.movingGridsDuration
     });
-    _anims.shapeHardDropAnim = new Animation({    // animation for 1 shape, falling or after clearing
+    _anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
         animateFunc: function(animOutput) { with(this) {
-            for (let p in _lockedShapes)
+            for (let p in _lockedShapes) // to animate block, we move the DomNode element
                 _lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
         }},
         endAnimFunc: function() { with(this) {
@@ -1003,7 +1003,7 @@ function Grid(keyboard, colorTxt) { with(this) {
     });
     _anims.rising1RowAnim = new Animation({
         animateFunc: function(animOutput) { with(this) {        // "this" display animation instancied object
-            for (let p in _lockedShapes)
+            for (let p in _lockedShapes) // to animate block, we move the DomNode element
                 _lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * GFX._pxBoxSize);
         }},
         endAnimFunc: function() { with(this) {
@@ -1022,7 +1022,7 @@ function Grid(keyboard, colorTxt) { with(this) {
         animDuration: DURATIONS.rising1RowDuration
     });
     _anims.shapeRotateAnim = new Animation({     // loading animation to use later
-        startAnimFunc: function() { with(this) {
+        startAnimFunc: function() { with(this) { // to animate block, we temporary apply a transform rotation
             _fallingShape._domNode.setTransformOrigin(GFX._gfxBlock.fx(_fallingShape._iPosition+0.5)+"px "+GFX._gfxBlock.fy(_fallingShape._jPosition-0.5)+"px");
         }},
         animateFunc: function(animOutput) { with(this) {
@@ -1032,7 +1032,7 @@ function Grid(keyboard, colorTxt) { with(this) {
                 _fallingShape._domNode.setRotate(90 - animOutput);
         }},
         endAnimFunc: function() { with(this) {
-            _fallingShape._domNode.delTransform();    // see if draw prefered
+            _fallingShape._domNode.delTransform(); // at end, we remove transform effect
         }},
         timingAnimFunc: function(x) {
             return -90*(x-2*Math.sqrt(x));
@@ -1318,7 +1318,7 @@ class Shape {
         return this;
     }
     drawShape() { // show hidden shapes
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlock(); });
+        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlockInCell(); });
         return this;
     }
     drawGhostAfterCompute() {
@@ -1327,7 +1327,7 @@ class Shape {
             this._shapeBlocks.forEach(function(myBlock, b) {
                 this._ghostBlocks[b]._iPosition = this._shapeBlocks[b]._iPosition;
                 this._ghostBlocks[b]._jPosition = this._shapeBlocks[b]._jPosition + this._jVector;
-                this._ghostBlocks[b].drawBlock();
+                this._ghostBlocks[b].drawBlockInCell();
             }, this) // this = Window context by default, puting this here makes this === Shape
         }
         return this;
@@ -1705,7 +1705,7 @@ class Block {
                 this._blockIndex = GAME._newBlockId++;
                 this._grid.putBlockInMatrix(this);
                 this._grid._lockedBlocks.putBlockInLockedBlocks(this);
-                this.drawBlock();
+                this.drawBlockInCell();
                 break;
             default: console.log(this) // bug if this case occurs #DEBUG
         }
@@ -1729,8 +1729,8 @@ class Block {
             && (this._grid._matrix[i][j] === null) // _matrix[i][j] === null means free
         );
     }
-    drawBlock() { // here you can hide top block outside grid
-        this._domNode.moveToStep(this._iPosition, this._jPosition);
+    drawBlockInCell() { // here you can hide top block outside grid
+        this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
     }
     blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs Shape.shapeSwitchFromTestToPlaced(false) then (true)
         if (fromTestToPlaced) {
@@ -2026,7 +2026,7 @@ function rgbaTxt(color, alpha=null) {
 // Graphic function, to make a linear gradient
 function linearGradient(ctx, startX, startY, vectorX, vectorY) {
 let grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
-    for (let p=5;p < arguments.length;p+=2) 
+    for (let p=5;p < arguments.length;p+=2)
         grad.addColorStop(arguments[p], arguments[p+1]);
     return grad;
 }
@@ -2125,7 +2125,7 @@ DomNode.prototype = {
     _vectorGfx                        : null,
     _scaleZoom                        : 1, // float
     _drawStack                        : null,
-    _moveStepStack                    : null,
+    _moveToGridCellStack                    : null,
     _text                            : null, // text node
     _textCharCountWidthMin            : null, // letter number in div width
     _textCharCountWidth                : null,
@@ -2195,22 +2195,21 @@ DomNode.prototype = {
                 result.push(p + att[p]);
         return GFX._scaleFactor + result.sort().join(); // we can put separator char in args here
     },
-    redrawNode: function(after2ndCall) {
+    redrawNode: function(recursiveCalling=false) {
         this.setWidth(this.getWidth());
         this.setHeight(this.getHeight());
-        if (after2ndCall) {
+        if (recursiveCalling) { // if (recursiveCalling === true)
             this.moveNodeTo(this.getXInit(), this.getYInit()); // init x y
-            if (this._moveStepStack) // positionned with fx
-                this.moveToStep.apply(this, this._moveStepStack);
-                //this.moveToStep(this._moveStepStack);//$$$$$$$$$$$$$$
-        }
+            if (this._moveToGridCellStack !== null) // positionned with fx
+                this.moveToGridCell(this._moveToGridCellStack); //before: this.moveToGridCell.apply(this, this._moveToGridCellStack); i// stacked [i, j] === this._moveToGridCellStack
+        } // _moveToGridCellStack is never reset, used 1 time
         if (this._domNodeType === 'canvas')
             this.redrawCanvas_(this._width, this._height);
         else { // type === div
             if (this._text)
                 this.resizeText_();
             for (let p in this._childs)
-                this._childs[p].redrawNode(true);
+                this._childs[p].redrawNode(true); //recursiveCalling === true
         }
     },
     redrawCanvas_: function(newWidth, newHeight) { // redraw at new size, no moving
@@ -2289,9 +2288,9 @@ DomNode.prototype = {
         if (x) this.setX(x);
         if (y) this.setY(y);
     },
-    moveToStep: function(i, j) {
-        this._moveStepStack = [i, j];
-        this.moveNodeTo(this._vectorGfx.fx(i), this._vectorGfx.fy(j));
+    moveToGridCell: function(cellPosition) {  // cellPosition = {i, j}
+        this._moveToGridCellStack = cellPosition; // to stack last position
+        this.moveNodeTo(this._vectorGfx.fx(cellPosition.i), this._vectorGfx.fy(cellPosition.j));
     },
     moveCenterTo: function(x, y) {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
