@@ -397,9 +397,9 @@ function GameGraphics(rootNode) { with(this) {
 }}
 GameGraphics.prototype = {
     _rootNode                            : null,
-    _zoomRatio                            : 1,                // default 1, float current zoom ratio
-    _scaleFactor                        : 33,                // default 33, int scale unit < _pxBlockSize && >= 1
-    _pxTopMenuZoneHeight                : 60,                 // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    _zoomRatio                            : 1, // default 1, float current zoom ratio
+    _scaleFactor                        : 33, // default 33, int scale unit < _pxBlockSize && >= 1
+    _pxTopMenuZoneHeight                : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
     _pxGameWidth                        : null,
     _pxGameHeight                        : null,
         _pxHalfGameHeight                : null,
@@ -420,21 +420,21 @@ GameGraphics.prototype = {
     _YMessagePosition                    : null,
     _pxCeilHeight                        : null,
     _pxFullGridAndCeil                    : null,
-    _pxPreviewFullSize                    : null,                // 2*36=72
+    _pxPreviewFullSize                    : null, // 2*36=72
     _pxPreviewBlockSize                    : null,
     _pxPreviewLineWidth                    : null,
-    _pxButtonSize                        : 50,                // default 50
+    _pxButtonSize                        : 50, // default 50
     _gfxBackground                        : null,
     _gfxBlock                            : null,
     _gfxGridFront                        : null,
     _gfxGridBackground                    : null,
     _gfxPreviewBlock                    : null,
     _gfxPreviewBlockFrame                : null,
-    _backgroundColor                    : 'black',            // default 'black'
-    _ghostShapeOpacity                    : 0.15,                // default 0.15
-    _previewOpacity                        : 0.2,                // default 0.2, opacity for preview grid
-    _lostShapeOpacity                    : 0.5,                // default 0.5, to show a ghost of shape wich makes losing
-    _shapesSpan                            : 2,                // span : envergure =(5-1)/2
+    _backgroundColor                    : 'black', // default 'black'
+    _ghostShapeOpacity                    : 0.15, // default 0.15
+    _previewOpacity                        : 0.2, // default 0.2, opacity for preview grid
+    _lostShapeOpacity                    : 0.5, // default 0.5, to show a ghost of shape wich makes losing
+    _shapesSpan                            : 2, // span : envergure =(5-1)/2
     _colors: {
         pink:         {light:[248, 190, 232], medium:[224, 107, 169], dark:[189,  66, 111]},
         purple:        {light:[210, 172, 241], medium:[136, 100, 208], dark:[ 90,  64, 177]},
@@ -2038,80 +2038,80 @@ function radialGradient(ctx, startX, startY, startRadius, vectorX, vectorY, endR
     return grad;
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
-function DomNode(att, parent, id) { with(this) { // att is attributes
-    _childs = {};
-    _domNodeType = isValued(att.type) ? att.type : 'div'; // implicit div if type ommited
-    if (parent) { _parent = parent; _id = id; }
-    _o = window.document.createElement(_domNodeType);
-    _o.id = _id; // #DEBUG
-    _o.style.position = 'absolute';
+function DomNode(att, parent, id) { // att is attributes
+    this._childs = {};
+    this._domNodeType = isValued(att.type) ? att.type : 'div'; // implicit div if type ommited
+    if (parent) { this._parent = parent; this._id = id; }
+    this._o = window.document.createElement(this._domNodeType);
+    this._o.id = this._id; // #DEBUG
+    this._o.style.position = 'absolute';
     if (att.onBody) {
-        window.document.body.appendChild(_o);
-        delete att.onBody; // to avoid it in set()
+        window.document.body.appendChild(this._o);
+        delete att.onBody; // to avoid it in this.set()
     } else if (parent)
-        _parent._o.appendChild(_o);
+        this._parent._o.appendChild(this._o);
     if (isValued(att.width))
         if (typeof att.width === 'number') {
-            _o.style.width = att.width+'%'; // all window
-            _width = getWidth();
+            this._o.style.width = att.width+'%'; // all window
+            this._width = this.getWidth();
         } else {
-            _widthVar = att.width;
-            getWidth = function() {return GFX[_widthVar]};
-            setWidth(getWidth());
+            this._widthVar = att.width;
+            this.getWidth = ()=>{ return GFX[this._widthVar] };
+            this.setWidth(this.getWidth());
         }
     else {
-        if (_parent)
-            getWidth = function() {return _parent.getWidth()};
+        if (this._parent)
+            this.getWidth = ()=>{ return this._parent.getWidth() };
         else
-            setWidth(0);
+            this.setWidth(0);
     }
     if (isValued(att.height))
         if (typeof att.height === 'number') {
-            _o.style.height = att.height+'%'; // all window
-            _height = getHeight();
+            this._o.style.height = att.height+'%'; // all window
+            this._height = this.getHeight();
         } else {
-            _heightVar = att.height;
-            getHeight = function() {return GFX[_heightVar]};
-            setHeight(getHeight());
+            this._heightVar = att.height;
+            this.getHeight = ()=>{ return GFX[this._heightVar] };
+            this.setHeight(this.getHeight());
         }
     else {
-        if (_parent)
-            getHeight = function() {return _parent.getHeight()};
+        if (this._parent)
+            this.getHeight = ()=>{ return this._parent.getHeight() };
         else
-            setHeight(0);
+            this.setHeight(0);
     }
     if (isValued(att.x)) {
-        _xVar = att.x;
-        getXInit = function() {return GFX[_xVar]};
+        this._xVar = att.x;
+        this.getXInit = ()=>{ return GFX[this._xVar] };
     } 
     if (isValued(att.y)) {
-        _yVar = att.y;
-        getYInit = function() {return GFX[_yVar]};
+        this._yVar = att.y;
+        this.getYInit = ()=>{ return GFX[this._yVar] };
     }
-    setX(getXInit());
-    setY(getYInit());
+    this.setX(this.getXInit());
+    this.setY(this.getYInit());
     delete att.x;
     delete att.y;
     delete att.width;
     delete att.height;    
-    if (_domNodeType === 'canvas') {
+    if (this._domNodeType === 'canvas') {
         if (att.gfx) {
-            _vectorGfx = att.gfx;
+            this._vectorGfx = att.gfx;
             delete att.gfx;
         }
-        _ctx = _o.getContext('2d');
-        _o.width =  _width;
-        _o.height =  _height;
-        _drawStack = {};
+        this._ctx = this._o.getContext('2d');
+        this._o.width =  this._width;
+        this._o.height =  this._height;
+        this._drawStack = {};
     }
-    set(att); // others attributes
-}}
+    this.set(att); // others attributes
+}
 DomNode.prototype = {
     _idCount                        : 0, // for unamed elements
     _o                                : null, // public, DOM DomNode or Div
     _childs                            : null,
     _parent                            : null, // pointer to parent
-    _id                                : null, // =ID, index of child in _childs, integer or name
+    _id                                : null, // =ID, index of child in this._childs, integer or name
     _x                                : 0,
     _y                                : 0,
     _width                            : 0,
@@ -2129,35 +2129,35 @@ DomNode.prototype = {
     _text                            : null, // text node
     _textCharCountWidthMin            : null, // letter number in div width
     _textCharCountWidth                : null,
-    destroyDomNode: function() { with(this) { // destroy all childs, optional because garbbage collector
-        for (let p in _childs)
-            _childs[p].destroyDomNode(); // delete _childs[p] made by child
-        if (_parent)
-            delete _parent._childs[_id]; // manage parent
-        delete _childs;
-        _o.parentNode.removeChild(_o);
-    }},
-    getUId_: function() { with(this) {
+    destroyDomNode: function() { // destroy all childs, optional because garbbage collector
+        for (let p in this._childs)
+            this._childs[p].destroyDomNode(); // delete this._childs[p] made by child
+        if (this._parent)
+            delete this._parent._childs[this._id]; // manage parent
+        delete this._childs;
+        this._o.parentNode.removeChild(this._o);
+    },
+    getNewUId_: function() {
         return ++DomNode.prototype._idCount;
-    }},
-    setTransformOrigin: function(origin) { with(this) {
-        _o.style['transformOrigin'] = origin;
-    }},
-    setRotate: function(degres) { with(this) {
-        _o.style['transform'] = 'rotate('+degres+'deg)';
-    }},
-    setScale: function(factor) { with(this) {
-        _o.style['transform'] = 'scale('+factor+')'; // scale with ratio
-    }},
-    delTransform: function() { with(this) {
-        _o.style['transform'] = '';
-    }},
-    drawGfx: function(attributes=null) { with(this) { // MAIN FUNCTION to draw a graphic, following attributes
+    },
+    setTransformOrigin: function(origin) {
+        this._o.style['transformOrigin'] = origin;
+    },
+    setRotate: function(degres) {
+        this._o.style['transform'] = `rotate(${degres}deg)`;
+    },
+    setScale: function(factor) {
+        this._o.style['transform'] = `scale(${factor})`; // scale with ratio
+    },
+    delTransform: function() {
+        this._o.style['transform'] = '';
+    },
+    drawGfx: function(attributes=null) { // MAIN FUNCTION to draw a graphic, following attributes
         let att = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
         let copyAtt = {}; // recording process to redraw
         for (let p in att)
             copyAtt[p] = att[p];
-        if (!att.gfx) att.gfx = _vectorGfx;
+        if (!att.gfx) att.gfx = this._vectorGfx;
         if (!att.x) att.x = 0; // px, int
         if (!att.y) att.y = 0; // px, int
         if (isValued(att.fx))
@@ -2166,156 +2166,157 @@ DomNode.prototype = {
             att.y += att.gfx.fy(att.fy);
         delete att.fx; // xy found, deleting functions
         delete att.fy;
-        _drawStack[getSortedXYArgs_(att)] = copyAtt; // remember xy only for index for redrawing
-        let sortedArgs = getSortedArgs_(att);
+        this._drawStack[this.getSortedXYArgs_(att)] = copyAtt; // remember xy only for index for redrawing
+        let sortedArgs = this.getSortedArgs_(att);
         if (!att.gfx.hasImageData(sortedArgs)) {
-            _ctx.beginPath();
-            att.gfx.draw_(_ctx, att.x, att.y, att, getWidth(), getHeight());
-            _ctx.closePath();
+            this._ctx.beginPath();
+            att.gfx.draw_(this._ctx, att.x, att.y, att, this.getWidth(), this.getHeight());
+            this._ctx.closePath();
         }
         if (att.gfx.hasImageData(sortedArgs)) {
             let imageData = att.gfx.getImageData(sortedArgs);
-            _ctx.putImageData(imageData, att.x, att.y);            // scaling position
+            this._ctx.putImageData(imageData, att.x, att.y);            // scaling position
         } else if (!att.gfx._nocache) {
-            let imageData = _ctx.getImageData(att.x, att.y, att.gfx.getWidth(), att.gfx.getHeight());
+            let imageData = this._ctx.getImageData(att.x, att.y, att.gfx.getWidth(), att.gfx.getHeight());
             att.gfx.putImageData(sortedArgs, imageData);
         }
-    }},
-    getSortedArgs_: function(att) { with(this) { // return sorted args as String
+    },
+    getSortedArgs_: function(att) { // return sorted args as String
         let result = [];
         for (let p in att)
-            if (p!='x' && p!='y' && p!='fx' && p!='fy' && p!='gfx')
+            if (p !== 'x' && p !== 'y' && p !== 'fx' && p !== 'fy' && p !== 'gfx')
                 result.push(p + att[p]);
         return GFX._scaleFactor + result.sort().join(); // we can put separator char in args here
-    }},
-    getSortedXYArgs_: function(att) { with(this) { // return sorted coord args as String
+    },
+    getSortedXYArgs_: function(att) { // return sorted coord args as String
         let result = [];
         for (let p in att)
-            if (p=='x' || p=='y')
+            if (p === 'x' || p === 'y')
                 result.push(p + att[p]);
         return GFX._scaleFactor + result.sort().join(); // we can put separator char in args here
-    }},
-    redrawNode: function(after2ndCall) { with(this) {
-        setWidth(getWidth());
-        setHeight(getHeight());
+    },
+    redrawNode: function(after2ndCall) {
+        this.setWidth(this.getWidth());
+        this.setHeight(this.getHeight());
         if (after2ndCall) {
-            moveNodeTo(getXInit(), getYInit()); // init x y
-            if (_moveStepStack) // positionned with fx
-                moveToStep.apply(this, _moveStepStack);
+            this.moveNodeTo(this.getXInit(), this.getYInit()); // init x y
+            if (this._moveStepStack) // positionned with fx
+                this.moveToStep.apply(this, this._moveStepStack);
+                //this.moveToStep(this._moveStepStack);//$$$$$$$$$$$$$$
         }
-        if (_domNodeType === 'canvas')
-            redrawCanvas_(_width, _height);
+        if (this._domNodeType === 'canvas')
+            this.redrawCanvas_(this._width, this._height);
         else { // type === div
-            if (_text)
-                resizeText_();
-            for (let p in _childs)
-                _childs[p].redrawNode(true);
+            if (this._text)
+                this.resizeText_();
+            for (let p in this._childs)
+                this._childs[p].redrawNode(true);
         }
-    }},
-    redrawCanvas_: function(newWidth, newHeight) { with(this) { // redraw at new size, no moving
-        _o.width = newWidth?newWidth:getWidth();
-        _o.height = newHeight?newHeight:getHeight();
+    },
+    redrawCanvas_: function(newWidth, newHeight) { // redraw at new size, no moving
+        this._o.width = newWidth ? newWidth : this.getWidth();
+        this._o.height = newHeight ? newHeight : this.getHeight();
         let redrawStack = {};
-        for (let p in _drawStack) // copy stack
-            redrawStack[p] = _drawStack[p];
-        _drawStack = {};
+        for (let p in this._drawStack) // copy stack
+            redrawStack[p] = this._drawStack[p];
+        this._drawStack = {};
         for (let p in redrawStack) // redrawing
-            drawGfx(redrawStack[p]);
-    }},
-    get: function(att) { with(this) {
-        return _o.getAttribute(att);
-    }},
-    set: function(att) { with(this) {
+            this.drawGfx(redrawStack[p]);
+    },
+    get: function(att) {
+        return this._o.getAttribute(att);
+    },
+    set: function(att) {
         for (let p in att)
             if (typeof att[p] !== 'object') // if not sub type and not sub group
-                _o.style[p.replace(/_/,'-')] = att[p];
+                this._o.style[p.replace(/_/,'-')] = att[p];
             else
-                _childs[p] = new DomNode(att[p], this, p);
-    }},
-    pxVal_: function(val) { with(this) {
+                this._childs[p] = new DomNode(att[p], this, p);
+    },
+    pxVal_: function(val) {
         return val + 'px';
-    }},
-    setX: function(x) { with(this) {
-        _x = Math.round(x);
-        _o.style.left = pxVal_(_x);
-    }},
-    setY: function(y) { with(this) {
-        _y = Math.round(y);
-        _o.style.top = pxVal_(_y); // comemnt to disable any Y graphical move #DEBUG
-    }},
-    getXCenter: function() { with(this) {
-        return _x + Math.round(getWidth()/2);
-    }},
-    setWidth: function(w) { with(this) {
-        _width = w;
-        _o.style.width = pxVal_(_width);
-    }},
-    setHeight: function(h) { with(this) {
-        _height = h;
-        _o.style.height = pxVal_(_height);
-    }},
-    getXInit: function() { with(this) { // function by default, can be overwritten by return GFX value
+    },
+    setX: function(x) {
+        this._x = Math.round(x);
+        this._o.style.left = this.pxVal_(this._x);
+    },
+    setY: function(y) {
+        this._y = Math.round(y);
+        this._o.style.top = this.pxVal_(this._y); // comemnt to disable any Y graphical move #DEBUG
+    },
+    getXCenter: function() {
+        return this._x + Math.round(this.getWidth()/2);
+    },
+    setWidth: function(w) {
+        this._width = w;
+        this._o.style.width = this.pxVal_(this._width);
+    },
+    setHeight: function(h) {
+        this._height = h;
+        this._o.style.height = this.pxVal_(this._height);
+    },
+    getXInit: function() { // function by default, can be overwritten by return GFX value
         return 0;
-    }},
-    getYInit: function() { with(this) { // function by default, can be overwritten by return GFX value
+    },
+    getYInit: function() { // function by default, can be overwritten by return GFX value
         return 0;
-    }},
-    getX: function() { with(this) {
-        return _x;// _o.offsetLeft;
-    }},
-    getY: function() { with(this) {
-        return _y;// _o.offsetTop;
-    }},
-    getWidth: function() { with(this) { // function by default, can be overwritten by return GFX value
-        return _o.offsetWidth;
-    }},
-    getHeight: function() { with(this) {// function by default, can be overwritten by return GFX value
-        return _o.offsetHeight;
-    }},
-    moveRelatively: function(left, down) { with(this) { // move relatively
-        if (left) setX(_x + left);
-        if (down) setY(_y + down);
-    }},
-    moveTemporaryRelatively: function(left, down) { with(this) { // move temporary relatively, used for quake
-        if (left) _o.style.left = pxVal_(_x + left);
-        if (down) _o.style.top = pxVal_(_y + down);
-    }},
-    moveTemporaryRestore: function() { with(this) { // restore before move, used for quake
-        _o.style.left = _x;
-        _o.style.top = _y;
-    }},
-    moveNodeTo: function(x, y) { with(this) {
-        if (x) setX(x);
-        if (y) setY(y);
-    }},
-    moveToStep: function(i, j) { with(this) {
-        _moveStepStack = [i, j];
-        moveNodeTo(_vectorGfx.fx(i), _vectorGfx.fy(j));
-    }},
-    moveCenterTo: function(x, y) { with(this) {
-        if (x) setX(Math.round(x-getWidth()/2));
-        if (y) setY(Math.round(y-getHeight()/2));
-    }},
-    newChild: function(att) { with(this) { // returns pointer to child
-        let id = getUId_();
-        return (_childs[id] = new DomNode(att, this, id));
-        // return _childs[att.name?att.name:id] = new DomNode(att, this, att.name?att.name:id);
-    }},
-    putChild: function(canvas) { with(this) {
+    },
+    getX: function() {
+        return this._x;// this._o.offsetLeft;
+    },
+    getY: function() {
+        return this._y;// this._o.offsetTop;
+    },
+    getWidth: function() { // function by default, can be overwritten by return GFX value
+        return this._o.offsetWidth;
+    },
+    getHeight: function() {// function by default, can be overwritten by return GFX value
+        return this._o.offsetHeight;
+    },
+    moveRelatively: function(left, down) { // move relatively
+        if (left) this.setX(this._x + left);
+        if (down) this.setY(this._y + down);
+    },
+    moveTemporaryRelatively: function(left, down) { // move temporary relatively, used for quake
+        if (left) this._o.style.left = this.pxVal_(this._x + left);
+        if (down) this._o.style.top = this.pxVal_(this._y + down);
+    },
+    moveTemporaryRestore: function() { // restore before move, used for quake
+        this._o.style.left = this._x;
+        this._o.style.top = this._y;
+    },
+    moveNodeTo: function(x, y) {
+        if (x) this.setX(x);
+        if (y) this.setY(y);
+    },
+    moveToStep: function(i, j) {
+        this._moveStepStack = [i, j];
+        this.moveNodeTo(this._vectorGfx.fx(i), this._vectorGfx.fy(j));
+    },
+    moveCenterTo: function(x, y) {
+        if (x) this.setX(Math.round(x-this.getWidth()/2));
+        if (y) this.setY(Math.round(y-this.getHeight()/2));
+    },
+    newChild: function(att) { // returns pointer to child
+        let id = this.getNewUId_();
+        return (this._childs[id] = new DomNode(att, this, id));
+        // return this._childs[att.name?att.name:id] = new DomNode(att, this, att.name?att.name:id);
+    },
+    putChild: function(canvas) {
         if (canvas._parent)
             delete canvas._parent._childs[canvas._id]; // manage parent
         if ( !canvas._id || (typeof canvas._id === 'number') )
-            canvas._id = getUId_();// ++ _count;
-        _childs[canvas._id] = canvas; // manage parent
+            canvas._id = this.getNewUId_();// ++ _idCount
+        this._childs[canvas._id] = canvas; // manage parent
         canvas._parent = this; // manage parent
         canvas.moveNodeTo(canvas._x, canvas._y);
-        _o.appendChild(canvas._o);
-    }},
-    createText: function(font, fontWeight, color, textShadow, textCharCountWidthMin) { with(this) {
-        _textCharCountWidthMin = textCharCountWidthMin?textCharCountWidthMin:1; 
+        this._o.appendChild(canvas._o);
+    },
+    createText: function(font, fontWeight, color, textShadow, textCharCountWidthMin) {
+        this._textCharCountWidthMin = textCharCountWidthMin?textCharCountWidthMin:1; 
         let table = window.document.createElement('table');
         let tr = window.document.createElement('tr');
-        _text = window.document.createElement('td');
+        this._text = window.document.createElement('td');
         table.style.width = '100%';
         table.style.height = '100%';
         table.style.textAlign = 'center';
@@ -2323,31 +2324,31 @@ DomNode.prototype = {
         table.style.fontWeight = fontWeight;
         table.style.textShadow = textShadow;
         table.style.color = color;
-        tr.appendChild(_text);
+        tr.appendChild(this._text);
         table.appendChild(tr);
-        _o.appendChild(table);
-    }},
-    setTextIntoSizedField: function(textInfos) { with(this) {
-        _textCharCountWidth = isValued(textInfos.fieldCharCount)
+        this._o.appendChild(table);
+    },
+    setTextIntoSizedField: function(textInfos) {
+        this._textCharCountWidth = isValued(textInfos.fieldCharCount)
             ? textInfos.fieldCharCount // value >= text.length, example, 3 chars represents 100% of width of this HTML Node
             : (''+textInfos.text).length; // to convert if text is a number
-        _text.innerHTML = textInfos.text;
-        resizeText_(); // resize field
-    }},
-    resizeText_: function() { with(this) {
-        // _o.style.width = 'auto';
-        // _o.style.height = 'auto';
-        // console.log(_o.clientHeight + ' ' + _o.clientWidth); // #DEBUG
-        _o.firstChild.style.fontSize = pxVal_(
-            getWidth()/Math.max(_textCharCountWidth, _textCharCountWidthMin)
+        this._text.innerHTML = textInfos.text;
+        this.resizeText_(); // resize field
+    },
+    resizeText_: function() {
+        // this._o.style.width = 'auto';
+        // this._o.style.height = 'auto';
+        // console.log(this._o.clientHeight + ' ' + this._o.clientWidth); // #DEBUG
+        this._o.firstChild.style.fontSize = this.pxVal_(
+            this.getWidth()/Math.max(this._textCharCountWidth, this._textCharCountWidthMin)
         );
-    }},
-    hide: function() { with(this) {
-        _o.style.visibility = 'hidden'; // or set({opacity: 0});
-    }},
-    show: function() { with(this) {
-        _o.style.visibility = 'inherit';
-    }}
+    },
+    hide: function() {
+        this._o.style.visibility = 'hidden'; // or this.set({opacity: 0});
+    },
+    show: function() {
+        this._o.style.visibility = 'inherit';
+    }
 };
 "use strict";
 // VECTOR GFX Class, manage graphic layout
