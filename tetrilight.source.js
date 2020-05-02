@@ -267,7 +267,7 @@ function init() {
     // if (GAME) GAME.destroyGame();
     GAME = new TetrisGame();
     GAME.addGrid();
-    GAME.addGrid(); // #DEBUG
+    //GAME.addGrid(); // #DEBUG
 }
 // MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { with(this) { // queue or stack
@@ -297,8 +297,7 @@ function MainMenu() { with(this) { // queue or stack
     window.addEventListener('keyup', keyCapture_, false);
     window.addEventListener('keypress', keyPressCapture_, false);
     window.oncontextmenu = function(event){ cancelEvent_(event); };
-    _domNode = new DomNode({
-        onBody: true, width:100, height:100 });
+    _domNode = new DomNode({ onBody: true, width:100, height:100 });
     SPRITES = new TetrisSpritesCreation(_domNode);
     _domNode.setDomNode({ // menus on top of the screen
         top: {
@@ -308,7 +307,7 @@ function MainMenu() { with(this) { // queue or stack
         background: {
             type:'canvas', y:'_pxTopMenuZoneHeight', width:'_pxGameWidth', height:'_pxGameHeight', sprite:SPRITES._spriteBackground }
         });
-    _domNode._childs.background.drawGfx();
+    _domNode._childs.background.drawGfx(); // paint black background
     _domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
     // _domNode._childs.message1.setTex('totototo');
     _domNode._htmlElement.addEventListener('click',
@@ -933,13 +932,13 @@ function Grid(keyboard, colorTxt) { with(this) {
     _softDropTimer = new Timer( function() {with(this) {
         _fallingShape.startSoftDropping(); }},
         DURATIONS.softDropPeriod );
-    _domNode = MAIN_MENU._domNode.newChild({        // creating gmae graphics
+    _domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
         width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
         frameZone: {
             x:'_pxGridBorder', y:'_pxCeilHeight',
             width:'_pxGridWidth', height:'_pxGridHeight',
             overflow:'hidden',
-            back: {    // tetris background
+            back: { // tetris background, if not canvas, it's div
                 background: {type:'canvas', sprite:SPRITES._spriteGridBackground},                
                 ghostBlocks:{},
                 realBlocks: {}    }    },
@@ -2058,9 +2057,10 @@ class EventsQueue {
     }
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
+// DIV contains DIV and CANVAS, CANVAS have no childs
 function DomNode(att, parent=null, id) { // att is attributes
     this._childs = {};
-    this._domNodeType = isValued(att.type) ? att.type : 'div'; // implicit div if type ommited
+    this._domNodeType = isValued(att.type) ? 'canvas' : 'div'; // implicit div if type ommited
     // have a parent ?
     if (parent !== null) { this._parent = parent; this._id = id; }
     // creating element into page window.document
@@ -2078,6 +2078,7 @@ function DomNode(att, parent=null, id) { // att is attributes
         if (typeof att.width === 'number') {
             this._htmlElement.style.width = att.width+'%'; // all window
             this._width = this.getWidth();
+            console.log(this._htmlElement.style.width)
         } else {
             this._widthVar = att.width;
             this.getWidth = ()=>{ return SPRITES[this._widthVar] };
