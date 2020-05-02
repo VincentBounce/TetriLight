@@ -11,6 +11,8 @@ All browsers support MP3 and WAV, excepted Edge/IE for WAV
 to sweep = to clear
 a row = a line
 a cell = a slot
+gfx = graphics
+sprite = designed part of 
 
 **************** GAME RULES ****************
 When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
@@ -24,6 +26,17 @@ Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 f
 Combos rows count formula is same * 50%
 Bonus same as 2 rows when all is cleared (Perfect clear)
 
+**************** GRAPHIC CHOICE ****************
+SVG:
+    blur because sizes in %
+    calculate render on each move
+    implicit built-in page resize zoom
+Canvas:
+    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen //$canvas
+    move without calculation
+    computing page resize zoom with JS explicit code
+WebGL: not massively adopted
+
 **************** MINOR BUGS ****************
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
 If top line only is cleared AND top line has blocks under, then the anim and sound of droping occurs again
@@ -33,10 +46,12 @@ $$$ ListAutoIndex called 1x, useless?
 $$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
-!= became !==, 10min tested: stable
-== became ===, 10min tested: stable
+!= became !==, 10min tested: stable, check if slower
+== became ===, 10min tested: stable, check if slower
+Prototypes became Class, check if slower
+frame rate
 
- **************** CHANGES FROM ECMAScript 5 (2009) ****************
+**************** CHANGES FROM ECMAScript 5 (2009) ****************
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
     (`Level ${this._level}`)
@@ -206,6 +221,27 @@ const DURATIONS                       = { // tetris durations, periods in ms
     lostMessageDuration               : 3500, // 3500 ms, period to display score
     softDropPeriod                    : 50, // 0050 ms, if this is max DropDuration
     initialDropPeriod                 : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+const PIXELS                          = {
+    pxTopMenuZoneHeight                : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    pxGameWidth                        : null,
+    pxGameHeight                        : null,
+        pxHalfGameHeight                : null,
+    pxBlockSize                        : 34,
+        pxBoxSize                        : null,
+    pxGridBorder                        : null,
+    pxGridLineWidth                    : null,
+    pxGridWidth                        : null,
+        pxFullGridWidth                : null,
+            pxGridMargin                : null,
+    pxGridHeight                        : null,
+        pxFullGridHeight                : null,
+    pxCeilHeight                        : null,
+    pxFullGridAndCeil                    : null,
+    pxPreviewFullSize                    : null, // 2*36=72
+    pxPreviewBlockSize                    : null,
+    pxPreviewLineWidth                    : null,
+    pxButtonSize                        : 50, // default 50
+}
 const FONTS                           = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS                          = {
     landFX:                           {ext:'wav'},
@@ -389,7 +425,7 @@ Audio.prototype = {
         return _sounds[name].sound.duration;
     }}
 };
-// TETRIS GRAPHICS Class
+// before TETRIS GRAPHICS Class
 function GameGraphics(rootNode) { with(this) {
     _rootNode = rootNode;
     zoom1Step(0);
@@ -2081,7 +2117,7 @@ function DomNode(att, parent, id) { // att is attributes
             delete att.gfx;
         }
         this._ctx = this._o.getContext('2d');
-        this._o.width =  this._width;
+        this._o.width =  this._width; //$canvas
         this._o.height =  this._height;
         this._drawStack = {};
     }
@@ -2184,7 +2220,7 @@ DomNode.prototype = {
             if (this._moveToGridCellStack !== null) // positionned with fx
                 this.moveToGridCell(this._moveToGridCellStack); //before: this.moveToGridCell.apply(this, this._moveToGridCellStack); i// stacked [i, j] === this._moveToGridCellStack
         } // _moveToGridCellStack is never reset, used 1 time
-        if (this._domNodeType === 'canvas')
+        if (this._domNodeType === 'canvas') //$canvas
             this.redrawCanvas_(this._width, this._height);
         else { // type === div
             if (this._text)
@@ -2332,7 +2368,7 @@ DomNode.prototype = {
 };
 "use strict";
 // VECTOR GFX Class, vectorial picture, emulates vectorial SVG graphics, generic
-// functions : x y fx fy gfx _nocache reserved; 1 input
+// functions : x, y, fx, fy, gfx, _nocache, reserved; 1 input
 // use nomage: __funcToDoThis (intern)
 // no '_' in String value of arguments
 // for called functions: use one input parameter not object nor array (String, Number, Boolean)
@@ -2374,6 +2410,7 @@ class VectorGfx {
     // Graphic function, to make a linear gradient
     static linearGradient(ctx, startX, startY, vectorX, vectorY) {
         let grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
+        console.table(arguments)
         for (let p=5;p < arguments.length;p+=2)
             grad.addColorStop(arguments[p], arguments[p+1]);
         return grad;
