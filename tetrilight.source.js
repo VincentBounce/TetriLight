@@ -42,7 +42,7 @@ IE11 (standard with Windows 10) not working with:
     (`Level ${this._level}`)
     var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
     cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
-    func(arg=false)
+    func(arg=null)
     myArray.fill()
 ECMAScript 2015: let, const, Transform: IE11 OK
 ECMAScript 2017: async await
@@ -181,32 +181,32 @@ Examples of listAutoIndex: _gridsListAuto
 */
 // "use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
-let BROWSER, MAIN_MENU, GAME, AUDIO, GFX;            // GFX: GameGraphics
+let MAIN_MENU, GAME, AUDIO, GFX;            // GFX: GameGraphics
 // GLOBAL CONSTANTS
 const RULES                         = { // tetris rules
     gameSpeedRatio                    : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
-    initialVolume                     : 0.1,            // default 0.6, 0 to 1, if #DEBUG
-    transferRowsCountMin              : 1,             // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
-    pentominoesRowsCountMin           : 1,             // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
-    horizontalBoxesCount              : 5,            // default 10, min 5 #DEBUG
-    verticalBoxesCount                : 21,             // default 21 = (20 visible + 1 hidden) #DEBUG
-    topLevel                          : 25,            // default 25, max level (steps of drop acceleration)
-    risingRowsHolesCountMaxRatio      : 0.3,            // default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
-    fps                               : 60/1000 };    // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
-const DURATIONS                       = {                // tetris durations, periods in ms
-    pentominoesModeDuration           : 10000,        // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
-    movingGridsDuration               : 350,            // 0350 ms
-    clearingRowsDuration              : 350,            // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
-    rising1RowDuration                : 150,            // 0150 ms or 250, increase for #DEBUG
-    rotatingDuration                  : 400,             // 0400 ms
-    gridQuakeDuration                 : 150,            // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
-    centralMessagesDuration           : 1500,            // 1500 ms, central messages displaying duration, replaced, not queued
-    displayingScoreDuration           : 1500,            // 1500 ms
-    hardDropDuration                  : 200,            // 0200 ms, increase for #DEBUG
-    lostMessageDuration               : 3500,            // 3500 ms, period to display score
-    softDropPeriod                    : 50,            // 0050 ms, if this is max DropDuration
-    initialDropPeriod                 : 1100 };         // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-const FONTS                           = {    scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
+    initialVolume                     : 0.1, // default 0.6, 0 to 1, if #DEBUG
+    transferRowsCountMin              : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
+    pentominoesRowsCountMin           : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
+    horizontalBoxesCount              : 5, // default 10, min 5 #DEBUG
+    verticalBoxesCount                : 21, // default 21 = (20 visible + 1 hidden) #DEBUG
+    topLevel                          : 25, // default 25, max level (steps of drop acceleration)
+    risingRowsHolesCountMaxRatio      : 0.3, // default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
+    fps                               : 60/1000 }; // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
+const DURATIONS                       = { // tetris durations, periods in ms
+    pentominoesModeDuration           : 10000, // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
+    movingGridsDuration               : 350, // 0350 ms
+    clearingRowsDuration              : 350, // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
+    rising1RowDuration                : 150, // 0150 ms or 250, increase for #DEBUG
+    rotatingDuration                  : 400, // 0400 ms
+    gridQuakeDuration                 : 150, // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
+    centralMessagesDuration           : 1500, // 1500 ms, central messages displaying duration, replaced, not queued
+    displayingScoreDuration           : 1500, // 1500 ms
+    hardDropDuration                  : 200, // 0200 ms, increase for #DEBUG
+    lostMessageDuration               : 3500, // 3500 ms, period to display score
+    softDropPeriod                    : 50, // 0050 ms, if this is max DropDuration
+    initialDropPeriod                 : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+const FONTS                           = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS                          = {
     landFX:                           {ext:'wav'},
     rotateFX:                         {ext:'wav'},
@@ -225,7 +225,6 @@ const DROP_TYPES                      = {soft: 1, hard: 2}; // 1 and 2 are usefu
 // INIT called by HTML browser
 function init() {
     for (let p in DURATIONS) DURATIONS[p]/=RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
-    BROWSER = new Browser();
     AUDIO = new Audio(SOUNDS);
     AUDIO.changeVolume(false);
     MAIN_MENU = new MainMenu();
@@ -258,14 +257,14 @@ function MainMenu() { with(this) { // queue or stack
                 GAME.pauseOrResume();
         }
     };// init below
-    document.documentElement.addEventListener('keydown', keyCapture_, false);         // document.documentElement root
-    document.documentElement.addEventListener('keyup', keyCapture_, false);
-    document.documentElement.addEventListener('keypress', keyPressCapture_, false);
-    document.documentElement.oncontextmenu = function(event){ cancelEvent_(event); };
+    window.addEventListener('keydown', keyCapture_, false); // old: window.document.documentElement
+    window.addEventListener('keyup', keyCapture_, false);
+    window.addEventListener('keypress', keyPressCapture_, false);
+    window.oncontextmenu = function(event){ cancelEvent_(event); };
     _domNode = new DomNode({
-        onBody: true, width:100, height:100    });
+        onBody: true, width:100, height:100 });
     GFX = new GameGraphics(_domNode);
-    _domNode.set({    // menus on top of the screen
+    _domNode.set({ // menus on top of the screen
         top: {
             type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', gfx:GFX._gfxBackground },// to create an HTML top free space above the tetris game
         message1: {
@@ -281,7 +280,7 @@ function MainMenu() { with(this) { // queue or stack
             if ((event.offsetX < GFX._pxButtonSize) && (event.offsetY < GFX._pxButtonSize))
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
-    window.onresize = function() { GAME.organizeGrids({resize:true}) };        // on IE : load at start ; or window.onresize = organizeGrids;
+    window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
 }}
 MainMenu.prototype = {
     _domNode    : null,
@@ -315,16 +314,16 @@ MainMenu.prototype = {
         }
     }}
 };
-// BROWSER Class
+/*// BROWSER Class
 function Browser() { with(this) {
 }}
 Browser.prototype = {
     isFullScreen: function() { with(this) {
         return (innerWidth === screen.width && innerHeight > screen.height-5); // Firefox use 1px in height
     }}
-};
+};*/
 // AUDIO Class (for sounds)
-function Audio(sounds) { with(this) {    // constructor
+function Audio(sounds) { with(this) { // constructor
     _sounds = {};
     for (let p in sounds)
         addSound(p, sounds[p].ext, sounds[p].vol);
@@ -333,14 +332,14 @@ Audio.prototype = {
     _mainVolume                    : RULES.initialVolume,
     _muted                        : false,
     _sounds                        : null,
-    addSound: function(name, ext, volume) { with(this) {    // when new is called, add all sounds in _sounds let, 2nd arg volume is optional
+    addSound: function(name, ext, volume) { with(this) { // when new is called, add all sounds in _sounds let, 2nd arg volume is optional
         _sounds[name] = {};
-        _sounds[name].sound = document.createElement('audio');
-        document.body.appendChild(_sounds[name].sound);
+        _sounds[name].sound = window.document.createElement('audio');
+        window.document.body.appendChild(_sounds[name].sound);
         // _sounds[name].sound.setAttribute('preload', 'auto');    // old
-        // _sounds[name].sound.autoplay = true;    // old
-        // _sounds[name].sound.controls = true;    // displays controls for #DEBUG
-        if (name.indexOf('Music') !== -1)    // check if contains Music in name, if so then play with loop
+        // _sounds[name].sound.autoplay = true; // old
+        // _sounds[name].sound.controls = true; // displays controls for #DEBUG
+        if (name.indexOf('Music') !== -1) // check if contains Music in name, if so then play with loop
             _sounds[name].sound.loop = 'loop';
         _sounds[name].sound.setAttribute('src', 'audio/' + name + '.' + ext); // (ext ? ext : 'wav')
         _sounds[name].volumeFactor = (volume ? volume : 1);
@@ -352,7 +351,7 @@ Audio.prototype = {
     }},
     audioStop: function(name) { with(this) {
         _sounds[name].paused = false;
-        _sounds[name].sound.pause();    // old: _sounds[name].sound.currentTime = 0;
+        _sounds[name].sound.pause(); // old: _sounds[name].sound.currentTime = 0;
     }},
     /*audioStopAll: function() { with(this) {
         for (let p in _sounds)
@@ -365,10 +364,10 @@ Audio.prototype = {
         else
             audioPlay(name);
     }},
-    changeVolume: function(up) { with(this) {    // -1 or +1, return false if not changed
+    changeVolume: function(up) { with(this) { // -1 or +1, return false if not changed
         let volume = _mainVolume + up*0.1;
         if ((volume < 0) || (volume > 1))
-            return false;                        // we can't change
+            return false; // we can't change
         else {
             _mainVolume = volume;
             refreshVolume(_mainVolume);
@@ -491,14 +490,14 @@ GameGraphics.prototype = {
         _YMessagePosition = Math.round(_pxFullGridHeight/2);
         _zoomRatio = !oldGridWidth ? 1 : _pxFullGridWidth / oldGridWidth;
     }},
-    create_: function()  { with(this) {        // creating all graphics
+    create_: function()  { with(this) { // creating all graphics
         _gfxBackground = new VectorGfx({
             _nocache: true,
-            draw_: function(c, x, y, a, w, h) {            // context, x, y, args, canvas width, canvas height
+            draw_: function(c, x, y, a, w, h) { // context, x, y, args, canvas width, canvas height
                 c.fillStyle=linearGradient(c,0,0,0,h,0.5,_backgroundColor,1,'#AAAAAA');
                 c.fillRect(x,y,w,h)    }
         });
-        _gfxGridFront = new VectorGfx({    // on dessine 3 trapèzes qu'on assemble
+        _gfxGridFront = new VectorGfx({ // on dessine 3 trapèzes qu'on assemble
             _width:    '_pxFullGridWidth',
             _height: '_pxFullGridHeight',
             _nocache: true,
@@ -522,14 +521,14 @@ GameGraphics.prototype = {
                 c.fillStyle=linearGradient(c,0,_pxGridHeight,0,_pxGridBorder,0,rgbaTxt(col.dark),1,rgbaTxt(col.light));
                 c.fill();
                 c.fillStyle=linearGradient(c,0,0,0,_pxBoxSize*2,0, rgbaTxt([0,0,0],1),1, rgbaTxt([0,0,0],0));    // top grid shadow
-                c.fillRect(0,0,_pxFullGridWidth,_pxFullGridHeight);    // #DEBUG
+                c.fillRect(0,0,_pxFullGridWidth,_pxFullGridHeight); // #DEBUG
             }
         });
         _gfxGridBackground = new VectorGfx({
             _width:    '_pxFullGridWidth',
             _height: '_pxFullGridHeight',
             _nocache: true,
-            draw_: function(c, x, y, a) {            // context, x, y, args
+            draw_: function(c, x, y, a) { // context, x, y, args
                 let col = _colors[a.col];
                 c.fillStyle='#111';c.fillRect(x,y,_pxGridWidth,_pxGridHeight);
                 let colo = ['#000','#222'];
@@ -789,6 +788,8 @@ Game.prototype = {
                 grid._domNode.moveNodeTo(count*realIntervalX + (count-1)*GFX._pxFullGridWidth, null);
             }
         }
+        //console.log('window.fullScreen: ' + window.fullScreen); // #DEBUG undefined
+        //console.log('window.devicePixelRatio: ' + window.devicePixelRatio); // #DEBUG Read only, ratio 1.75 on my 4K LCD === physical px / px independant device
     }},
     averageBlocksByPlayingGrid: function() { with(this) {
         let allGridsBlocksCount = 0;
@@ -1246,7 +1247,7 @@ Grid.prototype = {
 };
 // TETRIS SHAPE Class
 class Shape {
-    constructor(grid, group=false) { // default falling shape means not group argument
+    constructor(grid, group=null) { // default falling shape means not group argument
         this._grid = grid;
         this._iPosition;
         this._jPosition;
@@ -1261,7 +1262,7 @@ class Shape {
         this._domNode;
         this._jVector = 0, // vector upper (+) and under (-) shape
         this._shapeIndex = GAME._shapeIdTick++;
-        if (!group)
+        if (group===null)
             this.newControlledShape_();
         else
             this.newShapeForExistingLockedBlocks_(group); // old: this[shapeOrChain](group);
@@ -1358,7 +1359,7 @@ class Shape {
             }, this);
         return this;
     }
-    moveAndPutShapeToPlaced(iRight, jUp, dropType=false) { // move to placed
+    moveAndPutShapeToPlaced(iRight, jUp, dropType=null) { // move to placed
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 myBlock._iPosition += iRight; // updating position
@@ -1366,7 +1367,7 @@ class Shape {
                 myBlock._grid.putBlockInMatrix(myBlock); // put to new slot
                 myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock); // put block with new position
             });
-        if (dropType && (jUp < 0))
+        if ((dropType !== null) && (jUp < 0))
             this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
         return this;
     }
@@ -2018,8 +2019,9 @@ class EventsQueue {
     }
 }
 // Graphic function, convert a [RGB] array + alpha value to text
-function rgbaTxt(color, alpha) {
-    return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((arguments.length==2)?alpha:1)+')';
+function rgbaTxt(color, alpha=null) {
+    //return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((alpha===null)?1:alpha)+')';
+    return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
 }
 // Graphic function, to make a linear gradient
 function linearGradient(ctx, startX, startY, vectorX, vectorY) {
@@ -2036,21 +2038,21 @@ function radialGradient(ctx, startX, startY, startRadius, vectorX, vectorY, endR
     return grad;
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
-function DomNode(att, parent, id) { with(this) {                                                        // att is attributes
+function DomNode(att, parent, id) { with(this) { // att is attributes
     _childs = {};
-    _domNodeType = isValued(att.type) ? att.type : 'div';                    // implicit div if type ommited
+    _domNodeType = isValued(att.type) ? att.type : 'div'; // implicit div if type ommited
     if (parent) { _parent = parent; _id = id; }
-    _o = document.createElement(_domNodeType);
-    _o.id = _id;                            // #DEBUG
+    _o = window.document.createElement(_domNodeType);
+    _o.id = _id; // #DEBUG
     _o.style.position = 'absolute';
     if (att.onBody) {
-        document.body.appendChild(_o);
-        delete att.onBody;                    // to avoid it in set()
+        window.document.body.appendChild(_o);
+        delete att.onBody; // to avoid it in set()
     } else if (parent)
         _parent._o.appendChild(_o);
     if (isValued(att.width))
         if (typeof att.width === 'number') {
-            _o.style.width = att.width+'%';    // all window
+            _o.style.width = att.width+'%'; // all window
             _width = getWidth();
         } else {
             _widthVar = att.width;
@@ -2065,7 +2067,7 @@ function DomNode(att, parent, id) { with(this) {                                
     }
     if (isValued(att.height))
         if (typeof att.height === 'number') {
-            _o.style.height = att.height+'%';            // all window
+            _o.style.height = att.height+'%'; // all window
             _height = getHeight();
         } else {
             _heightVar = att.height;
@@ -2102,14 +2104,14 @@ function DomNode(att, parent, id) { with(this) {                                
         _o.height =  _height;
         _drawStack = {};
     }
-    set(att);                // others attributes
+    set(att); // others attributes
 }}
 DomNode.prototype = {
-    _idCount                        : 0,                // for unamed elements
-    _o                                : null,                // public, DOM DomNode or Div
+    _idCount                        : 0, // for unamed elements
+    _o                                : null, // public, DOM DomNode or Div
     _childs                            : null,
-    _parent                            : null,                // pointer to parent
-    _id                                : null,                // =ID, index of child in _childs, integer or name
+    _parent                            : null, // pointer to parent
+    _id                                : null, // =ID, index of child in _childs, integer or name
     _x                                : 0,
     _y                                : 0,
     _width                            : 0,
@@ -2121,17 +2123,17 @@ DomNode.prototype = {
     _domNodeType                    : null,
     _ctx                            : null,
     _vectorGfx                        : null,
-    _scaleZoom                        : 1,                // float
+    _scaleZoom                        : 1, // float
     _drawStack                        : null,
     _moveStepStack                    : null,
-    _text                            : null,                // text node
-    _textCharCountWidthMin            : null,                // letter number in div width
+    _text                            : null, // text node
+    _textCharCountWidthMin            : null, // letter number in div width
     _textCharCountWidth                : null,
-    destroyDomNode: function() { with(this) {    // destroy all childs, optional because garbbage collector
+    destroyDomNode: function() { with(this) { // destroy all childs, optional because garbbage collector
         for (let p in _childs)
-            _childs[p].destroyDomNode();        // delete _childs[p] made by child
+            _childs[p].destroyDomNode(); // delete _childs[p] made by child
         if (_parent)
-            delete _parent._childs[_id];        // manage parent
+            delete _parent._childs[_id]; // manage parent
         delete _childs;
         _o.parentNode.removeChild(_o);
     }},
@@ -2145,13 +2147,13 @@ DomNode.prototype = {
         _o.style['transform'] = 'rotate('+degres+'deg)';
     }},
     setScale: function(factor) { with(this) {
-        _o.style['transform'] = 'scale('+factor+')';    // scale with ratio
+        _o.style['transform'] = 'scale('+factor+')'; // scale with ratio
     }},
     delTransform: function() { with(this) {
         _o.style['transform'] = '';
     }},
-    drawGfx: function(attributes=false) { with(this) {    // MAIN FUNCTION to draw a graphic, following attributes
-        let att = attributes ? attributes : {}; // if attributes not supplied, we make new Object
+    drawGfx: function(attributes=null) { with(this) { // MAIN FUNCTION to draw a graphic, following attributes
+        let att = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
         let copyAtt = {}; // recording process to redraw
         for (let p in att)
             copyAtt[p] = att[p];
@@ -2184,40 +2186,40 @@ DomNode.prototype = {
         for (let p in att)
             if (p!='x' && p!='y' && p!='fx' && p!='fy' && p!='gfx')
                 result.push(p + att[p]);
-        return GFX._scaleFactor + result.sort().join();        // we can put separator char in args here
+        return GFX._scaleFactor + result.sort().join(); // we can put separator char in args here
     }},
     getSortedXYArgs_: function(att) { with(this) { // return sorted coord args as String
         let result = [];
         for (let p in att)
             if (p=='x' || p=='y')
                 result.push(p + att[p]);
-        return GFX._scaleFactor + result.sort().join();        // we can put separator char in args here
+        return GFX._scaleFactor + result.sort().join(); // we can put separator char in args here
     }},
     redrawNode: function(after2ndCall) { with(this) {
         setWidth(getWidth());
         setHeight(getHeight());
         if (after2ndCall) {
-            moveNodeTo(getXInit(), getYInit());                        // init x y
-            if (_moveStepStack)                                 // positionned with fx
+            moveNodeTo(getXInit(), getYInit()); // init x y
+            if (_moveStepStack) // positionned with fx
                 moveToStep.apply(this, _moveStepStack);
         }
         if (_domNodeType === 'canvas')
             redrawCanvas_(_width, _height);
-        else {                                                        // type === div
+        else { // type === div
             if (_text)
                 resizeText_();
             for (let p in _childs)
                 _childs[p].redrawNode(true);
         }
     }},
-    redrawCanvas_: function(newWidth, newHeight) { with(this) {    // redraw at new size, no moving
+    redrawCanvas_: function(newWidth, newHeight) { with(this) { // redraw at new size, no moving
         _o.width = newWidth?newWidth:getWidth();
         _o.height = newHeight?newHeight:getHeight();
-        let redrawStack = {}
-        for (let p in _drawStack)                        // copy stack
+        let redrawStack = {};
+        for (let p in _drawStack) // copy stack
             redrawStack[p] = _drawStack[p];
         _drawStack = {};
-        for (let p in redrawStack)                        // redrawing
+        for (let p in redrawStack) // redrawing
             drawGfx(redrawStack[p]);
     }},
     get: function(att) { with(this) {
@@ -2225,7 +2227,7 @@ DomNode.prototype = {
     }},
     set: function(att) { with(this) {
         for (let p in att)
-            if (typeof att[p] !== 'object')                // if not sub type and not sub group
+            if (typeof att[p] !== 'object') // if not sub type and not sub group
                 _o.style[p.replace(/_/,'-')] = att[p];
             else
                 _childs[p] = new DomNode(att[p], this, p);
@@ -2239,7 +2241,7 @@ DomNode.prototype = {
     }},
     setY: function(y) { with(this) {
         _y = Math.round(y);
-        _o.style.top = pxVal_(_y);        // comemnt to disable any Y graphical move #DEBUG
+        _o.style.top = pxVal_(_y); // comemnt to disable any Y graphical move #DEBUG
     }},
     getXCenter: function() { with(this) {
         return _x + Math.round(getWidth()/2);
@@ -2252,10 +2254,10 @@ DomNode.prototype = {
         _height = h;
         _o.style.height = pxVal_(_height);
     }},
-    getXInit: function() { with(this) {    // function by default, can be overwritten by return GFX value
+    getXInit: function() { with(this) { // function by default, can be overwritten by return GFX value
         return 0;
     }},
-    getYInit: function() { with(this) {    // function by default, can be overwritten by return GFX value
+    getYInit: function() { with(this) { // function by default, can be overwritten by return GFX value
         return 0;
     }},
     getX: function() { with(this) {
@@ -2264,21 +2266,21 @@ DomNode.prototype = {
     getY: function() { with(this) {
         return _y;// _o.offsetTop;
     }},
-    getWidth: function() { with(this) {    // function by default, can be overwritten by return GFX value
+    getWidth: function() { with(this) { // function by default, can be overwritten by return GFX value
         return _o.offsetWidth;
     }},
     getHeight: function() { with(this) {// function by default, can be overwritten by return GFX value
         return _o.offsetHeight;
     }},
-    moveRelatively: function(left, down) { with(this) {    // move relatively
+    moveRelatively: function(left, down) { with(this) { // move relatively
         if (left) setX(_x + left);
         if (down) setY(_y + down);
     }},
-    moveTemporaryRelatively: function(left, down) { with(this) {    // move temporary relatively, used for quake
+    moveTemporaryRelatively: function(left, down) { with(this) { // move temporary relatively, used for quake
         if (left) _o.style.left = pxVal_(_x + left);
         if (down) _o.style.top = pxVal_(_y + down);
     }},
-    moveTemporaryRestore: function() { with(this) {    // restore before move, used for quake
+    moveTemporaryRestore: function() { with(this) { // restore before move, used for quake
         _o.style.left = _x;
         _o.style.top = _y;
     }},
@@ -2294,26 +2296,26 @@ DomNode.prototype = {
         if (x) setX(Math.round(x-getWidth()/2));
         if (y) setY(Math.round(y-getHeight()/2));
     }},
-    newChild: function(att) { with(this) {                        // returns pointer to child
+    newChild: function(att) { with(this) { // returns pointer to child
         let id = getUId_();
         return (_childs[id] = new DomNode(att, this, id));
         // return _childs[att.name?att.name:id] = new DomNode(att, this, att.name?att.name:id);
     }},
     putChild: function(canvas) { with(this) {
         if (canvas._parent)
-            delete canvas._parent._childs[canvas._id];            // manage parent
+            delete canvas._parent._childs[canvas._id]; // manage parent
         if ( !canvas._id || (typeof canvas._id === 'number') )
             canvas._id = getUId_();// ++ _count;
-        _childs[canvas._id] = canvas;                            // manage parent
-        canvas._parent = this;                                    // manage parent
+        _childs[canvas._id] = canvas; // manage parent
+        canvas._parent = this; // manage parent
         canvas.moveNodeTo(canvas._x, canvas._y);
         _o.appendChild(canvas._o);
     }},
     createText: function(font, fontWeight, color, textShadow, textCharCountWidthMin) { with(this) {
         _textCharCountWidthMin = textCharCountWidthMin?textCharCountWidthMin:1; 
-        let table = document.createElement('table');
-        let tr = document.createElement('tr');
-        _text = document.createElement('td');
+        let table = window.document.createElement('table');
+        let tr = window.document.createElement('tr');
+        _text = window.document.createElement('td');
         table.style.width = '100%';
         table.style.height = '100%';
         table.style.textAlign = 'center';
@@ -2341,7 +2343,7 @@ DomNode.prototype = {
         );
     }},
     hide: function() { with(this) {
-        _o.style.visibility = 'hidden';    // or set({opacity: 0});
+        _o.style.visibility = 'hidden'; // or set({opacity: 0});
     }},
     show: function() { with(this) {
         _o.style.visibility = 'inherit';
@@ -2423,7 +2425,7 @@ class Animation {
     startAnim() { // start animation, optional arguments are stocked in the 'arguments' array, return true if kill previous same anim
         this.endAnim();    // return true if killing previous
         this._animating = true;
-        // if (this.startAnimFunc_)        this.startAnimFunc_.apply(arguments); // launch optional startAnimFunc_ function, arguments is array
+        // if (this.startAnimFunc_) this.startAnimFunc_.apply(arguments); // launch optional startAnimFunc_ function, arguments is array
         if (this.startAnimFunc_) this.startAnimFunc_.apply(this._animOwner, arguments); // launch optional startAnimFunc_ function, arguments is array
         this._beginTime = performance.now();
         this._plannedFrames = RULES.fps * this._duration;
