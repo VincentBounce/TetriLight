@@ -264,7 +264,7 @@ function MainMenu() { with(this) { // queue or stack
     _domNode = new DomNode({
         onBody: true, width:100, height:100 });
     GFX = new GameGraphics(_domNode);
-    _domNode.set({ // menus on top of the screen
+    _domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', gfx:GFX._gfxBackground },// to create an HTML top free space above the tetris game
         message1: {
@@ -494,7 +494,7 @@ GameGraphics.prototype = {
         _gfxBackground = new VectorGfx({
             _nocache: true,
             draw_: function(c, x, y, a, w, h) { // context, x, y, args, canvas width, canvas height
-                c.fillStyle=linearGradient(c,0,0,0,h,0.5,_backgroundColor,1,'#AAAAAA');
+                c.fillStyle=VectorGfx.linearGradient(c,0,0,0,h,0.5,_backgroundColor,1,'#AAAAAA');
                 c.fillRect(x,y,w,h)    }
         });
         _gfxGridFront = new VectorGfx({ // on dessine 3 trapèzes qu'on assemble
@@ -506,21 +506,21 @@ GameGraphics.prototype = {
                 c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y); // left border
                 c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
                 c.lineTo(x,y+_pxFullGridHeight);
-                c.fillStyle=linearGradient(c,0,0,_pxGridBorder,0,1,rgbaTxt(col.dark),0,rgbaTxt(col.light));
+                c.fillStyle=VectorGfx.linearGradient(c,0,0,_pxGridBorder,0,1,VectorGfx.rgbaTxt(col.dark),0,VectorGfx.rgbaTxt(col.light));
                 c.fill();
                 c.beginPath();c.moveTo(x+_pxFullGridWidth,y); // right border
                 c.lineTo(x+_pxGridBorder+_pxGridWidth,y);
                 c.lineTo(x+_pxGridBorder+_pxGridWidth,y+_pxGridHeight);
                 c.lineTo(x+_pxFullGridWidth,y+_pxFullGridHeight);
-                c.fillStyle=linearGradient(c,_pxGridWidth+_pxGridBorder,0,_pxGridBorder,0,0,rgbaTxt(col.dark),1,rgbaTxt(col.light));
+                c.fillStyle=VectorGfx.linearGradient(c,_pxGridWidth+_pxGridBorder,0,_pxGridBorder,0,0,VectorGfx.rgbaTxt(col.dark),1,VectorGfx.rgbaTxt(col.light));
                 c.fill();
                 c.beginPath();c.moveTo(0,_pxFullGridHeight); // bottom border
                 c.lineTo(_pxGridBorder,_pxGridHeight);
                 c.lineTo(_pxGridBorder+_pxGridWidth,_pxGridHeight);
                 c.lineTo(_pxFullGridWidth,_pxFullGridHeight);
-                c.fillStyle=linearGradient(c,0,_pxGridHeight,0,_pxGridBorder,0,rgbaTxt(col.dark),1,rgbaTxt(col.light));
+                c.fillStyle=VectorGfx.linearGradient(c,0,_pxGridHeight,0,_pxGridBorder,0,VectorGfx.rgbaTxt(col.dark),1,VectorGfx.rgbaTxt(col.light));
                 c.fill();
-                c.fillStyle=linearGradient(c,0,0,0,_pxBoxSize*2,0, rgbaTxt([0,0,0],1),1, rgbaTxt([0,0,0],0));    // top grid shadow
+                c.fillStyle=VectorGfx.linearGradient(c,0,0,0,_pxBoxSize*2,0, VectorGfx.rgbaTxt([0,0,0],1),1, VectorGfx.rgbaTxt([0,0,0],0));    // top grid shadow
                 c.fillRect(0,0,_pxFullGridWidth,_pxFullGridHeight); // #DEBUG
             }
         });
@@ -547,11 +547,11 @@ GameGraphics.prototype = {
                     }
                 }
                 c.rect(x,y,_pxGridWidth,_pxGridHeight);
-                c.fillStyle=radialGradient(c,x+_pxGridWidth/2,y+_pxGridHeight,0,0,0,3*_pxGridHeight/4,
-                    0, rgbaTxt(col.medium, 0.3),        1, rgbaTxt(col.medium, 0));    c.fill();
-                c.fillStyle=linearGradient(c,x,y,_pxGridWidth,0,
-                    0, rgbaTxt([0,0,0],0.5),    0.1, rgbaTxt([0,0,0],0),
-                    0.9, rgbaTxt([0,0,0],0),    1, rgbaTxt([0,0,0],0.5));    c.fill();    },
+                c.fillStyle=VectorGfx.radialGradient(c,x+_pxGridWidth/2,y+_pxGridHeight,0,0,0,3*_pxGridHeight/4,
+                    0, VectorGfx.rgbaTxt(col.medium, 0.3),        1, VectorGfx.rgbaTxt(col.medium, 0));    c.fill();
+                c.fillStyle=VectorGfx.linearGradient(c,x,y,_pxGridWidth,0,
+                    0, VectorGfx.rgbaTxt([0,0,0],0.5),    0.1, VectorGfx.rgbaTxt([0,0,0],0),
+                    0.9, VectorGfx.rgbaTxt([0,0,0],0),    1, VectorGfx.rgbaTxt([0,0,0],0.5));    c.fill();    },
             fx:    function(x)    {    return _pxGridBorder    },
             fy:    'fx'
         });
@@ -561,8 +561,8 @@ GameGraphics.prototype = {
             draw_: function(c, x, y, a) {    // context, x, y, args
                 let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle=(a.__onOff?
-                    linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, rgbaTxt(col.dark), 1, rgbaTxt(col.light))
-                    :rgbaTxt(col.medium, _previewOpacity)
+                    VectorGfx.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorGfx.rgbaTxt(col.dark), 1, VectorGfx.rgbaTxt(col.light))
+                    :VectorGfx.rgbaTxt(col.medium, _previewOpacity)
                 );
                 c.fillRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize)    },
             fx:    function(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
@@ -576,7 +576,7 @@ GameGraphics.prototype = {
                 c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y);        // left border
                 c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
                 c.lineTo(x,y+_pxFullGridHeight);
-                c.fillStyle=(rgbaTxt(col.light, _previewOpacity));
+                c.fillStyle=(VectorGfx.rgbaTxt(col.light, _previewOpacity));
                 c.fill(); },
             fx:    function(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
             fy:    function(y)    {    return (_shapesSpan-y)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    }
@@ -588,13 +588,13 @@ GameGraphics.prototype = {
                 let half = Math.round(_pxBlockSize/2);
                 let margin = Math.round(_pxBlockSize/7);
                 let col = _colors[a.col];
-                c.fillStyle=rgbaTxt(col.medium);
+                c.fillStyle=VectorGfx.rgbaTxt(col.medium);
                 c.fillRect(x,y,_pxBlockSize,_pxBlockSize);
                 c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+_pxBlockSize,y);
-                c.fillStyle=rgbaTxt(col.light);c.fill();
+                c.fillStyle=VectorGfx.rgbaTxt(col.light);c.fill();
                 c.beginPath();c.moveTo(x,y+_pxBlockSize);c.lineTo(x+half,y+half);
-                c.lineTo(x+_pxBlockSize,y+_pxBlockSize);c.fillStyle=rgbaTxt(col.dark);c.fill();c.beginPath();
-                c.fillStyle=linearGradient(c,x,y,_pxBlockSize-2*margin,_pxBlockSize-2*margin,0,rgbaTxt(col.dark),1,rgbaTxt(col.light));
+                c.lineTo(x+_pxBlockSize,y+_pxBlockSize);c.fillStyle=VectorGfx.rgbaTxt(col.dark);c.fill();c.beginPath();
+                c.fillStyle=VectorGfx.linearGradient(c,x,y,_pxBlockSize-2*margin,_pxBlockSize-2*margin,0,VectorGfx.rgbaTxt(col.dark),1,VectorGfx.rgbaTxt(col.light));
                 c.fillRect(x+margin,y+margin,_pxBlockSize-2*margin,_pxBlockSize-2*margin)    },
             fx: function (i) { return _pxGridLineWidth + ( i-1 ) * _pxBoxSize },
             fy: function (j) { return _pxGridLineWidth + ( RULES.verticalBoxesCount-j ) * _pxBoxSize }
@@ -921,12 +921,12 @@ function Grid(keyboard, colorTxt) { with(this) {
     _realBlocksNode = _domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     _ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
     _domNode._childs.frameZone._childs.back._childs.background.drawGfx({col:_colorTxt});
-    _domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', rgbaTxt(_color.light), '0 0 0.4em '+rgbaTxt(_color.light));    // _textCharCountWidthMin : 1 or 7
+    _domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorGfx.rgbaTxt(_color.light), '0 0 0.4em '+VectorGfx.rgbaTxt(_color.light));    // _textCharCountWidthMin : 1 or 7
     _domNode._childs.controlZone.setTextIntoSizedField({
         text: _keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    _domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', rgbaTxt(_color.light), '0 0 0.4em '+rgbaTxt(_color.light), 3);
-    _domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', rgbaTxt(_color.light), '0.05em 0.05em 0em '+rgbaTxt(_color.dark));
+    _domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', VectorGfx.rgbaTxt(_color.light), '0 0 0.4em '+VectorGfx.rgbaTxt(_color.light), 3);
+    _domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorGfx.rgbaTxt(_color.light), '0.05em 0.05em 0em '+VectorGfx.rgbaTxt(_color.dark));
     _nextShapePreview = new NextShapePreview(this);
     _anims = {};    // need to initialize before creating new score which contains anim
     _score = new Score(this);    // contains animation, 
@@ -945,10 +945,10 @@ function Grid(keyboard, colorTxt) { with(this) {
     });
     _anims.pentominoesModeAnim = new Animation({
         animateFunc: function(animOutput) { with(this) {                            // to use context of this Animation // console.log(animOutput); $alert(animOutput);
-            _domNode._childs.frontZone.set({opacity: Math.abs(animOutput)});
+            _domNode._childs.frontZone.setDomNode({opacity: Math.abs(animOutput)});
         }},
         endAnimFunc: function() { with(this) {
-            _domNode._childs.frontZone.set({opacity: 1});                // 1 = totalement opaque, visble
+            _domNode._childs.frontZone.setDomNode({opacity: 1});                // 1 = totalement opaque, visble
         }},
         timingAnimFunc: function(x) {                                    // console.log(x); $alert(x);
             return -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5;            // f(x)=-cos(3^(x*3)*pi)/2+0.5
@@ -1045,11 +1045,11 @@ function Grid(keyboard, colorTxt) { with(this) {
         }},
         animateFunc: function(animOutput) { with(this) {
             _domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*GFX._pxBoxSize);// _YMessagePosition);
-            _domNode._childs.messageZone.set({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
+            _domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
         }},
         endAnimFunc: function() { with(this) {
             _domNode._childs.messageZone.moveTemporaryRestore();
-            _domNode._childs.messageZone.set({opacity: 0});
+            _domNode._childs.messageZone.setDomNode({opacity: 0});
             _gridMessagesQueue.dequeue();
         }},
         timingAnimFunc: function(x) {
@@ -1141,7 +1141,7 @@ Grid.prototype = {
         } else { // it's lost
             _fallingShape.drawShape()
                 .clearGhostBlocks()
-                ._domNode.set({opacity: GFX._lostShapeOpacity});
+                ._domNode.setDomNode({opacity: GFX._lostShapeOpacity});
             lose();
         }
     }},
@@ -1691,7 +1691,7 @@ class Block {
             case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
                 this._grid = shapeOrGridOwnerOfThisBlock;
                 this.putBlockNodeIn(this._grid._ghostBlocksNode);
-                this._domNode.set({opacity: GFX._ghostShapeOpacity});
+                this._domNode.setDomNode({opacity: GFX._ghostShapeOpacity});
                 break;
             case BLOCK_TYPES.inShape: // falling ghape
                 this._shape = shapeOrGridOwnerOfThisBlock;
@@ -2018,25 +2018,6 @@ class EventsQueue {
         }
     }
 }
-// Graphic function, convert a [RGB] array + alpha value to text
-function rgbaTxt(color, alpha=null) {
-    //return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((alpha===null)?1:alpha)+')';
-    return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
-}
-// Graphic function, to make a linear gradient
-function linearGradient(ctx, startX, startY, vectorX, vectorY) {
-let grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
-    for (let p=5;p < arguments.length;p+=2)
-        grad.addColorStop(arguments[p], arguments[p+1]);
-    return grad;
-}
-// Graphic function, to make a radial  gradient
-function radialGradient(ctx, startX, startY, startRadius, vectorX, vectorY, endRadius) {
-    let grad = ctx.createRadialGradient(startX, startY, startRadius, startX+vectorX, startY+vectorY, endRadius);
-    for (let p=7;p < arguments.length;p+=2) 
-        grad.addColorStop(arguments[p], arguments[p+1]);
-    return grad;
-}
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
 function DomNode(att, parent, id) { // att is attributes
     this._childs = {};
@@ -2047,7 +2028,7 @@ function DomNode(att, parent, id) { // att is attributes
     this._o.style.position = 'absolute';
     if (att.onBody) {
         window.document.body.appendChild(this._o);
-        delete att.onBody; // to avoid it in this.set()
+        delete att.onBody; // to avoid it in this.setDomNode()
     } else if (parent)
         this._parent._o.appendChild(this._o);
     if (isValued(att.width))
@@ -2104,7 +2085,7 @@ function DomNode(att, parent, id) { // att is attributes
         this._o.height =  this._height;
         this._drawStack = {};
     }
-    this.set(att); // others attributes
+    this.setDomNode(att); // others attributes
 }
 DomNode.prototype = {
     _idCount                        : 0, // for unamed elements
@@ -2222,10 +2203,10 @@ DomNode.prototype = {
         for (let p in redrawStack) // redrawing
             this.drawGfx(redrawStack[p]);
     },
-    get: function(att) {
+    /*get: function(att) {
         return this._o.getAttribute(att);
-    },
-    set: function(att) {
+    },*/
+    setDomNode: function(att) {
         for (let p in att)
             if (typeof att[p] !== 'object') // if not sub type and not sub group
                 this._o.style[p.replace(/_/,'-')] = att[p];
@@ -2343,14 +2324,14 @@ DomNode.prototype = {
         );
     },
     hide: function() {
-        this._o.style.visibility = 'hidden'; // or this.set({opacity: 0});
+        this._o.style.visibility = 'hidden'; // or this.setDomNode({opacity: 0});
     },
     show: function() {
         this._o.style.visibility = 'inherit';
     }
 };
 "use strict";
-// VECTOR GFX Class, manage graphic layout
+// VECTOR GFX Class, vectorial picture, emulates vectorial SVG graphics, generic
 // functions : x y fx fy gfx _nocache reserved; 1 input
 // use nomage: __funcToDoThis (intern)
 // no '_' in String value of arguments
@@ -2384,6 +2365,25 @@ class VectorGfx {
     }
     hasImageData(sortedArgs) { // return boolean
         return !!this._imagesData[sortedArgs];
+    }
+    // Graphic function, convert a [RGB] array + alpha value to text
+    static rgbaTxt(color, alpha=null) {
+        //return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((alpha===null)?1:alpha)+')';
+        return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
+    }
+    // Graphic function, to make a linear gradient
+    static linearGradient(ctx, startX, startY, vectorX, vectorY) {
+        let grad = ctx.createLinearGradient(startX, startY, startX+vectorX, startY+vectorY);
+        for (let p=5;p < arguments.length;p+=2)
+            grad.addColorStop(arguments[p], arguments[p+1]);
+        return grad;
+    }
+    // Graphic function, to make a radial  gradient
+    static radialGradient(ctx, startX, startY, startRadius, vectorX, vectorY, endRadius) {
+        let grad = ctx.createRadialGradient(startX, startY, startRadius, startX+vectorX, startY+vectorY, endRadius);
+        for (let p=7;p < arguments.length;p+=2) 
+            grad.addColorStop(arguments[p], arguments[p+1]);
+        return grad;
     }
 }
 // ANIMATION Class, to prepare an animation
