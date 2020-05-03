@@ -917,16 +917,9 @@ function Grid(keyboard, colorTxt){
     }
     this._dropTimer = new Timer({ // here this._fallingShape is not defined yet
         funcAtTimeOut: (shape)=>{ shape.fallingShapeTriesMove(0,-1); },
-        //funcAtTimeOut: (shape)=>{ shape.continueSoftDropping(); },
-        //funcAtTimeOut: ()=>{ console.log(TetrisShape.prototype.fallingShapeTriesMove); },
         timerPeriod: this._normalDropPeriod,
         timerOwner: null
     });
-    /*this._softDropTimer = new Timer({
-        funcAtTimeOut: (shape)=>{ shape.continueSoftDropping(); },
-        timerPeriod: DURATIONS.softDropPeriod,
-        timerOwner: null
-    });*/
     this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
         width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
         frameZone: {
@@ -1550,27 +1543,14 @@ class TetrisShape {
         return this;
     }
     continueSoftDropping() { // full falling iterative, called by timer
-        //console.log(this);
         this.moveFalling(0, -1);
-        //this._grid._softDropTimer._timerOwner = this; //$$$$$$$$$
-        //this._grid._softDropTimer.runTimer();
         this._grid._isSoftDropping = true;            
         this._grid._dropTimer.finishTimer(); //ok
         this._grid._dropTimer.setPeriod(DURATIONS.softDropPeriod);
         this._grid._dropTimer.runTimer();
         return this;
     }
-    /*finishAnyDropping(keep) { // stop fall in all cases, keep if new period, return false if not falling
-        if (this._grid._isSoftDropping) {
-            //this._grid._softDropTimer.finishTimer();
-            this._grid._dropTimer.finishTimer();
-            this._grid._isSoftDropping = false;
-        }
-        return _grid._isSoftDropping;
-    }*/
     hardDropping() {
-        //this._grid._dropTimer.finishTimer();
-        //ex code this.finishAnyDropping();
         this._grid._dropTimer.finishTimer();
         this._grid._isSoftDropping = false;
         this._grid.lockFallingShapePrepareMoving();
