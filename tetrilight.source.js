@@ -1981,13 +1981,12 @@ class Timer { //$$$$$$$$$$
         this._funcAtTimeOut = timerObject.funcAtTimeOut;
         this._timerPeriod = timerObject.timerPeriod;
         this._timerOwner = timerObject.timerOwner;
-        this._paused = false;
-        this._running = false;
+        this._paused = false; // if timer is paused
+        this._running = false; // if timer is running or finished (can be paused)
         this._beginTime;
         this._pauseTime;
         this._funcAtTimeOut;
         this._timerPeriod;
-        this._args;
         this._timeOut;
     }
     runTimer() { // return true if killing previous
@@ -1998,7 +1997,7 @@ class Timer { //$$$$$$$$$$
         return needToKill;
     }
     isRunning() {
-        return this._running;
+        return this._running; // useless for drop timer
     }
     pauseOrResume() { // works only if running, if not do nothing
         if (this._running) { // if paused, resume and return false
