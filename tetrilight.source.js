@@ -276,7 +276,7 @@ function init() {
     //GAME.addGrid(); // #DEBUG
 }
 // MENU MANAGER Class (make new to open web GAME)
-function MainMenu() { with(this) { // queue or stack
+function MainMenu() { // queue or stack
     let commands = {
         rotate: function(grid) {
             if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
@@ -299,14 +299,14 @@ function MainMenu() { with(this) { // queue or stack
                 GAME.pauseOrResume();
         }
     }; // init below
-    window.addEventListener('keydown', keyCapture_, false); // old: window.document.documentElement
-    window.addEventListener('keyup', keyCapture_, false);
-    window.addEventListener('keypress', keyPressCapture_, false);
-    window.oncontextmenu = function(event){ cancelEvent_(event); };
+    window.addEventListener('keydown', this.keyCapture_, false); // old: window.document.documentElement
+    window.addEventListener('keyup', this.keyCapture_, false);
+    window.addEventListener('keypress', this.keyPressCapture_, false);
+    window.oncontextmenu = function(event){ this.cancelEvent_(event); };
     // below creation for MAIN dom node
-    _domNode = new DomNode({body: true});
-    SPRITES = new TetrisSpritesCreation(_domNode); // need dom node created to get sizes for scaling
-    _domNode.setDomNode({ // menus on top of the screen
+    this._domNode = new DomNode({body: true});
+    SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
+    this._domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
         message1: {
@@ -314,16 +314,16 @@ function MainMenu() { with(this) { // queue or stack
         background: {
             type:'canvas', y:'_pxTopMenuZoneHeight', width:'_pxGameWidth', height:'_pxGameHeight', sprite:SPRITES._spriteBackground }
         });
-    _domNode._childs.background.nodeDrawSprite(); // paint black background
-    _domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
-    // _domNode._childs.message1.setTex('totototo'); //$$$$$$$$$$
-    _domNode._htmlElement.addEventListener('click',
+    this._domNode._childs.background.nodeDrawSprite(); // paint black background
+    this._domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
+    // this._domNode._childs.message1.setTex('totototo'); //$$$$$$$$$$
+    this._domNode._htmlElement.addEventListener('click',
         function(event) {
             if ((event.offsetX < SPRITES._pxButtonSize) && (event.offsetY < SPRITES._pxButtonSize))
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
     window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
-}}
+}
 MainMenu.prototype = {
     _domNode    : null,
     cancelEvent_: function(event) { with(this) {
@@ -356,14 +356,6 @@ MainMenu.prototype = {
         }
     }}
 };
-/*// BROWSER Class
-function Browser() { with(this) {
-}}
-Browser.prototype = {
-    isFullScreen: function() { with(this) {
-        return (innerWidth === screen.width && innerHeight > screen.height-5); // Firefox use 1px in height
-    }}
-};*/
 // AUDIO Class (for sounds)
 function Audio(sounds) { with(this) { // constructor
     _sounds = {};
