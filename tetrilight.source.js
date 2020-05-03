@@ -1166,7 +1166,7 @@ Grid.prototype            = {
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.runTimer(); // shape can move after fall or stopped
         }
-        this._grid.fallingShapeTriesMove(iRight, 0);
+        this.fallingShapeTriesMove(iRight, 0);
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
