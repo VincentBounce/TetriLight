@@ -426,9 +426,9 @@ function TetrisSpritesCreation(rootNode) {
     this.create_();
     this._spriteBackground = new VectorialSprite({ // black > grey
         _nocache: true,
-        drawSprite_: function(c, x, y, a, w, h) { // context, x, y, args, canvas width, canvas height
+        drawSprite_: (c, x, y, a, w, h)=>{ // context c, x, y, args a, canvas width w, canvas height h
             c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
-            c.fillRect(x,y,w,h)    }
+            c.fillRect(x,y,w,h) }
     });
 }
 TetrisSpritesCreation.prototype = {
@@ -515,7 +515,7 @@ TetrisSpritesCreation.prototype = {
         this._pxFullGridHeight = this._pxGridHeight + this._pxGridBorder; // hauteur grille + bordure
         this._pxGridMargin = Math.round(this._pxFullGridWidth/8);
         this._pxPreviewBlockSize = Math.round(this._pxBlockSize/2.6);
-        this._pxPreviewLineWidth    = this._pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
+        this._pxPreviewLineWidth = this._pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
         this._pxPreviewFullSize = (this._pxPreviewBlockSize + this._pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
         this._pxCeilHeight = this._pxPreviewFullSize + this._pxPreviewBlockSize + this._pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + _pxCellSize
         this._pxFullGridAndCeil = this._pxFullGridHeight + this._pxCeilHeight;
@@ -586,11 +586,12 @@ TetrisSpritesCreation.prototype = {
             fx:    function(x)    {    return _pxGridBorder    },
             fy:    'fx'
         });
-        _spritePreviewBlock = new VectorialSprite({        // args a: gradient if true, uniform if false
+        _spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
             _width:    '_pxPreviewBlockSize',
             _height: '_pxPreviewBlockSize',
             drawSprite_: function(c, x, y, a) {    // context, x, y, args
+                //console.log(this); VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
                 let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle=(a.__onOff
                     ?VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
@@ -618,7 +619,7 @@ TetrisSpritesCreation.prototype = {
                 c.fillRect(x+margin,y+margin,_pxBlockSize-2*margin,_pxBlockSize-2*margin)    },
             fx: function (i) { return _pxGridLineWidth + ( i-1 ) * _pxCellSize },
             fy: function (j) { return _pxGridLineWidth + ( RULES.verticalCellsCount-j ) * _pxCellSize }
-        })
+        });
     }},
 };
 // TETRIS GAME Class
@@ -2382,8 +2383,8 @@ class VectorialSprite {
         for (let p in funcs)
             if (p === '_nocache')
                 this._nocache = funcs[p];
-            else
-                this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p]; // to reproduce sames functions fy: 'fx'
+            else  // to reproduce same functions: drawSprite_, fy:, 'fx'
+                this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p];
     }
     getWidth() {
         return SPRITES[this._width];
