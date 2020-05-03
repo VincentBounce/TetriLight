@@ -650,58 +650,59 @@ TetrisSpritesCreation.prototype = {
     }},
 };
 // TETRIS GAME Class
-function TetrisGame() { with(this) {
-    _matrixHeight                = RULES.verticalCellsCount * 2;                // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
-    _iPositionStart                = Math.ceil(RULES.horizontalCellsCount/2);    // shape start position
-    _jPositionStart                = RULES.verticalCellsCount - 1;
-    _gridsListAuto                = new ListAutoIndex();                        // players' grids' lists
-    _pentominoesBriefMode        = new PentominoesBriefMode();
-    _gameShapesWithRotations     = new Array(_storedPolyominoes.length);        // table of all shapes with rotations
-    for (let s=0;s < _storedPolyominoes.length;s++) {                          // creating all shapes variations: browsing shapes
-        shapeBlocksCount        = _storedPolyominoes[s].blocks.length;
-        quarters                = _storedPolyominoes[s].quarters;
-        _gameShapesWithRotations[s]    = new Array(quarters);
+function TetrisGame() {
+    this._matrixHeight                = RULES.verticalCellsCount * 2;                // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
+    this._iPositionStart                = Math.ceil(RULES.horizontalCellsCount/2);    // shape start position
+    this._jPositionStart                = RULES.verticalCellsCount - 1;
+    this._gridsListAuto                = new ListAutoIndex();                        // players' grids' lists
+    this._pentominoesBriefMode        = new PentominoesBriefMode();
+    this._gameShapesWithRotations     = new Array(this._storedPolyominoes.length);        // table of all shapes with rotations
+    for (let s=0;s < this._storedPolyominoes.length;s++) {                          // creating all shapes variations: browsing shapes
+        shapeBlocksCount        = this._storedPolyominoes[s].blocks.length;
+        quarters                = this._storedPolyominoes[s].quarters;
+        this._gameShapesWithRotations[s]    = new Array(quarters);
         for (let pivot=0;pivot < quarters;pivot++) {                         // creating all shapes rotations: browsing rotations
-            _gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
+            this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
             if(pivot === 0)
                 for (let b=0;b < shapeBlocksCount;b++)                        // browsing 4 blocks
-                    _gameShapesWithRotations[s][pivot][b] = [
-                        _storedPolyominoes[s].blocks[b][0],
-                        _storedPolyominoes[s].blocks[b][1]    ];
+                    this._gameShapesWithRotations[s][pivot][b] = [
+                        this._storedPolyominoes[s].blocks[b][0],
+                        this._storedPolyominoes[s].blocks[b][1]    ];
             else
                 for (let b=0;b < shapeBlocksCount;b++)                        // browsing 4 blocks
-                    _gameShapesWithRotations[s][pivot][b] = [
-                        - _gameShapesWithRotations[s][pivot-1][b][1],        // minus here (default) for unclockwise
-                          _gameShapesWithRotations[s][pivot-1][b][0]     ]    // minus here for clockwise
+                    this._gameShapesWithRotations[s][pivot][b] = [
+                        - this._gameShapesWithRotations[s][pivot-1][b][1],        // minus here (default) for unclockwise
+                          this._gameShapesWithRotations[s][pivot-1][b][0]     ]    // minus here for clockwise
         }
     }
-    _freeColors = new List();
+    this._freeColors = new List();
     for (let p in SPRITES._colors)
         if (p !== 'grey')
-            _freeColors.putInList(p, p);// to know available colors
-    _anims.moveGridsAnim = new Animation({    // make tetris grid coming and leaving
-        animateFunc: function(animOutput) { with(this) {
-            _gridsListAuto.resetNext();
+            this._freeColors.putInList(p, p);// to know available colors
+    this._anims.moveGridsAnim = new Animation({    // make tetris grid coming and leaving
+        animateFunc: function(animOutput){
+            this._gridsListAuto.resetNext();
             let grid;
-            while (grid = _gridsListAuto.next())
+            while (grid = this._gridsListAuto.next())
                 grid._domNode.moveTemporaryRelatively(grid._vector[0]*animOutput, grid._vector[1]*animOutput)
-        }},
-        endAnimFunc: function() { with(this) {
-            _gridsListAuto.resetNext();
+        },
+        endAnimFunc: function(){
+            this._gridsListAuto.resetNext();
             let grid;
-            while (grid = _gridsListAuto.next()) {
+            while (grid = this._gridsListAuto.next()) {
                 grid._domNode.moveRelatively(grid._vector[0], grid._vector[1]);
                 grid._vector = [0, 0];
             }
-            _gameEventsQueue.dequeue();
-        }},
+            this._gameEventsQueue.dequeue();
+        },
         timingAnimFunc: function(x) {
             return -(x-2*Math.sqrt(x));    // old: return -(x-2*Math.sqrt(x));
         },
-        animDuration: DURATIONS.movingGridsDuration
+        animDuration: DURATIONS.movingGridsDuration,
+        optionalAnimOwner: this // because score anim not declared in grid
     });
-    _gameEventsQueue = new EventsQueue();    // animating applied on _anims.moveGridsAnim
-}}
+    this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
+}
 TetrisGame.prototype = {
     _gridsListAuto                    : null,
     _matrixHeight                    : null,
@@ -714,7 +715,6 @@ TetrisGame.prototype = {
     _newBlockId                        : 0,
     _pentominoesBriefMode            : null,            
     _gameShapesWithRotations        : null,
-    _shelf                            : null,
     _gameEventsQueue                : null,
     _anims                            : {},                    // only 1 instance of game
     _freeColors                        : null,                    // for name of free colors for players
@@ -758,62 +758,62 @@ TetrisGame.prototype = {
         tetrominoes:     {index: 4, count: 7},    // range of 4 blocks shapes
         pentominoes:     {index: 11, count:14}    // range of 5 blocks shapes
     },
-    destroyGame: function() { with(this) {
-        _gridsListAuto.runForEachListElement(function(o){o.destroyDomNode()});
-        _newBlockId = 0;
+    destroyGame: function(){
+        this._gridsListAuto.runForEachListElement(function(o){o.destroyDomNode()});
+        this._newBlockId = 0;
         _domNode.destroyDomNode();
-        // _pentominoesBriefMode.destroyPentoMode();// old, remove all timers
-    }},
-    pauseOrResume: function() { with(this) {// pause or resume
-        _gameState = (_gameState === GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
+        // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
+    },
+    pauseOrResume: function(){// pause or resume
+        this._gameState = (this._gameState === GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
         AUDIO.pauseOrResume('musicMusic');    // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX');        // always play sound FX for pause or resume
-        _pentominoesBriefMode.pauseOrResume();    // if pentominoes mode, pause it
-        _gridsListAuto.runForEachListElement( function(o){o.pauseOrResume()} );    // all players
-    }},
-    addGrid: function() { with(this) {        // return true if added
-        _gameEventsQueue.execNowOrEnqueue(this, addGridBody_);
-    }},
-    addGridBody_: function() { with(this) {    // return true if added
-        if (_freeColors.listSize > 0) {
-            _playersCount ++;
-            let p; for (p in _keyboards)
-                if ( _keyboards[p].free)
+        this._pentominoesBriefMode.pauseOrResume();    // if pentominoes mode, pause it
+        this._gridsListAuto.runForEachListElement( function(o){o.pauseOrResume()} );    // all players
+    },
+    addGrid: function(){        // return true if added
+        this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
+    },
+    addGridBody_: function(){    // return true if added
+        if (this._freeColors.listSize > 0) {
+            this._playersCount ++;
+            let p; for (p in this._keyboards)
+                if ( this._keyboards[p].free)
                     break;
-            _keyboards[p].free = false;
-            let grid = new Grid( _keyboards[p], _freeColors.unListN( Math.floor(Math.random()*_freeColors.listSize)) );
-            // old: grid._gridId = (_playersCount%2)?_gridsListAuto.putFirst(grid):_gridsListAuto.putLast(grid);    // from left or right
-            organizeGrids({newGrid:grid});
+            this._keyboards[p].free = false;
+            let grid = new Grid( this._keyboards[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
+            // old: grid._gridId = (this._playersCount%2)?this._gridsListAuto.putFirst(grid):this._gridsListAuto.putLast(grid);    // from left or right
+            this.organizeGrids({newGrid:grid});
             return grid;
         } else
-            _gameEventsQueue.dequeue();
+            this._gameEventsQueue.dequeue();
             return null;
-    }},
-    removeGrid: function(grid) { with(this) {
-        _gridsListAuto.eraseItemFromListAuto(grid._gridId);
+    },
+    removeGrid: function(grid){
+        this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
         grid._keyboard.free = true;                        // release if keys used
-        _freeColors.putInList(grid._colorTxt, grid._colorTxt);// we reput color on free colors
-        _playersCount--;
+        this._freeColors.putInList(grid._colorTxt, grid._colorTxt);// we reput color on free colors
+        this._playersCount--;
         grid.destroyGrid();    // stops timers etc..
-        organizeGrids({oldGrid:true});
-    }},
-    organizeGrids: function(instruction) { with(this) {    // horizontal organization only, zoomToFit makes the correct zoom
-        SPRITES.zoomToFit(_playersCount);
+        this.organizeGrids({oldGrid:true});
+    },
+    organizeGrids: function(instruction){    // horizontal organization only, zoomToFit makes the correct zoom
+        SPRITES.zoomToFit(this._playersCount);
         MAIN_MENU._domNode._childs.background.redrawNode();    // redraw background
-        let realIntervalX = (SPRITES._pxGameWidth-(SPRITES._pxFullGridWidth*_playersCount)) / (_playersCount+1);
+        let realIntervalX = (SPRITES._pxGameWidth-(SPRITES._pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
-                if (_playersCount%2) {    // from left or right
-                    instruction.newGrid._gridId = _gridsListAuto.putFirst(instruction.newGrid);
+                if (this._playersCount%2) {    // from left or right
+                    instruction.newGrid._gridId = this._gridsListAuto.putFirst(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
-                    instruction.newGrid._gridId = _gridsListAuto.putLast(instruction.newGrid);
+                    instruction.newGrid._gridId = this._gridsListAuto.putLast(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
                 }
-            _gridsListAuto.resetNext();
+            this._gridsListAuto.resetNext();
             let grid;
             let count = 0;
-            while (grid = _gridsListAuto.next()) {
+            while (grid = this._gridsListAuto.next()) {
                 count++;
                 grid._domNode.redrawNode();                // we change all sizes
                 grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
@@ -821,15 +821,15 @@ TetrisGame.prototype = {
                     count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - grid._domNode.getX(),
                     0    ];
             }
-            // old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
-            _anims.moveGridsAnim.startAnim();
+            // old: this._gameEventsQueue.execNowOrEnqueue(this._anims.moveGridsAnim, this._anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
+            this._anims.moveGridsAnim.startAnim();
             if (instruction.newGrid)
                 instruction.newGrid.startGrid();    // enqueue?
         } else {
             let grid;
             let count = 0;
-            _gridsListAuto.resetNext();
-            while (grid = _gridsListAuto.next()) {
+            this._gridsListAuto.resetNext();
+            while (grid = this._gridsListAuto.next()) {
                 count++;
                 grid._domNode.redrawNode();    // we change all sizes
                 grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
@@ -838,32 +838,32 @@ TetrisGame.prototype = {
         }
         //console.log('window.fullScreen: ' + window.fullScreen); // #DEBUG undefined
         //console.log('window.devicePixelRatio: ' + window.devicePixelRatio); // #DEBUG Read only, ratio 1.75 on my 4K LCD === physical px / px independant device
-    }},
-    averageBlocksByPlayingGrid: function() { with(this) {
+    },
+    averageBlocksByPlayingGrid: function(){
         let allGridsBlocksCount = 0;
         let playingGridsCount = 0;
         let grid;
-        _gridsListAuto.resetNext();
-        while (grid = _gridsListAuto.next())
+        this._gridsListAuto.resetNext();
+        while (grid = this._gridsListAuto.next())
             if (grid._gridState === GRID_STATES.playing) {
                 playingGridsCount ++;
                 allGridsBlocksCount += grid._lockedBlocks._blocksCount;
             }
         return allGridsBlocksCount/playingGridsCount;
-    }},
-    startGame: function() { with(this) {
-        _gameState = GAME_STATES.running;
+    },
+    startGame: function(){
+        this._gameState = GAME_STATES.running;
         AUDIO.audioStop('musicMusic');
         // AUDIO.audioPlay('musicMusic');
-    }},
-    chooseAction: function(event) { with(this) {
-        _gridsListAuto.runForEachListElement( function(o){ o.chooseAction(event); } );
-    }},
-    transferRows: function(from, count) { with(this) {    // from grid
+    },
+    chooseAction: function(event){
+        this._gridsListAuto.runForEachListElement( function(o){ o.chooseAction(event); } );
+    },
+    transferRows: function(from, count){    // from grid
         let toGrid = [];
-        for (let p in _gridsListAuto.listAutoTable)
-            if ( (_gridsListAuto.listAutoTable[p] !== from) && (_gridsListAuto.listAutoTable[p]._gridState === GRID_STATES.playing) )
-                toGrid.push(_gridsListAuto.listAutoTable[p]);
+        for (let p in this._gridsListAuto.listAutoTable)
+            if ( (this._gridsListAuto.listAutoTable[p] !== from) && (this._gridsListAuto.listAutoTable[p]._gridState === GRID_STATES.playing) )
+                toGrid.push(this._gridsListAuto.listAutoTable[p]);
         if (toGrid.length)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
                 // toGrid[ (Math.floor(Math.random()*toGrid.length)+count) % toGrid.length ]._lockedBlocks.put1NewRisingRow(); // same call as earlier
@@ -872,7 +872,7 @@ TetrisGame.prototype = {
                     destGrid._lockedBlocks,
                     destGrid._lockedBlocks.put1NewRisingRow ); // we exec or enqueue
             }    
-    }},
+    },
 };
 // PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 class PentominoesBriefMode {
