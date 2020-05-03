@@ -303,9 +303,9 @@ function MainMenu() { with(this) { // queue or stack
     window.addEventListener('keyup', keyCapture_, false);
     window.addEventListener('keypress', keyPressCapture_, false);
     window.oncontextmenu = function(event){ cancelEvent_(event); };
-    // below creation for main dom node
-    _domNode = new DomNode({ onBody: true, width:100, height:100 });
-    SPRITES = new TetrisSpritesCreation(_domNode); // need dom node to scale sizes
+    // below creation for MAIN dom node
+    _domNode = new DomNode({body: true});
+    SPRITES = new TetrisSpritesCreation(_domNode); // need dom node created to get sizes for scaling
     _domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
@@ -490,10 +490,10 @@ TetrisSpritesCreation.prototype = {
         grey:          {light:[207, 207, 207], medium:[134, 134, 134], dark:[ 88,  88,  88]}
     },
     condition_: function(gridCount) { with(this) {    // gridCount = GAME._playersCount
-        return ( ( // #DEBUG: to compact grids together
-                // (_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) ) && (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
-                (_pxGameWidth >= _pxFullGridWidth * gridCount )    && (_pxGameHeight >= _pxFullGridAndCeil )
-            ) || (!(_scaleFactor-1)) );
+        //return ( ( // #DEBUG: to compact grids together
+        // (_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) ) && (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
+        return (  ( (_pxGameWidth >= _pxFullGridWidth * gridCount ) && (_pxGameHeight >= _pxFullGridAndCeil ) )
+                    || (!(_scaleFactor-1))  );
     }},
     zoomToFit: function(gridCount) { with(this) { // used for scaling if needed
         if (condition_(gridCount)) {
@@ -2081,54 +2081,41 @@ class EventsQueue {
     }
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
-function DomNode(definitionObject, parent=null, id) { // 2 last arguments for recursive calls
+function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
     this._domNodeType = isValued(definitionObject.type) ? 'canvas' : 'div'; // implicit div if type ommited
-    // have a parent ?
-    if (parent !== null) { this._parent = parent; this._id = id; }
     // creating element into page window.document
     this._htmlElement = window.document.createElement(this._domNodeType); // create canvas or div
-    this._htmlElement.id = this._id; // #DEBUG
     this._htmlElement.style.position = 'absolute';
-    // checking onBody property
-    if (definitionObject.onBody) {
-        window.document.body.appendChild(this._htmlElement);
-        delete definitionObject.onBody; // to avoid it in this.setDomNode()
-    } else if (parent)
+    // have a parent ?
+    if (parent !== null) { // && (nameId !== null)
+        this._parent = parent;
+        this._nameId = nameId; // see if replace by this._htmlElement.id = this._nameId; in future
         this._parent._htmlElement.appendChild(this._htmlElement);
+    }
+    // run this code only 1 time for body MAIN dom node, then exit
+    if (isValued(definitionObject.body)) {
+        window.document.body.appendChild(this._htmlElement)
+        this._htmlElement.style.width = '100%'; // all window
+        this._width = this._htmlElement.offsetWidth; //this.getHeight();
+        this._htmlElement.style.height = '100%'; // all window
+        this._height = this._htmlElement.offsetHeight; //this.getHeight();
+        return; // not proceed anymore, it's just one time
+    }
     // checking width property
-    if (isValued(definitionObject.width))
-        if (typeof definitionObject.width === 'number') {
-            this._htmlElement.style.width = definitionObject.width+'%'; // all window
-            this._width = this.getWidth();
-            console.log(this._htmlElement.style.width)
-        } else {
-            this._widthVar = definitionObject.width;
-            this.getWidth = ()=>{ return SPRITES[this._widthVar] };
-            this.setWidth(this.getWidth());
-        }
-    else {
-        if (this._parent)
-            this.getWidth = ()=>{ return this._parent.getWidth() };
-        else
-            this.setWidth(0);
-    }
-    // checkingheight property
-    if (isValued(definitionObject.height))
-        if (typeof definitionObject.height === 'number') {
-            this._htmlElement.style.height = definitionObject.height+'%'; // all window
-            this._height = this.getHeight();
-        } else {
-            this._heightVar = definitionObject.height;
-            this.getHeight = ()=>{ return SPRITES[this._heightVar] };
-            this.setHeight(this.getHeight());
-        }
-    else {
-        if (this._parent)
-            this.getHeight = ()=>{ return this._parent.getHeight() };
-        else
-            this.setHeight(0);
-    }
+    if (isValued(definitionObject.width)) {
+        this._widthVar = definitionObject.width;
+        this.getWidth = ()=>{ return SPRITES[this._widthVar] };
+        this.setWidth(this.getWidth());
+    } else
+        this.getWidth = ()=>{ return this._parent.getWidth() };
+    // checking height property
+    if (isValued(definitionObject.height)) {
+        this._heightVar = definitionObject.height;
+        this.getHeight = ()=>{ return SPRITES[this._heightVar] };
+        this.setHeight(this.getHeight());
+    } else
+        this.getHeight = ()=>{ return this._parent.getHeight() };
     // checkingx position property
     if (isValued(definitionObject.x)) {
         this._xVar = definitionObject.x;
@@ -2165,7 +2152,7 @@ DomNode.prototype = {
     _htmlElement                                : null, // public, DOM DomNode or Div
     _childs                            : null,
     _parent                            : null, // pointer to parent
-    _id                                : null, // =ID, index of child in this._childs, integer or name
+    _nameId                                : null, // =ID, index of child in this._childs, integer or name
     _x                                : 0,
     _y                                : 0,
     _width                            : 0,
@@ -2187,7 +2174,7 @@ DomNode.prototype = {
         for (let p in this._childs)
             this._childs[p].destroyDomNode(); // delete this._childs[p] made by child
         if (this._parent)
-            delete this._parent._childs[this._id]; // manage parent
+            delete this._parent._childs[this._nameId]; // manage parent
         delete this._childs;
         this._htmlElement.parentNode.removeChild(this._htmlElement);
     },
@@ -2356,10 +2343,10 @@ DomNode.prototype = {
     },
     putChild: function(canvas) {
         if (canvas._parent)
-            delete canvas._parent._childs[canvas._id]; // manage parent
-        if ( !canvas._id || (typeof canvas._id === 'number') )
-            canvas._id = this.getNewUId_();// ++ _idCount
-        this._childs[canvas._id] = canvas; // manage parent
+            delete canvas._parent._childs[canvas._nameId]; // manage parent
+        if ( !canvas._nameId || (typeof canvas._nameId === 'number') )
+            canvas._nameId = this.getNewUId_();// ++ _idCount
+        this._childs[canvas._nameId] = canvas; // manage parent
         canvas._parent = this; // manage parent
         canvas.moveNodeTo(canvas._x, canvas._y);
         this._htmlElement.appendChild(canvas._htmlElement);
@@ -2488,7 +2475,8 @@ class Animation {
         // this.animateFunc_(); // draw frame on display, as defined in the instance of Animation
         if ( (++this._elapsedFrames) < this._plannedFrames) {
             this.animOutput = this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); // input [0;1] animOutput have any value
-            this._windowNextFrameId = window.requestAnimationFrame(()=>{ this.makeNextFrame_(); }); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
+            this._windowNextFrameId = window.requestAnimationFrame(()=>{ this.makeNextFrame_(); }); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
+            //this._windowNextFrameId = window.requestAnimationFrame(this.makeNextFrame_); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
         } else
             this.endAnim();
     }
