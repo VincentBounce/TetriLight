@@ -420,11 +420,17 @@ Audio.prototype = {
     }*/
 };
 // before TETRIS GRAPHICS Class
-function TetrisSpritesCreation(rootNode) { with(this) {
-    _rootNode = rootNode;
-    zoom1Step(0);
-    create_();
-}}
+function TetrisSpritesCreation(rootNode) {
+    this._rootNode = rootNode;
+    this.zoom1Step(0);
+    this.create_();
+    this._spriteBackground = new VectorialSprite({ // black > grey
+        _nocache: true,
+        drawSprite_: function(c, x, y, a, w, h) { // context, x, y, args, canvas width, canvas height
+            c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
+            c.fillRect(x,y,w,h)    }
+    });
+}
 TetrisSpritesCreation.prototype = {
     _rootNode                            : null,
     _zoomRatio                            : 1, // default 1, float current zoom ratio
@@ -460,7 +466,7 @@ TetrisSpritesCreation.prototype = {
     _spriteGridBackground                    : null,
     _spritePreviewBlock                    : null,
     _spritePreviewBlockFrame                : null,
-    _backgroundColor                    : 'black', // default 'black'
+    //_backgroundColor                    : 'black', // default 'black'
     _ghostShapeOpacity                    : 0.15, // default 0.15
     _previewOpacity                        : 0.2, // default 0.2, opacity for preview grid
     _lostShapeOpacity                    : 0.5, // default 0.5, to show a ghost of shape wich makes losing
@@ -477,56 +483,51 @@ TetrisSpritesCreation.prototype = {
         grey_blue :    {light:[192, 216, 231], medium:[127, 150, 188], dark:[ 73,  85, 118]},
         grey:          {light:[207, 207, 207], medium:[134, 134, 134], dark:[ 88,  88,  88]}
     },
-    condition_: function(gridCount) { with(this) {    // gridCount = GAME._playersCount
+    condition_: function(gridCount) { // gridCount = GAME._playersCount
         //return ( ( // #DEBUG: to compact grids together
         // (_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) ) && (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
-        return (  ( (_pxGameWidth >= _pxFullGridWidth * gridCount ) && (_pxGameHeight >= _pxFullGridAndCeil ) )
-                    || (!(_scaleFactor-1))  );
-    }},
-    zoomToFit: function(gridCount) { with(this) { // used for scaling if needed
-        if (condition_(gridCount)) {
-            while (condition_(gridCount))
-                zoom1Step(1);
-            zoom1Step(-1);
+        return (  ( (this._pxGameWidth >= this._pxFullGridWidth * gridCount )
+                && (this._pxGameHeight >= this._pxFullGridAndCeil ) )
+                || (!(this._scaleFactor-1))  );
+    },
+    zoomToFit: function(gridCount) { // used for scaling if needed
+        if (this.condition_(gridCount)) {
+            while (this.condition_(gridCount))
+                this.zoom1Step(1);
+                this.zoom1Step(-1);
         } else
-            while (!condition_(gridCount))
-                zoom1Step(-1);
-    }},
-    zoom1Step: function(step) { with(this) {    // computing for zoom with pixels into web browser
-        _scaleFactor += step;
-        let oldGridWidth = _pxFullGridWidth;
-        _pxBlockSize += step;
-        _pxGameWidth = _rootNode.getWidth();
-        _pxGameHeight = _rootNode.getHeight() - _pxTopMenuZoneHeight;
-        _pxHalfGameHeight = Math.round(_pxGameHeight/2);
-        _pxGridLineWidth = Math.max(Math.round(_pxBlockSize/14), 1);
-        _pxGridWidth = RULES.horizontalCellsCount*_pxBlockSize + (RULES.horizontalCellsCount+1)*_pxGridLineWidth;
-        _pxGridHeight = RULES.verticalCellsCount*_pxBlockSize + (RULES.verticalCellsCount+1)*_pxGridLineWidth;
-        _pxCellSize = _pxBlockSize + _pxGridLineWidth;
-        _pxGridBorder = Math.ceil(_pxCellSize/3);    // bordure de grille en dégradé
-        _pxFullGridWidth = _pxGridWidth + 2*_pxGridBorder;    // largeur grille + bordure
-        _pxFullGridHeight = _pxGridHeight + _pxGridBorder;    // hauteur grille + bordure
-        _pxGridMargin = Math.round(_pxFullGridWidth/8);
-        _pxPreviewBlockSize = Math.round(_pxBlockSize/2.6);
-        _pxPreviewLineWidth    = _pxGridLineWidth;    // valeur arbitraire, aurait pu etre différente
-        _pxPreviewFullSize = (_pxPreviewBlockSize + _pxPreviewLineWidth) * (2*_shapesSpan+1) ;
-        _pxCeilHeight = _pxPreviewFullSize + _pxPreviewBlockSize + _pxPreviewLineWidth;    // hauteur de la zone posée sur la grille old: + _pxCellSize
-        _pxFullGridAndCeil = _pxFullGridHeight + _pxCeilHeight;
-        _XPreviewPosition = Math.round(_pxFullGridWidth/2-_pxPreviewFullSize/2);
-        _YPreviewPosition = 0;
-        _XScorePosition = _XPreviewPosition + _pxPreviewFullSize;    // Math.round(3*_pxFullGridWidth/4);
-        _YScorePosition = 0;
-        _XMessagePosition = Math.round(_pxFullGridWidth/2);
-        _YMessagePosition = Math.round(_pxFullGridHeight/2);
-        _zoomRatio = !oldGridWidth ? 1 : _pxFullGridWidth / oldGridWidth;
-    }},
+            while (!this.condition_(gridCount))
+                this.zoom1Step(-1);
+    },
+    zoom1Step: function(step) { // computing for zoom with pixels into web browser
+        this._scaleFactor += step;
+        let oldGridWidth = this._pxFullGridWidth;
+        this._pxBlockSize += step;
+        this._pxGameWidth = this._rootNode.getWidth();
+        this._pxGameHeight = this._rootNode.getHeight() - this._pxTopMenuZoneHeight;
+        this._pxHalfGameHeight = Math.round(this._pxGameHeight/2);
+        this._pxGridLineWidth = Math.max(Math.round(this._pxBlockSize/14), 1);
+        this._pxGridWidth = RULES.horizontalCellsCount*this._pxBlockSize + (RULES.horizontalCellsCount+1)*this._pxGridLineWidth;
+        this._pxGridHeight = RULES.verticalCellsCount*this._pxBlockSize + (RULES.verticalCellsCount+1)*this._pxGridLineWidth;
+        this._pxCellSize = this._pxBlockSize + this._pxGridLineWidth;
+        this._pxGridBorder = Math.ceil(this._pxCellSize/3); // bordure de grille en dégradé
+        this._pxFullGridWidth = this._pxGridWidth + 2*this._pxGridBorder; // largeur grille + bordure
+        this._pxFullGridHeight = this._pxGridHeight + this._pxGridBorder; // hauteur grille + bordure
+        this._pxGridMargin = Math.round(this._pxFullGridWidth/8);
+        this._pxPreviewBlockSize = Math.round(this._pxBlockSize/2.6);
+        this._pxPreviewLineWidth    = this._pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
+        this._pxPreviewFullSize = (this._pxPreviewBlockSize + this._pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
+        this._pxCeilHeight = this._pxPreviewFullSize + this._pxPreviewBlockSize + this._pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + _pxCellSize
+        this._pxFullGridAndCeil = this._pxFullGridHeight + this._pxCeilHeight;
+        this._XPreviewPosition = Math.round(this._pxFullGridWidth/2-this._pxPreviewFullSize/2);
+        this._YPreviewPosition = 0;
+        this._XScorePosition = this._XPreviewPosition + this._pxPreviewFullSize; // Math.round(3*_pxFullGridWidth/4);
+        this._YScorePosition = 0;
+        this._XMessagePosition = Math.round(this._pxFullGridWidth/2);
+        this._YMessagePosition = Math.round(this._pxFullGridHeight/2);
+        this._zoomRatio = !oldGridWidth ? 1 : this._pxFullGridWidth / oldGridWidth;
+    },
     create_: function()  { with(this) { // creating all graphics
-        _spriteBackground = new VectorialSprite({
-            _nocache: true,
-            drawSprite_: function(c, x, y, a, w, h) { // context, x, y, args, canvas width, canvas height
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,_backgroundColor,1,'#AAAAAA');
-                c.fillRect(x,y,w,h)    }
-        });
         _spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
             _width: '_pxFullGridWidth',
@@ -591,25 +592,11 @@ TetrisSpritesCreation.prototype = {
             _height: '_pxPreviewBlockSize',
             drawSprite_: function(c, x, y, a) {    // context, x, y, args
                 let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
-                c.fillStyle=(a.__onOff?
-                    VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
+                c.fillStyle=(a.__onOff
+                    ?VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
                     :VectorialSprite.rgbaTxt(col.medium, _previewOpacity)
                 );
                 c.fillRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize)    },
-            fx:    function(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
-            fy:    function(y)    {    return (_shapesSpan-y)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    }
-        });
-        _spritePreviewBlockFrame = new VectorialSprite({    // !!!
-            _nocache: false,
-            _width: '_pxPreviewBlockSize',
-            _height: '_pxPreviewBlockSize',
-            drawSprite_: function(c, x, y, a) {    // context, x, y, args
-                let col = _colors[a.col];
-                c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y);        // left border
-                c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
-                c.lineTo(x,y+_pxFullGridHeight);
-                c.fillStyle=(VectorialSprite.rgbaTxt(col.light, _previewOpacity));
-                c.fill(); },
             fx:    function(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
             fy:    function(y)    {    return (_shapesSpan-y)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    }
         });
