@@ -895,9 +895,9 @@ function Grid(playerKeysSet, colorTxt){
             this._matrix[i][j] = null;
     }
     this._dropTimer = new Timer({ // here this._fallingShape is not defined yet
-        funcAtTimeOut: (shape)=>{ shape.fallingShapeTriesMove(0,-1); },
+        funcAtTimeOut: (grid)=>{ grid.fallingShapeTriesMove(0,-1); },
         timerPeriod: this._normalDropPeriod,
-        timerOwner: null
+        timerOwner: this
     });
     this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
         width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
@@ -1150,7 +1150,6 @@ Grid.prototype            = {
             this._fallingShape.moveAndPutShapeToPlaced(0, 0) // only place with call without previous removeShapeFromPlace()
                 .drawShape()
                 .drawGhostAfterCompute();
-            this._dropTimer._timerOwner = this._fallingShape; //$$$$$$$$
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.runTimer();
         } else { // it's lost
@@ -1159,6 +1158,31 @@ Grid.prototype            = {
                 ._domNode.setDomNode({opacity: SPRITES._lostShapeOpacity});
             this.lose();
         }
+    },
+    horizontalMoveAsked(iRight) {
+        if (this._isSoftDropping) {// if softdropping
+            this._dropTimer.finishTimer();
+            this._isSoftDropping = false;
+            this._dropTimer.setPeriod(this._normalDropPeriod);
+            this._dropTimer.runTimer(); // shape can move after fall or stopped
+        }
+        this._grid.fallingShapeTriesMove(iRight, 0);
+    },
+    fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
+        if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
+            if (iRight === 0) //no left nor right
+                this._dropTimer.runTimer(); // shape go down, new period
+            this._fallingShape.moveFalling(iRight, jUp);
+        } else { // shape can't move...
+            if (jUp < 0) // ...player or drop timer tries move down
+                if (this._isSoftDropping) { //if we shape can be placed
+                    this._isSoftDropping = false;
+                    this._dropTimer.setPeriod(this._normalDropPeriod);
+                    this._dropTimer.runTimer(); 
+                } else
+                    this.lockFallingShapePrepareMoving();
+        }
+        return this;
     },
     lockFallingShapePrepareMoving: function(){ // can be called recursively, when falling shape or locked shapes in game hit floor
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
@@ -1254,8 +1278,8 @@ Grid.prototype            = {
             switch (event.keyCode) {
                 case this._playerKeysSet.keys[0]: this._fallingShape.rotationAsked(); break; // up
                 case this._playerKeysSet.keys[1]: this._fallingShape.beginSoftDropping(); break; // down
-                case this._playerKeysSet.keys[2]: this._fallingShape.horizontalMoveAsked(-1); break; // left
-                case this._playerKeysSet.keys[3]: this._fallingShape.horizontalMoveAsked(1); break; // right
+                case this._playerKeysSet.keys[2]: this.horizontalMoveAsked(-1); break; // left
+                case this._playerKeysSet.keys[3]: this.horizontalMoveAsked(1); break; // right
             }
     },
     pauseOrResume: function(){    // pause or resume this grid
@@ -1405,34 +1429,6 @@ class TetrisShape {
                 break; // exit loop
             }
         return result;
-    }
-    horizontalMoveAsked(iRight) {
-        if (this._grid._isSoftDropping) {// if softdropping
-            //ex code 2 lines below for this.finishAnyDropping(true);
-            this._grid._dropTimer.finishTimer();
-            this._grid._isSoftDropping = false;
-            this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-            this._grid._dropTimer.runTimer(); // shape can move after fall or stopped
-        }
-        this.fallingShapeTriesMove(iRight, 0);
-    }
-    fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
-        if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
-//            console.log(iRight);
-            if (iRight === 0) //no left nor right
-                this._grid._dropTimer.runTimer(); // shape go down, new period
-            this.moveFalling(iRight, jUp);
-        } else { // shape can't move...
-//            console.log(jUp);
-            if (jUp < 0) // ...player or drop timer tries move down
-                if (this._grid._isSoftDropping) { //if we shape can be placed
-                    this._grid._isSoftDropping = false;
-                    this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-                    this._grid._dropTimer.runTimer(); 
-                } else
-                    this._grid.lockFallingShapePrepareMoving();
-        }
-        return this;
     }
     rotateDataInMatrix() { // 1 is clockwiseQuarters
         this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount;// we test need rotating in this.canShapeRotate()
@@ -1976,7 +1972,7 @@ ListAutoIndex.prototype = {
     }},
 };
 // TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
-class Timer { //$$$$$$$$$$
+class Timer {
     constructor(timerObject) { // args never used here, so removed
         this._funcAtTimeOut = timerObject.funcAtTimeOut;
         this._timerPeriod = timerObject.timerPeriod;
@@ -1990,11 +1986,10 @@ class Timer { //$$$$$$$$$$
         this._timeOut;
     }
     runTimer() { // return true if killing previous
-        let needToKill = this.finishTimer();
+        this.finishTimer(); // if still running
         this._running = true;
         this._beginTime = (new Date).getTime();
         this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod); // setInterval is useless here, not used
-        return needToKill;
     }
     isRunning() {
         return this._running; // useless for drop timer
@@ -2012,14 +2007,12 @@ class Timer { //$$$$$$$$$$
             return this._paused;
         }
     }
-    finishTimer() { // return true if killing previous timer
-        this._paused = false; // turn pause off, necessary ?
+    finishTimer() {
+        //this._paused = false; // turn pause off, necessary ?
         if (this._running) {
             clearTimeout(this._timeOut);
             this._running = false;
-            return true
-        } else
-            return false;
+        }
     }
     setPeriod(timerPeriod) { // period will change on next call can be changed when running
         this._timerPeriod = timerPeriod;
