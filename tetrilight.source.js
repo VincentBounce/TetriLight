@@ -35,6 +35,12 @@ Canvas:
     blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen //$canvas
     move without calculation
     computing page resize zoom with JS explicit code
+    DIV
+        _htmlElement: DIV
+        _htmlElement: CANVAS
+            _drawingContext2D: CanvasRenderingContext2D (choose smooth)
+                globalAlpha, imageSmoothingEnabled, imageSmoothingQuality
+
 WebGL: not massively adopted
 
 **************** MINOR BUGS ****************
@@ -292,13 +298,17 @@ function MainMenu() { with(this) { // queue or stack
             if (GAME._gameState !== GAME_STATES.waiting)
                 GAME.pauseOrResume();
         }
-    };// init below
+    }; // init below
     window.addEventListener('keydown', keyCapture_, false); // old: window.document.documentElement
     window.addEventListener('keyup', keyCapture_, false);
     window.addEventListener('keypress', keyPressCapture_, false);
     window.oncontextmenu = function(event){ cancelEvent_(event); };
     _domNode = new DomNode({ onBody: true, width:100, height:100 });
-    SPRITES = new TetrisSpritesCreation(_domNode);
+    //window.document.createElement('div')
+
+
+
+    SPRITES = new TetrisSpritesCreation(_domNode); // need dom node to scale sizes
     _domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
@@ -307,7 +317,7 @@ function MainMenu() { with(this) { // queue or stack
         background: {
             type:'canvas', y:'_pxTopMenuZoneHeight', width:'_pxGameWidth', height:'_pxGameHeight', sprite:SPRITES._spriteBackground }
         });
-    _domNode._childs.background.drawGfx(); // paint black background
+    _domNode._childs.background.nodeDrawSprite(); // paint black background
     _domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
     // _domNode._childs.message1.setTex('totototo');
     _domNode._htmlElement.addEventListener('click',
@@ -955,10 +965,10 @@ function Grid(keyboard, colorTxt) { with(this) {
         messageZone: {
             y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
     });
-    _domNode._childs.frontZone.drawGfx({col:_colorTxt});
+    _domNode._childs.frontZone.nodeDrawSprite({col:_colorTxt});
     _realBlocksNode = _domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     _ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
-    _domNode._childs.frameZone._childs.back._childs.background.drawGfx({col:_colorTxt});
+    _domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:_colorTxt});
     _domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(_color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(_color.light));    // _textCharCountWidthMin : 1 or 7
     _domNode._childs.controlZone.setTextIntoSizedField({
         text: _keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3],
@@ -1548,15 +1558,15 @@ class NextShapePreview {
         this._domNode = this._grid._domNode._childs.nextShapePreview;
         for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
             for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
-                this._domNode.drawGfx({fx: i, fy: j, col: this._grid._colorTxt, __onOff: false}); // off
+                this._domNode.nodeDrawSprite({fx: i, fy: j, col: this._grid._colorTxt, __onOff: false}); // off
     }
     mark(shape) {
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.drawGfx({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: true}); // on
+            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: true}); // on
     }
     unMark(shape) {// optimized to remove only current previewed shape, and not all preview
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.drawGfx({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: false }); // off
+            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: false }); // off
     }
 }
 // LOCKED BLOCKS Class, for locked blocks on the ground
@@ -1756,7 +1766,7 @@ class TetrisBlock {
     setColor(colorTxt)  {
         this._colorTxt = colorTxt;
         this._color = SPRITES._colors[this.colorTxt];
-        this._domNode.drawGfx({col: this._colorTxt});
+        this._domNode.nodeDrawSprite({col: this._colorTxt});
     }
     isFreeSlot(i, j)  { // can move on placed grid, put this into grid
         return (
@@ -2057,14 +2067,13 @@ class EventsQueue {
     }
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
-// DIV contains DIV and CANVAS, CANVAS have no childs
-function DomNode(att, parent=null, id) { // att is attributes
+function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
     this._childs = {};
     this._domNodeType = isValued(att.type) ? 'canvas' : 'div'; // implicit div if type ommited
     // have a parent ?
     if (parent !== null) { this._parent = parent; this._id = id; }
     // creating element into page window.document
-    this._htmlElement = window.document.createElement(this._domNodeType);
+    this._htmlElement = window.document.createElement(this._domNodeType); // create canvas or div
     this._htmlElement.id = this._id; // #DEBUG
     this._htmlElement.style.position = 'absolute';
     // checking onBody property
@@ -2128,9 +2137,11 @@ function DomNode(att, parent=null, id) { // att is attributes
             this._vectorialSprite = att.sprite;
             delete att.sprite;
         }
-        this._canvas2dDrawing = this._htmlElement.getContext('2d');
-        this._htmlElement.width =  this._width; //$canvas
-        this._htmlElement.height =  this._height;
+        this._drawingContext2D = this._htmlElement.getContext('2d');
+        this._htmlElement.width = this._width;
+        //this._htmlElement.style.width = this._width*ratio+'px';
+        this._htmlElement.height = this._height;
+        //this._htmlElement.style.height = this._height*ratio+'px';
         this._drawStack = {};
     }
     this.setDomNode(att); // others attributes
@@ -2150,7 +2161,7 @@ DomNode.prototype = {
     _widthVar                        : null,
     _heightVar                        : null,
     _domNodeType                    : null,
-    _canvas2dDrawing             : null, // _canvas2dDrawing context
+    _drawingContext2D             : null, // _drawingContext2D context
     _vectorialSprite                        : null,
     _scaleZoom                        : 1, // float
     _drawStack                        : null,
@@ -2181,11 +2192,10 @@ DomNode.prototype = {
     delTransform: function() {
         this._htmlElement.style['transform'] = '';
     },
-    drawGfx: function(attributes=null) { // MAIN FUNCTION to draw a graphic, following attributes
+    nodeDrawSprite: function(attributes=null) { // MAIN FUNCTION to draw a graphic, following attributes
         let att = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
         let copyAtt = {}; // recording process to redraw
-        for (let p in att)
-            copyAtt[p] = att[p];
+        Object.assign(copyAtt, att); // to copy object, old: for (let p in att) copyAtt[p] = att[p];
         if (!att.sprite) att.sprite = this._vectorialSprite;
         if (!att.x) att.x = 0; // px, int
         if (!att.y) att.y = 0; // px, int
@@ -2198,15 +2208,15 @@ DomNode.prototype = {
         this._drawStack[this.getSortedXYArgs_(att)] = copyAtt; // remember xy only for index for redrawing
         let sortedArgs = this.getSortedArgs_(att);
         if (!att.sprite.hasImageData(sortedArgs)) {
-            this._canvas2dDrawing.beginPath();
-            att.sprite.drawSprite_(this._canvas2dDrawing, att.x, att.y, att, this.getWidth(), this.getHeight());
-            this._canvas2dDrawing.closePath();
+            this._drawingContext2D.beginPath();
+            att.sprite.drawSprite_(this._drawingContext2D, att.x, att.y, att, this.getWidth(), this.getHeight());
+            this._drawingContext2D.closePath();
         }
-        if (att.sprite.hasImageData(sortedArgs)) {
+        if (att.sprite.hasImageData(sortedArgs)) { // second test
             let imageData = att.sprite.getImageData(sortedArgs);
-            this._canvas2dDrawing.putImageData(imageData, att.x, att.y);            // scaling position
-        } else if (att.sprite._nocache === false) { // lonley test for _nocache
-            let imageData = this._canvas2dDrawing.getImageData(att.x, att.y, att.sprite.getWidth(), att.sprite.getHeight());
+            this._drawingContext2D.putImageData(imageData, att.x, att.y); // scaling position
+        } else if (att.sprite._nocache === false) {
+            let imageData = this._drawingContext2D.getImageData(att.x, att.y, att.sprite.getWidth(), att.sprite.getHeight());
             att.sprite.putImageData(sortedArgs, imageData);
         }
     },
@@ -2249,17 +2259,17 @@ DomNode.prototype = {
             redrawStack[p] = this._drawStack[p];
         this._drawStack = {};
         for (let p in redrawStack) // redrawing
-            this.drawGfx(redrawStack[p]);
+            this.nodeDrawSprite(redrawStack[p]);
     },
     /*get: function(att) {
         return this._htmlElement.getAttribute(att);
     },*/
-    setDomNode: function(att) {
-        for (let p in att)
-            if (typeof att[p] !== 'object') // if not sub type and not sub group
-                this._htmlElement.style[p.replace(/_/,'-')] = att[p];
+    setDomNode: function(att) { // to run all attributes
+        for (let p in att) //
+            if (typeof att[p] === 'object')
+                this._childs[p] = new DomNode(att[p], this, p); // if att[p] is div parent, create DomNode which runs setDomeNode
             else
-                this._childs[p] = new DomNode(att[p], this, p);
+                this._htmlElement.style[p.replace(/_/,'-')] = att[p]; // if att[p] is an attribute, opacity for example
     },
     pxVal_: function(val) {
         return val + 'px';
