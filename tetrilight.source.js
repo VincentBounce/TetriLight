@@ -129,11 +129,16 @@ myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it
             for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; // height -1 to +(2x20) });
 merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
 
-**************** CODE GITHUB ****************
-remove a remote: git remote rm old
-rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
-rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
-solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
+**************** VISUAL STUDIO CODE ****************
+To execute a command: CTRL + SHIFT + P
+Monokai ST3 extension: gives function blue coloration instead green in 'Monokai' standard theme
+Color Highlight extension: to colorize colors declarations into code
+Alignment extension: ALT + = to align selection
+GitHub: remove a remote: git remote rm old
+GitHub: rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
+GitHub: rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
+GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
+Settings Sync extension: to save VS Code configuration in GitHub
 
 **************** NAMING CONVENTION ****************
 // #DEBUG: to track bug
@@ -204,49 +209,49 @@ Examples of listAutoIndex: _gridsListAuto
 // GLOBAL VARIABLES, each one handle one class instance only
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
 // GLOBAL CONSTANTS
-const RULES                         = { // tetris rules
-    gameSpeedRatio                    : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
-    initialVolume                     : 0.1, // default 0.6, 0 to 1, if #DEBUG
-    transferRowsCountMin              : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
-    pentominoesRowsCountMin           : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
-    horizontalCellsCount              : 5, // default 10, min 5 #DEBUG
-    verticalCellsCount                : 21, // default 21 = (20 visible + 1 hidden) #DEBUG
-    topLevel                          : 25, // default 25, max level (steps of drop acceleration)
-    risingRowsHolesCountMaxRatio      : 0.3, // default 0.3, <=0.5, max holes into each rising row, example: 0.5=50% means 5 holes for 10 columns
-    fps                               : 60/1000 }; // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
-const DURATIONS                       = { // tetris durations, periods in ms
-    pentominoesModeDuration           : 10000, // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
-    movingGridsDuration               : 350, // 0350 ms
-    clearingRowsDuration              : 350, // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
-    rising1RowDuration                : 150, // 0150 ms or 250, increase for #DEBUG
-    rotatingDuration                  : 400, // 0400 ms
-    gridQuakeDuration                 : 150, // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
-    centralMessagesDuration           : 1500, // 1500 ms, central messages displaying duration, replaced, not queued
-    displayingScoreDuration           : 1500, // 1500 ms
-    hardDropDuration                  : 200, // 0200 ms, increase for #DEBUG
-    lostMessageDuration               : 3500, // 3500 ms, period to display score
-    softDropPeriod                    : 50, // 0050 ms, if this is max DropDuration
-    initialDropPeriod                 : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-const PIXELS                          = {
-    pxTopMenuZoneHeight                : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
-    pxGameWidth                        : null,
-    pxGameHeight                        : null,
-        pxHalfGameHeight                : null,
-    pxBlockSize                        : 34,
-        pxCellSize                        : null,
-    pxGridBorder                        : null,
-    pxGridLineWidth                    : null,
-    pxGridWidth                        : null,
-        pxFullGridWidth                : null,
-            pxGridMargin                : null,
-    pxGridHeight                        : null,
-        pxFullGridHeight                : null,
-    pxCeilHeight                        : null,
-    pxFullGridAndCeil                    : null,
-    pxPreviewFullSize                    : null, // 2*36=72
-    pxPreviewBlockSize                    : null,
-    pxPreviewLineWidth                    : null,
-    pxButtonSize                        : 50, // default 50
+const RULES                     = { // tetris rules
+    gameSpeedRatio              : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+    initialVolume               : 0.1, // default 0.6, 0 to 1, if #DEBUG
+    transferRowsCountMin        : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
+    pentominoesRowsCountMin     : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
+    horizontalCellsCount        : 5, // default 10, min 5 #DEBUG
+    verticalCellsCount          : 21, // default 21             = (20 visible + 1 hidden) #DEBUG
+    topLevel                    : 25, // default 25, max level (steps of drop acceleration)
+    risingRowsHolesCountMaxRatio: 0.3, // default 0.3, <        = 0.5, max holes into each rising row, example: 0.5 = 50% means 5 holes for 10 columns
+    fps                         : 60/1000 }; // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
+const DURATIONS                 = { // tetris durations, periods in ms
+    pentominoesModeDuration     : 10000, // 5000 ms, 15s for 3 lines cleared, 20s for 4 lines cleared
+    movingGridsDuration         : 350, // 0350 ms
+    clearingRowsDuration        : 350, // 0350 ms or 500, increase for #DEBUG, incompressible by any key excepted pause
+    rising1RowDuration          : 150, // 0150 ms or 250, increase for #DEBUG
+    rotatingDuration            : 400, // 0400 ms
+    gridQuakeDuration           : 150, // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
+    centralMessagesDuration     : 1500, // 1500 ms, central messages displaying duration, replaced, not queued
+    displayingScoreDuration     : 1500, // 1500 ms
+    hardDropDuration            : 200, // 0200 ms, increase for #DEBUG
+    lostMessageDuration         : 3500, // 3500 ms, period to display score
+    softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
+    initialDropPeriod           : 1100 }; // 0700 ms, >         = _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+const PIXELS                    = {
+    pxTopMenuZoneHeight         : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    pxGameWidth                 : null,
+    pxGameHeight                : null,
+        pxHalfGameHeight        : null,
+    pxBlockSize                 : 34,
+        pxCellSize              : null,
+    pxGridBorder                : null,
+    pxGridLineWidth             : null,
+    pxGridWidth                 : null,
+        pxFullGridWidth         : null,
+            pxGridMargin        : null,
+    pxGridHeight                : null,
+        pxFullGridHeight        : null,
+    pxCeilHeight                : null,
+    pxFullGridAndCeil           : null,
+    pxPreviewFullSize           : null, // 2*36                 = 72
+    pxPreviewBlockSize          : null,
+    pxPreviewLineWidth          : null,
+    pxButtonSize                : 50, // default 50
 }
 const FONTS                           = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
 const SOUNDS                          = {
@@ -424,7 +429,7 @@ function TetrisSpritesCreation(rootNode) {
     this._rootNode = rootNode;
     this.zoom1Step(0);
     this.create_();
-    this._spriteBackground = new VectorialSprite({ // black > grey
+    this._spriteBackground = new VectorialSprite({ // define backgroung color here: black > grey
         _nocache: true,
         drawSprite_: (c, x, y, a, w, h)=>{ // context c, x, y, args a, canvas width w, canvas height h
             c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
@@ -432,56 +437,55 @@ function TetrisSpritesCreation(rootNode) {
     });
 }
 TetrisSpritesCreation.prototype = {
-    _rootNode                            : null,
-    _zoomRatio                            : 1, // default 1, float current zoom ratio
-    _scaleFactor                        : 33, // default 33, int scale unit < _pxBlockSize && >= 1
-    _pxTopMenuZoneHeight                : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
-    _pxGameWidth                        : null,
-    _pxGameHeight                        : null,
-        _pxHalfGameHeight                : null,
-    _pxBlockSize                        : 34,
-        _pxCellSize                        : null,
-    _pxGridBorder                        : null,
-    _pxGridLineWidth                    : null,
-    _pxGridWidth                        : null,
-        _pxFullGridWidth                : null,
-            _pxGridMargin                : null,
-    _pxGridHeight                        : null,
-        _pxFullGridHeight                : null,
-    _XPreviewPosition                    : null,
-    _YPreviewPosition                    : null,
-    _XScorePosition                        : null,
-    _YScorePosition                        : null,
-    _XMessagePosition                    : null,
-    _YMessagePosition                    : null,
-    _pxCeilHeight                        : null,
-    _pxFullGridAndCeil                    : null,
-    _pxPreviewFullSize                    : null, // 2*36=72
-    _pxPreviewBlockSize                    : null,
-    _pxPreviewLineWidth                    : null,
-    _pxButtonSize                        : 50, // default 50
-    _spriteBackground                        : null,
-    _spriteBlock                            : null,
-    _spriteGridFront                        : null,
-    _spriteGridBackground                    : null,
-    _spritePreviewBlock                    : null,
-    _spritePreviewBlockFrame                : null,
-    //_backgroundColor                    : 'black', // default 'black'
-    _ghostShapeOpacity                    : 0.15, // default 0.15
-    _previewOpacity                        : 0.2, // default 0.2, opacity for preview grid
-    _lostShapeOpacity                    : 0.5, // default 0.5, to show a ghost of shape wich makes losing
-    _shapesSpan                            : 2, // span : envergure =(5-1)/2
-    _colors: {
-        pink:         {light:[248, 190, 232], medium:[224, 107, 169], dark:[189,  66, 111]},
-        purple:        {light:[210, 172, 241], medium:[136, 100, 208], dark:[ 90,  64, 177]},
-        red:         {light:[245, 140, 140], medium:[219,  78,  78], dark:[187,  48,  48]},
-        green:      {light:[199, 233,  88], medium:[115, 176,  13], dark:[ 75, 127,   0]},
-        yellow:     {light:[255, 250, 134], medium:[218, 190,  13], dark:[184, 147,   0]},
-        orange:        {light:[250, 197, 115], medium:[240, 143,   0], dark:[212,  87,   0]},
-        blue:          {light:[  0, 215, 246], medium:[ 13, 134, 222], dark:[  0,  87, 190]},
-        grey_white:    {light:[255, 255, 255], medium:[188, 197, 204], dark:[ 97, 109, 121]},
-        grey_blue :    {light:[192, 216, 231], medium:[127, 150, 188], dark:[ 73,  85, 118]},
-        grey:          {light:[207, 207, 207], medium:[134, 134, 134], dark:[ 88,  88,  88]}
+    _rootNode               : null,
+    _zoomRatio              : 1, // default 1, float current zoom ratio
+    _scaleFactor            : 33, // default 33, int scale unit < _pxBlockSize && > = 1
+    _pxTopMenuZoneHeight    : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    _pxGameWidth            : null,
+    _pxGameHeight           : null,
+        _pxHalfGameHeight   : null,
+    _pxBlockSize            : 34,
+        _pxCellSize         : null,
+    _pxGridBorder           : null,
+    _pxGridLineWidth        : null,
+    _pxGridWidth            : null,
+        _pxFullGridWidth    : null,
+            _pxGridMargin   : null,
+    _pxGridHeight           : null,
+        _pxFullGridHeight   : null,
+    _XPreviewPosition       : null,
+    _YPreviewPosition       : null,
+    _XScorePosition         : null,
+    _YScorePosition         : null,
+    _XMessagePosition       : null,
+    _YMessagePosition       : null,
+    _pxCeilHeight           : null,
+    _pxFullGridAndCeil      : null,
+    _pxPreviewFullSize      : null, // 2*36===72
+    _pxPreviewBlockSize     : null,
+    _pxPreviewLineWidth     : null,
+    _pxButtonSize           : 50, // default 50
+    _spriteBackground       : null,
+    _spriteBlock            : null,
+    _spriteGridFront        : null,
+    _spriteGridBackground   : null,
+    _spritePreviewBlock     : null,
+    _spritePreviewBlockFrame: null,
+    _ghostShapeOpacity      : 0.15, // default 0.15
+    _previewOpacity         : 0.2, // default 0.2, opacity for preview grid
+    _lostShapeOpacity       : 0.5, // default 0.5, to show a ghost of shape wich makes losing
+    _shapesSpan             : 2, // span                                            : envergure = (5-1)/2
+    _colors                 : {
+        pink      : {light: [248, 190, 232], medium: [224, 107, 169], dark: [189,  66, 111]},
+        purple    : {light: [210, 172, 241], medium: [136, 100, 208], dark: [ 90,  64, 177]},
+        red       : {light: [245, 140, 140], medium: [219,  78,  78], dark: [187,  48,  48]},
+        green     : {light: [199, 233,  88], medium: [115, 176,  13], dark: [ 75, 127,   0]},
+        yellow    : {light: [255, 250, 134], medium: [218, 190,  13], dark: [184, 147,   0]},
+        orange    : {light: [250, 197, 115], medium: [240, 143,   0], dark: [212,  87,   0]},
+        blue      : {light: [  0, 215, 246], medium: [ 13, 134, 222], dark: [  0,  87, 190]},
+        grey_white: {light: [255, 255, 255], medium: [188, 197, 204], dark: [ 97, 109, 121]},
+        grey_blue : {light: [192, 216, 231], medium: [127, 150, 188], dark: [ 73,  85, 118]},
+        grey      : {light: [207, 207, 207], medium: [134, 134, 134], dark: [ 88,  88,  88]}
     },
     condition_: function(gridCount) { // gridCount = GAME._playersCount
         //return ( ( // #DEBUG: to compact grids together
