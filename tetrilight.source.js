@@ -183,7 +183,7 @@ MainMenu [1 instance]
         PentominoesBriefMode
         Grid [x instance]
             _playedPolyominoesType
-            _keyboard
+            _playerKeysSet
             _animsStack
             _anims: all grid anims
             _gridEventsQueue
@@ -674,8 +674,8 @@ TetrisGame.prototype = {
     _gameEventsQueue                : null,
     _anims                            : {},                    // only 1 instance of game
     _freeColors                        : null,                    // for name of free colors for players
-    _keyboards : [                    // up down left right
-        {symbols:['Z','S','Q','D'], keys:['Z'.charCodeAt(0), 'S'.charCodeAt(0), 'Q'.charCodeAt(0), 'D'.charCodeAt(0)], free:true}, // $$$ manage W for QWERTY
+    _gameKeysSets : [                    // up down left right
+        {symbols:['Z','S','Q','D'], keys:['Z'.charCodeAt(0), 'S'.charCodeAt(0), 'Q'.charCodeAt(0), 'D'.charCodeAt(0)], free:true},
         {symbols:['I','K','J','L'], keys:['I'.charCodeAt(0), 'K'.charCodeAt(0), 'J'.charCodeAt(0), 'L'.charCodeAt(0)], free:true},
         {symbols:['\u2227','\u2228','<','>'], keys:[38, 40, 37, 39], free:true}
     ],
@@ -733,11 +733,11 @@ TetrisGame.prototype = {
     addGridBody_: function(){    // return true if added
         if (this._freeColors.listSize > 0) {
             this._playersCount ++;
-            let p; for (p in this._keyboards)
-                if ( this._keyboards[p].free)
+            let p; for (p in this._gameKeysSets)
+                if ( this._gameKeysSets[p].free)
                     break;
-            this._keyboards[p].free = false;
-            let grid = new Grid( this._keyboards[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
+            this._gameKeysSets[p].free = false;
+            let grid = new Grid( this._gameKeysSets[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
             // old: grid._gridId = (this._playersCount%2)?this._gridsListAuto.putFirst(grid):this._gridsListAuto.putLast(grid);    // from left or right
             this.organizeGrids({newGrid:grid});
             return grid;
@@ -747,7 +747,7 @@ TetrisGame.prototype = {
     },
     removeGrid: function(grid){
         this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
-        grid._keyboard.free = true;                        // release if keys used
+        grid._playerKeysSet.free = true;                        // release if keys used
         this._freeColors.putInList(grid._colorTxt, grid._colorTxt);// we reput color on free colors
         this._playersCount--;
         grid.destroyGrid();    // stops timers etc..
@@ -878,10 +878,10 @@ class PentominoesBriefMode {
     }
 }
 // TETRIS GRID Class
-function Grid(keyboard, colorTxt){
+function Grid(playerKeysSet, colorTxt){
     this._colorTxt            = colorTxt;
     this._color               = SPRITES._colors[this._colorTxt];
-    this._keyboard            = keyboard;                                    // [up down left right]
+    this._playerKeysSet       = playerKeysSet;                                    // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
     this._animsStack          = [];
@@ -928,7 +928,7 @@ function Grid(keyboard, colorTxt){
     this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._colorTxt});
     this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light));    // _textCharCountWidthMin : 1 or 7
     this._domNode._childs.controlZone.setTextIntoSizedField({
-        text: this._keyboard.symbols[0]+'</BR>'+this._keyboard.symbols[2]+' '+this._keyboard.symbols[1]+' '+this._keyboard.symbols[3],
+        text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
     this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
     this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._color.dark));
@@ -1090,7 +1090,7 @@ Grid.prototype            = {
     _isSoftDropping       : false, // false means normal dropping, true means soft dropping
     _softDroppingReloaded : true, // keyup
     _playedPolyominoesType: 'tetrominoes',// starts tetris with 4 blocks shape
-    _keyboard             : null,
+    _playerKeysSet             : null,
     _lockedBlocks         : null, // placed blocks in grid or locked?
     _matrix               : null,
     _anims                : null,
@@ -1247,15 +1247,15 @@ Grid.prototype            = {
     },
     chooseAction: function(event){
         if (event.type === 'keyup') {                                // touche relevée
-            if (event.keyCode === this._keyboard.keys[1]) 
+            if (event.keyCode === this._playerKeysSet.keys[1]) 
                 this._softDroppingReloaded = true;
         }
         else if (!this.isBusy())
             switch (event.keyCode) {
-                case this._keyboard.keys[0]: this._fallingShape.rotationAsked();  break; // up
-                case this._keyboard.keys[1]: this._fallingShape.beginSoftDropping(false);        break; // down
-                case this._keyboard.keys[2]: this._fallingShape.horizontalMoveAsked(-1);break; // left
-                case this._keyboard.keys[3]: this._fallingShape.horizontalMoveAsked(1); break; // right
+                case this._playerKeysSet.keys[0]: this._fallingShape.rotationAsked(); break; // up
+                case this._playerKeysSet.keys[1]: this._fallingShape.beginSoftDropping(); break; // down
+                case this._playerKeysSet.keys[2]: this._fallingShape.horizontalMoveAsked(-1); break; // left
+                case this._playerKeysSet.keys[3]: this._fallingShape.horizontalMoveAsked(1); break; // right
             }
     },
     pauseOrResume: function(){    // pause or resume this grid
@@ -1502,9 +1502,8 @@ class TetrisShape {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); }) // only called here
         return this;
     }
-    beginSoftDropping(force) { // full falling, called by keydown, call falling()
-        if (!this._grid._isSoftDropping &&
-        (this._grid._softDroppingReloaded || force) ) { // if not soft dropping and reloaded
+    beginSoftDropping() { // full falling, called by keydown, call falling()
+        if ( !this._grid._isSoftDropping && this._grid._softDroppingReloaded ) { // if not soft dropping and reloaded by keyup
             this._grid._softDroppingReloaded = false; // keydown
             if (this.canMoveFromPlacedToPlaced(0, -1))      
                 this.continueSoftDropping(); // we run fall
