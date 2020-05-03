@@ -797,18 +797,18 @@ TetrisGame.prototype = {
         grid.destroyGrid();    // stops timers etc..
         organizeGrids({oldGrid:true});
     }},
-    organizeGrids: function(att) { with(this) {    // horizontal organization only, zoomToFit makes the correct zoom
+    organizeGrids: function(instruction) { with(this) {    // horizontal organization only, zoomToFit makes the correct zoom
         SPRITES.zoomToFit(_playersCount);
         MAIN_MENU._domNode._childs.background.redrawNode();    // redraw background
         let realIntervalX = (SPRITES._pxGameWidth-(SPRITES._pxFullGridWidth*_playersCount)) / (_playersCount+1);
-        if (att.newGrid || att.oldGrid) {
-            if (att.newGrid)
+        if (instruction.newGrid || instruction.oldGrid) {
+            if (instruction.newGrid)
                 if (_playersCount%2) {    // from left or right
-                    att.newGrid._gridId = _gridsListAuto.putFirst(att.newGrid);
-                    att.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
+                    instruction.newGrid._gridId = _gridsListAuto.putFirst(instruction.newGrid);
+                    instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
-                    att.newGrid._gridId = _gridsListAuto.putLast(att.newGrid);
-                    att.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
+                    instruction.newGrid._gridId = _gridsListAuto.putLast(instruction.newGrid);
+                    instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
                 }
             _gridsListAuto.resetNext();
             let grid;
@@ -821,10 +821,10 @@ TetrisGame.prototype = {
                     count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - grid._domNode.getX(),
                     0    ];
             }
-            // old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(att);
+            // old: _gameEventsQueue.execNowOrEnqueue(_anims.moveGridsAnim, _anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
             _anims.moveGridsAnim.startAnim();
-            if (att.newGrid)
-                att.newGrid.startGrid();    // enqueue?
+            if (instruction.newGrid)
+                instruction.newGrid.startGrid();    // enqueue?
         } else {
             let grid;
             let count = 0;
@@ -2067,9 +2067,9 @@ class EventsQueue {
     }
 }
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
-function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
+function DomNode(definitionObject, parent=null, id) { // 2 last arguments for recursive calls
     this._childs = {};
-    this._domNodeType = isValued(att.type) ? 'canvas' : 'div'; // implicit div if type ommited
+    this._domNodeType = isValued(definitionObject.type) ? 'canvas' : 'div'; // implicit div if type ommited
     // have a parent ?
     if (parent !== null) { this._parent = parent; this._id = id; }
     // creating element into page window.document
@@ -2077,19 +2077,19 @@ function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
     this._htmlElement.id = this._id; // #DEBUG
     this._htmlElement.style.position = 'absolute';
     // checking onBody property
-    if (att.onBody) {
+    if (definitionObject.onBody) {
         window.document.body.appendChild(this._htmlElement);
-        delete att.onBody; // to avoid it in this.setDomNode()
+        delete definitionObject.onBody; // to avoid it in this.setDomNode()
     } else if (parent)
         this._parent._htmlElement.appendChild(this._htmlElement);
     // checking width property
-    if (isValued(att.width))
-        if (typeof att.width === 'number') {
-            this._htmlElement.style.width = att.width+'%'; // all window
+    if (isValued(definitionObject.width))
+        if (typeof definitionObject.width === 'number') {
+            this._htmlElement.style.width = definitionObject.width+'%'; // all window
             this._width = this.getWidth();
             console.log(this._htmlElement.style.width)
         } else {
-            this._widthVar = att.width;
+            this._widthVar = definitionObject.width;
             this.getWidth = ()=>{ return SPRITES[this._widthVar] };
             this.setWidth(this.getWidth());
         }
@@ -2100,12 +2100,12 @@ function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
             this.setWidth(0);
     }
     // checkingheight property
-    if (isValued(att.height))
-        if (typeof att.height === 'number') {
-            this._htmlElement.style.height = att.height+'%'; // all window
+    if (isValued(definitionObject.height))
+        if (typeof definitionObject.height === 'number') {
+            this._htmlElement.style.height = definitionObject.height+'%'; // all window
             this._height = this.getHeight();
         } else {
-            this._heightVar = att.height;
+            this._heightVar = definitionObject.height;
             this.getHeight = ()=>{ return SPRITES[this._heightVar] };
             this.setHeight(this.getHeight());
         }
@@ -2116,26 +2116,26 @@ function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
             this.setHeight(0);
     }
     // checkingx position property
-    if (isValued(att.x)) {
-        this._xVar = att.x;
+    if (isValued(definitionObject.x)) {
+        this._xVar = definitionObject.x;
         this.getXInit = ()=>{ return SPRITES[this._xVar] };
     }
     // checking y position  property
-    if (isValued(att.y)) {
-        this._yVar = att.y;
+    if (isValued(definitionObject.y)) {
+        this._yVar = definitionObject.y;
         this.getYInit = ()=>{ return SPRITES[this._yVar] };
     }
     this.setX(this.getXInit());
     this.setY(this.getYInit());
-    delete att.x;
-    delete att.y;
-    delete att.width;
-    delete att.height;
+    delete definitionObject.x;
+    delete definitionObject.y;
+    delete definitionObject.width;
+    delete definitionObject.height;
     // checking y canvas  property
     if (this._domNodeType === 'canvas') {
-        if (att.sprite) {
-            this._vectorialSprite = att.sprite;
-            delete att.sprite;
+        if (definitionObject.sprite) {
+            this._vectorialSprite = definitionObject.sprite;
+            delete definitionObject.sprite;
         }
         this._drawingContext2D = this._htmlElement.getContext('2d');
         this._htmlElement.width = this._width;
@@ -2144,7 +2144,7 @@ function DomNode(att, parent=null, id) { // 2 last arguments for recursive calls
         //this._htmlElement.style.height = this._height*ratio+'px';
         this._drawStack = {};
     }
-    this.setDomNode(att); // others attributes
+    this.setDomNode(definitionObject); // others attributes
 }
 DomNode.prototype = {
     _idCount                        : 0, // for unamed elements
@@ -2193,45 +2193,45 @@ DomNode.prototype = {
         this._htmlElement.style['transform'] = '';
     },
     nodeDrawSprite: function(attributes=null) { // MAIN FUNCTION to draw a graphic, following attributes
-        let att = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
+        let definitionObject = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
         let copyAtt = {}; // recording process to redraw
-        Object.assign(copyAtt, att); // to copy object, old: for (let p in att) copyAtt[p] = att[p];
-        if (!att.sprite) att.sprite = this._vectorialSprite;
-        if (!att.x) att.x = 0; // px, int
-        if (!att.y) att.y = 0; // px, int
-        if (isValued(att.fx))
-            att.x += att.sprite.fx(att.fx);
-        if (isValued(att.fy))
-            att.y += att.sprite.fy(att.fy);
-        delete att.fx; // xy found, deleting functions
-        delete att.fy;
-        this._drawStack[this.getSortedXYArgs_(att)] = copyAtt; // remember xy only for index for redrawing
-        let sortedArgs = this.getSortedArgs_(att);
-        if (!att.sprite.hasImageData(sortedArgs)) {
+        Object.assign(copyAtt, definitionObject); // to copy object, old: for (let p in definitionObject) copyAtt[p] = definitionObject[p];
+        if (!definitionObject.sprite) definitionObject.sprite = this._vectorialSprite;
+        if (!definitionObject.x) definitionObject.x = 0; // px, int
+        if (!definitionObject.y) definitionObject.y = 0; // px, int
+        if (isValued(definitionObject.fx))
+            definitionObject.x += definitionObject.sprite.fx(definitionObject.fx);
+        if (isValued(definitionObject.fy))
+            definitionObject.y += definitionObject.sprite.fy(definitionObject.fy);
+        delete definitionObject.fx; // xy found, deleting functions
+        delete definitionObject.fy;
+        this._drawStack[this.getSortedXYArgs_(definitionObject)] = copyAtt; // remember xy only for index for redrawing
+        let sortedArgs = this.getSortedArgs_(definitionObject);
+        if (!definitionObject.sprite.hasImageData(sortedArgs)) {
             this._drawingContext2D.beginPath();
-            att.sprite.drawSprite_(this._drawingContext2D, att.x, att.y, att, this.getWidth(), this.getHeight());
+            definitionObject.sprite.drawSprite_(this._drawingContext2D, definitionObject.x, definitionObject.y, definitionObject, this.getWidth(), this.getHeight());
             this._drawingContext2D.closePath();
         }
-        if (att.sprite.hasImageData(sortedArgs)) { // second test
-            let imageData = att.sprite.getImageData(sortedArgs);
-            this._drawingContext2D.putImageData(imageData, att.x, att.y); // scaling position
-        } else if (att.sprite._nocache === false) {
-            let imageData = this._drawingContext2D.getImageData(att.x, att.y, att.sprite.getWidth(), att.sprite.getHeight());
-            att.sprite.putImageData(sortedArgs, imageData);
+        if (definitionObject.sprite.hasImageData(sortedArgs)) { // second test
+            let imageData = definitionObject.sprite.getImageData(sortedArgs);
+            this._drawingContext2D.putImageData(imageData, definitionObject.x, definitionObject.y); // scaling position
+        } else if (definitionObject.sprite._nocache === false) {
+            let imageData = this._drawingContext2D.getImageData(definitionObject.x, definitionObject.y, definitionObject.sprite.getWidth(), definitionObject.sprite.getHeight());
+            definitionObject.sprite.putImageData(sortedArgs, imageData);
         }
     },
-    getSortedArgs_: function(att) { // return sorted args as String
+    getSortedArgs_: function(definitionObject) { // return sorted args as String
         let result = [];
-        for (let p in att)
+        for (let p in definitionObject)
             if (p !== 'x' && p !== 'y' && p !== 'fx' && p !== 'fy' && p !== 'sprite')
-                result.push(p + att[p]);
+                result.push(p + definitionObject[p]);
         return SPRITES._scaleFactor + result.sort().join(); // we can put separator char in args here
     },
-    getSortedXYArgs_: function(att) { // return sorted coord args as String
+    getSortedXYArgs_: function(definitionObject) { // return sorted coord args as String
         let result = [];
-        for (let p in att)
+        for (let p in definitionObject)
             if (p === 'x' || p === 'y')
-                result.push(p + att[p]);
+                result.push(p + definitionObject[p]);
         return SPRITES._scaleFactor + result.sort().join(); // we can put separator char in args here
     },
     redrawNode: function(recursiveCalling=false) {
@@ -2261,15 +2261,15 @@ DomNode.prototype = {
         for (let p in redrawStack) // redrawing
             this.nodeDrawSprite(redrawStack[p]);
     },
-    /*get: function(att) {
-        return this._htmlElement.getAttribute(att);
+    /*get: function(definitionObject) {
+        return this._htmlElement.getAttribute(definitionObject);
     },*/
-    setDomNode: function(att) { // to run all attributes
-        for (let p in att) //
-            if (typeof att[p] === 'object')
-                this._childs[p] = new DomNode(att[p], this, p); // if att[p] is div parent, create DomNode which runs setDomeNode
+    setDomNode: function(definitionObject) { // to run all attributes
+        for (let p in definitionObject) //
+            if (typeof definitionObject[p] === 'object')
+                this._childs[p] = new DomNode(definitionObject[p], this, p); // if definitionObject[p] is div parent, create DomNode which runs setDomeNode
             else
-                this._htmlElement.style[p.replace(/_/,'-')] = att[p]; // if att[p] is an attribute, opacity for example
+                this._htmlElement.style[p.replace(/_/,'-')] = definitionObject[p]; // if definitionObject[p] is an attribute, opacity for example
     },
     pxVal_: function(val) {
         return val + 'px';
@@ -2335,10 +2335,10 @@ DomNode.prototype = {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
         if (y) this.setY(Math.round(y-this.getHeight()/2));
     },
-    newChild: function(att) { // returns pointer to child
+    newChild: function(definitionObject) { // returns pointer to child
         let id = this.getNewUId_();
-        return (this._childs[id] = new DomNode(att, this, id));
-        // return this._childs[att.name?att.name:id] = new DomNode(att, this, att.name?att.name:id);
+        return (this._childs[id] = new DomNode(definitionObject, this, id));
+        // return this._childs[definitionObject.name?definitionObject.name:id] = new DomNode(definitionObject, this, definitionObject.name?definitionObject.name:id);
     },
     putChild: function(canvas) {
         if (canvas._parent)
@@ -2447,13 +2447,13 @@ class VectorialSprite {
 }
 // ANIMATION Class, to prepare an animation
 class Animation {
-    constructor(att) {
-        this.startAnimFunc_  = isValued(att.startAnimFunc) ? att.startAnimFunc : false; // optional function when begin animation, value = null or defined
-        this.animateFunc_    = att.animateFunc; // function to set THE movement to execute
-        this.endAnimFunc_    = att.endAnimFunc; // function to set the last position after animation
-        this.timingAnimFunc_ = att.timingAnimFunc; // f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
-        this._duration       = att.animDuration; // duration of animation
-        this._animOwner      = isValued(att.optionalAnimOwner) ? att.optionalAnimOwner : this; // because score anim not declared in grid
+    constructor(animObject) {
+        this.startAnimFunc_  = isValued(animObject.startAnimFunc) ? animObject.startAnimFunc : false; // optional function when begin animation, value = null or defined
+        this.animateFunc_    = animObject.animateFunc; // function to set THE movement to execute
+        this.endAnimFunc_    = animObject.endAnimFunc; // function to set the last position after animation
+        this.timingAnimFunc_ = animObject.timingAnimFunc; // f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
+        this._duration       = animObject.animDuration; // duration of animation
+        this._animOwner      = isValued(animObject.optionalAnimOwner) ? animObject.optionalAnimOwner : this; // because score anim not declared in grid
         this.animOutput; // public value of f(x), current animation position after timingAnimFunc_, any value possible
         this._paused;
         this._animating;
