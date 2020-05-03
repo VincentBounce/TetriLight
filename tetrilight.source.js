@@ -1429,9 +1429,8 @@ class TetrisShape {
     }
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
+            console.log(iRight);
             if (iRight === 0) { //no left or no right
-                //ko: this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-                //this._grid._dropTimer.setPeriod(1000);
                 this._grid._dropTimer.runTimer(); // shape go down, new period
             }else // shape move side
                 if (this._grid._isSoftDropping) {// if falling
