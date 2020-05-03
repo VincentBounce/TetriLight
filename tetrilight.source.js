@@ -13,6 +13,7 @@ a row = a line
 a cell = a slot = a box
 gfx = graphics
 sprite = designed part of 
+pivot = orientation
 
 **************** TETRIS GAME RULES ****************
 When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
@@ -282,28 +283,6 @@ function init() {
 }
 // MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { // queue or stack
-    let commands = {
-        rotate: function(grid) {
-            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
-                grid._fallingShape.fallingShapeTriesRotate();
-        },
-        softdrop: function(grid) {
-            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
-                grid._fallingShape.beginSoftDropping(true);
-        },
-        left: function(grid) {
-            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
-                grid._fallingShape.horizontalMoveAsked(-1);
-        },
-        right: function(grid) {
-            if ( (GAME._gameState === GAME_STATES.running) && !grid.isBusy() )
-                grid._fallingShape.horizontalMoveAsked(1);
-        },
-        pauseOrResume: function() {
-            if (GAME._gameState !== GAME_STATES.waiting)
-                GAME.pauseOrResume();
-        }
-    }; // init below
     window.addEventListener('keydown', this.keyCapture_, false); // old: window.document.documentElement
     window.addEventListener('keyup', this.keyCapture_, false);
     window.addEventListener('keypress', this.keyPressCapture_, false);
@@ -1273,7 +1252,7 @@ Grid.prototype            = {
         }
         else if (!this.isBusy())
             switch (event.keyCode) {
-                case this._keyboard.keys[0]: this._fallingShape.fallingShapeTriesRotate();  break; // up
+                case this._keyboard.keys[0]: this._fallingShape.rotationAsked();  break; // up
                 case this._keyboard.keys[1]: this._fallingShape.beginSoftDropping(false);        break; // down
                 case this._keyboard.keys[2]: this._fallingShape.horizontalMoveAsked(-1);break; // left
                 case this._keyboard.keys[3]: this._fallingShape.horizontalMoveAsked(1); break; // right
@@ -1439,10 +1418,12 @@ class TetrisShape {
     }
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
+//            console.log(iRight);
             if (iRight === 0) //no left nor right
                 this._grid._dropTimer.runTimer(); // shape go down, new period
             this.moveFalling(iRight, jUp);
         } else { // shape can't move...
+//            console.log(jUp);
             if (jUp < 0) // ...player or drop timer tries move down
                 if (this._grid._isSoftDropping) { //if we shape can be placed
                     this._grid._isSoftDropping = false;
@@ -1450,33 +1431,9 @@ class TetrisShape {
                     this._grid._dropTimer.runTimer(); 
                 } else
                     this._grid.lockFallingShapePrepareMoving();
-                }
+        }
         return this;
     }
-    /*fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
-        if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
-            if (iRight === 0) { //no left nor right
-                this._grid._dropTimer.runTimer(); // shape go down, new period
-            }else // shape move side, left or right
-                if (this._grid._isSoftDropping) {// if softdropping
-                    //ex code 2 lines below for this.finishAnyDropping(true);
-                    this._grid._dropTimer.finishTimer();
-                    this._grid._isSoftDropping = false;
-                    this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-                    this._grid._dropTimer.runTimer(); // shape can move after fall or stopped
-                }
-            this.moveFalling(iRight, jUp);
-        } else { // shape can't move...
-            if (jUp < 0) // ...player or drop timer tries move down
-                if (this._grid._isSoftDropping) { //if we shape can be placed
-                    this._grid._isSoftDropping = false;
-                    this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-                    this._grid._dropTimer.runTimer(); 
-                } else
-                    this._grid.lockFallingShapePrepareMoving();
-                }
-        return this;
-    }*/
     rotateDataInMatrix() { // 1 is clockwiseQuarters
         this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount;// we test need rotating in this.canShapeRotate()
         for (let b=0;b < this._shapeBlocks.length;b++) {
@@ -1490,7 +1447,7 @@ class TetrisShape {
         return this;
     }
     canShapeRotate() { // 1 is clockwiseQuarters
-        if (this._pivotsCount === 1)
+        if (this._pivotsCount === 1) // if shape has only 1 orientation
             return false;
         else {
             let result = true;
@@ -1507,7 +1464,7 @@ class TetrisShape {
             return result;
         }
     }
-    fallingShapeTriesRotate() { // do rotation if possible, else nothing
+    rotationAsked() { // do rotation if possible, else nothing
         if (this._grid._isSoftDropping) { // stopping soft drop fall by continuing normal timer
             this._grid._dropTimer.finishTimer(); //optional
             this._grid._isSoftDropping = false;
