@@ -8,7 +8,7 @@ Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
 
 **************** VOCABULARY ****************
-to sweep = to clear
+to clear = to sweep, cleared = swept
 a row = a line
 a cell = a slot = a box
 gfx = graphics
@@ -20,7 +20,7 @@ and others players have 5 blocks per shape, during 15 or 20 seconds (it's called
 When a player clears 2 or more (RULES.transferRowsCountMin) lines together, then he drops same quantity of bad grey lines to others players.
 Game is lost when new shape can't be placed (!_fallingShape.canMoveToPlaced).
 Game starts at level 0
-Level increments +1 every 10 rows
+Level starts 0, increments +1 every 10 rows cleared
 Hard drops double travelled cells count
 Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then *(level + 1)
 Combos rows count formula is same * 50%
@@ -356,72 +356,68 @@ MainMenu.prototype = {
         }
     }}
 };
-// AUDIO Class (for sounds)
-function Audio(sounds) { with(this) { // constructor
-    _sounds = {};
+// AUDIO Class, sounds management
+function Audio(sounds) { // constructor
+    this._sounds = {};
     for (let p in sounds)
-        addSound(p, sounds[p].ext, sounds[p].vol);
-}}
+        this.addSound(p, sounds[p].ext, sounds[p].vol);
+}
 Audio.prototype = {
-    _mainVolume                    : RULES.initialVolume,
-    _muted                        : false,
-    _sounds                        : null,
-    addSound: function(name, ext, volume) { with(this) { // when new is called, add all sounds in _sounds let, 2nd arg volume is optional
-        _sounds[name] = {};
-        _sounds[name].sound = window.document.createElement('audio');
-        window.document.body.appendChild(_sounds[name].sound);
-        // _sounds[name].sound.setAttribute('preload', 'auto');    // old
-        // _sounds[name].sound.autoplay = true; // old
-        // _sounds[name].sound.controls = true; // displays controls for #DEBUG
+    _mainVolume: RULES.initialVolume,
+    _muted: false,
+    _sounds: null, // object containing all sounds
+    addSound: function(name, ext, volume) { // when new is called, add all sounds in this._sounds let, 2nd arg volume is optional
+        this._sounds[name] = {};
+        this._sounds[name].sound = window.document.createElement('audio');
+        window.document.body.appendChild(this._sounds[name].sound);
+        // this._sounds[name].sound.setAttribute('preload', 'auto');    // old
+        // this._sounds[name].sound.autoplay = true; // old
+        // this._sounds[name].sound.controls = true; // displays controls for #DEBUG
         if (name.indexOf('Music') !== -1) // check if contains Music in name, if so then play with loop
-            _sounds[name].sound.loop = 'loop';
-        _sounds[name].sound.setAttribute('src', 'audio/' + name + '.' + ext); // (ext ? ext : 'wav')
-        _sounds[name].volumeFactor = (volume ? volume : 1);
-        _sounds[name].paused = false;
-    }},
-    audioPlay: function(name) { with(this) {
-        _sounds[name].paused = false;
-        _sounds[name].sound.play();
-    }},
-    audioStop: function(name) { with(this) {
-        _sounds[name].paused = false;
-        _sounds[name].sound.pause(); // old: _sounds[name].sound.currentTime = 0;
-    }},
-    /*audioStopAll: function() { with(this) {
-        for (let p in _sounds)
-            stop(_sounds[p]);
-    }},*/
-    pauseOrResume: function(name) { with(this) {
-        _sounds[name].paused = !_sounds[name].paused;
-        if (_sounds[name].paused)
-            _sounds[name].sound.pause();
+            this._sounds[name].sound.loop = 'loop';
+        this._sounds[name].sound.setAttribute('src', 'audio/' + name + '.' + ext); // (ext ? ext : 'wav')
+        this._sounds[name].volumeFactor = (volume ? volume : 1);
+        this._sounds[name].paused = false;
+    },
+    audioPlay: function(name) {
+        this._sounds[name].paused = false;
+        this._sounds[name].sound.play();
+    },
+    audioStop: function(name) {
+        this._sounds[name].paused = false;
+        this._sounds[name].sound.pause(); // old: this._sounds[name].sound.currentTime = 0;
+    },
+    pauseOrResume: function(name) {
+        this._sounds[name].paused = !this._sounds[name].paused;
+        if (this._sounds[name].paused)
+            this._sounds[name].sound.pause();
         else
-            audioPlay(name);
-    }},
-    changeVolume: function(up) { with(this) { // -1 or +1, return false if not changed
-        let volume = _mainVolume + up*0.1;
+            this.audioPlay(name);
+    },
+    changeVolume: function(up) { // -1 or +1, return false if not changed
+        let volume = this._mainVolume + up*0.1;
         if ((volume < 0) || (volume > 1))
             return false; // we can't change
         else {
-            _mainVolume = volume;
-            refreshVolume(_mainVolume);
+            this._mainVolume = volume;
+            this.refreshVolume(this._mainVolume);
             return true;
         }
-    }},
-    muteUnmute: function() { with(this) {
+    },
+    muteUnmute: function() {
         muted = !muted;
         if (muted)
-            refreshVolume(0);
+            this.refreshVolume(0);
         else
-            refreshVolume(_mainVolume);
-    }},
-    refreshVolume: function(volume) { with(this) {
-        for (let sound in _sounds)
-            _sounds[sound].sound.volume    = volume * _sounds[sound].volumeFactor;
-    }},
-    getDuration: function(name) { with(this) {
-        return _sounds[name].sound.duration;
-    }}
+            this.refreshVolume(this._mainVolume);
+    },
+    refreshVolume: function(volume) {
+        for (let sound in this._sounds)
+            this._sounds[sound].sound.volume    = volume * this._sounds[sound].volumeFactor;
+    },
+    /*getDuration: function(name) {
+        return this._sounds[name].sound.duration;
+    }*/
 };
 // before TETRIS GRAPHICS Class
 function TetrisSpritesCreation(rootNode) { with(this) {
@@ -1876,7 +1872,7 @@ class Score {
     combosCompute() {
         this._combos++;
         if (this._combos >= 1) {
-            this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; // 50% of lines swept together
+            this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; // 50% of lines cleared together
             this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
             // $$$sound of coins
         }
