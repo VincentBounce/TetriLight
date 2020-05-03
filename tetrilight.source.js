@@ -303,11 +303,8 @@ function MainMenu() { with(this) { // queue or stack
     window.addEventListener('keyup', keyCapture_, false);
     window.addEventListener('keypress', keyPressCapture_, false);
     window.oncontextmenu = function(event){ cancelEvent_(event); };
+    // below creation for main dom node
     _domNode = new DomNode({ onBody: true, width:100, height:100 });
-    //window.document.createElement('div')
-
-
-
     SPRITES = new TetrisSpritesCreation(_domNode); // need dom node to scale sizes
     _domNode.setDomNode({ // menus on top of the screen
         top: {
@@ -319,7 +316,7 @@ function MainMenu() { with(this) { // queue or stack
         });
     _domNode._childs.background.nodeDrawSprite(); // paint black background
     _domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
-    // _domNode._childs.message1.setTex('totototo');
+    // _domNode._childs.message1.setTex('totototo'); //$$$$$$$$$$
     _domNode._htmlElement.addEventListener('click',
         function(event) {
             if ((event.offsetX < SPRITES._pxButtonSize) && (event.offsetY < SPRITES._pxButtonSize))
@@ -699,7 +696,7 @@ function TetrisGame() {
             return -(x-2*Math.sqrt(x));    // old: return -(x-2*Math.sqrt(x));
         },
         animDuration: DURATIONS.movingGridsDuration,
-        optionalAnimOwner: this // because score anim not declared in grid
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
@@ -877,9 +874,11 @@ TetrisGame.prototype = {
 // PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 class PentominoesBriefMode {
     constructor() {
-        this._pentoModeTimer = new Timer( function() {
-            GAME._pentominoesBriefMode.finishPentoMode();    // run in this class, because not with this for Timer, to delete$$$$$
-        }, 0 );
+        this._pentoModeTimer = new Timer({
+            funcAtTimeOut: ()=>{ this.finishPentoMode(); },
+            timerPeriod: 0,
+            timerOwner: this
+        });
     }
     /*destroyPentoMode() { with(this) { // to replace by anim timer
         _pentoModeTimer.finishTimer();
@@ -920,29 +919,34 @@ class PentominoesBriefMode {
     }
 }
 // TETRIS GRID Class
-function Grid(keyboard, colorTxt) { with(this) {
-    _colorTxt                        = colorTxt;
-    _color                            = SPRITES._colors[_colorTxt];
-    _keyboard                        = keyboard;                                    // [up down left right]
-    _lockedBlocks                    = new LockedBlocks(this);
-    _gridEventsQueue                = new EventsQueue();
-    _animsStack                        = [];
-    _lockedShapes                    = [];
-    // _rowsToClearArray                = [];                                        // no row to clear at the begining
-    _rowsToClearList                = new List();
-    _matrix = new Array(RULES.horizontalCellsCount + 2);// 12 columns, left and right boxes as margins columns, program fail if removed
-    for (let i=0;i < _matrix.length;i++) {
-        _matrix[i] = [];
+function Grid(keyboard, colorTxt){
+    this._colorTxt                        = colorTxt;
+    this._color                            = SPRITES._colors[this._colorTxt];
+    this._keyboard                        = keyboard;                                    // [up down left right]
+    this._lockedBlocks                    = new LockedBlocks(this);
+    this._gridEventsQueue                = new EventsQueue();
+    this._animsStack                        = [];
+    this._lockedShapes                    = [];
+    // this._rowsToClearArray                = [];                                        // no row to clear at the begining
+    this._rowsToClearList                = new List();
+    this._matrix = new Array(RULES.horizontalCellsCount + 2);// 12 columns, left and right boxes as margins columns, program fail if removed
+    for (let i=0;i < this._matrix.length;i++) {
+        this._matrix[i] = [];
         for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) // height -1 to +(2x20)
-            _matrix[i][j] = null;
+            this._matrix[i][j] = null;
     }
-    _dropTimer = new Timer( function() {with(this) {
-        _fallingShape.fallingShapeTriesMove(0,-1); }},
-        DURATIONS.initialDropPeriod );
-    _softDropTimer = new Timer( function() {with(this) {
-        _fallingShape.startSoftDropping(); }},
-        DURATIONS.softDropPeriod );
-    _domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
+    this._normalDropTimer = new Timer({ // here this._fallingShape is not defined yet
+        funcAtTimeOut: (shape)=>{ shape.fallingShapeTriesMove(0,-1); },
+        //funcAtTimeOut: ()=>{ console.log(TetrisShape.prototype.fallingShapeTriesMove); },
+        timerPeriod: DURATIONS.initialDropPeriod,
+        timerOwner: null
+    });
+    this._softDropTimer = new Timer({
+        funcAtTimeOut: (shape)=>{ shape.startSoftDropping(); },
+        timerPeriod: DURATIONS.softDropPeriod,
+        timerOwner: null
+    });
+    this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
         width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
         frameZone: {
             x:'_pxGridBorder', y:'_pxCeilHeight',
@@ -965,148 +969,155 @@ function Grid(keyboard, colorTxt) { with(this) {
         messageZone: {
             y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
     });
-    _domNode._childs.frontZone.nodeDrawSprite({col:_colorTxt});
-    _realBlocksNode = _domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
-    _ghostBlocksNode = _domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
-    _domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:_colorTxt});
-    _domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(_color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(_color.light));    // _textCharCountWidthMin : 1 or 7
-    _domNode._childs.controlZone.setTextIntoSizedField({
-        text: _keyboard.symbols[0]+'</BR>'+_keyboard.symbols[2]+' '+_keyboard.symbols[1]+' '+_keyboard.symbols[3],
+    this._domNode._childs.frontZone.nodeDrawSprite({col:this._colorTxt});
+    this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
+    this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
+    this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._colorTxt});
+    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light));    // _textCharCountWidthMin : 1 or 7
+    this._domNode._childs.controlZone.setTextIntoSizedField({
+        text: this._keyboard.symbols[0]+'</BR>'+this._keyboard.symbols[2]+' '+this._keyboard.symbols[1]+' '+this._keyboard.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    _domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(_color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(_color.light), 3);
-    _domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(_color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(_color.dark));
-    _nextShapePreview = new NextShapePreview(this);
-    _anims = {};    // need to initialize before creating new score which contains anim
-    _score = new Score(this);    // contains animation, 
-    _anims.quakeAnim = new Animation({
-        animateFunc: function(animOutput) { with(this) {                            // to use context of this Animation
-            _domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 _domNode use context of this Grid
-        }},
-        endAnimFunc: function() { with(this) {
-            _domNode._childs.frameZone._childs.back.moveTemporaryRestore();
-            gridAnimsStackPop();                                                // to have exclusive quake anim
-        }},
+    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
+    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._color.dark));
+    this._nextShapePreview = new NextShapePreview(this);
+    this._anims = {};    // need to initialize before creating new score which contains anim
+    this._score = new Score(this);    // contains animation, 
+    this._anims.quakeAnim = new Animation({
+        animateFunc: function(animOutput){                            // to use context of this Animation
+            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this Grid
+        },
+        endAnimFunc: function(){
+            this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
+            this.gridAnimsStackPop();                                                // to have exclusive quake anim
+        },
         timingAnimFunc: function(x) {
             return Math.sin(x*Math.PI);                                    // or return Math.sin(x*Math.PI*2)*(1-x);
         },
-        animDuration: DURATIONS.gridQuakeDuration
+        animDuration: DURATIONS.gridQuakeDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.pentominoesModeAnim = new Animation({
-        animateFunc: function(animOutput) { with(this) {                            // to use context of this Animation // console.log(animOutput); $alert(animOutput);
-            _domNode._childs.frontZone.setDomNode({opacity: Math.abs(animOutput)});
-        }},
-        endAnimFunc: function() { with(this) {
-            _domNode._childs.frontZone.setDomNode({opacity: 1});                // 1 = totalement opaque, visble
-        }},
+    this._anims.pentominoesModeAnim = new Animation({
+        animateFunc: function(animOutput){                            // to use context of this Animation // console.log(animOutput); $alert(animOutput);
+            this._domNode._childs.frontZone.setDomNode({opacity: Math.abs(animOutput)});
+        },
+        endAnimFunc: function(){
+            this._domNode._childs.frontZone.setDomNode({opacity: 1});                // 1 = totalement opaque, visble
+        },
         timingAnimFunc: function(x) {                                    // console.log(x); $alert(x);
             return -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5;            // f(x)=-cos(3^(x*3)*pi)/2+0.5
         },
-        animDuration: 0    // need to set duration for this animation before running
+        animDuration: 0, // need to set duration for this animation before running
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.clearRowsAnim = new Animation({ // loading animation to use later
-        animateFunc: function(animOutput) { with(this) { // called n times recursively, this: current object AND Animation
-            // for (let r in _rowsToClearArray) // for each row to clear
+    this._anims.clearRowsAnim = new Animation({ // loading animation to use later
+        animateFunc: function(animOutput){ // called n times recursively, this: current object AND Animation
+            // for (let r in this._rowsToClearArray) // for each row to clear
             //     for (let i=1;i <= RULES.horizontalCellsCount;i++) // for each column
-            //         _matrix[i][_rowsToClearArray[r]]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
-            for (let r in _rowsToClearList.listTable) // for each row to clear
+            //         this._matrix[i][this._rowsToClearArray[r]]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
+            for (let r in this._rowsToClearList.listTable) // for each row to clear
                 for (let i=1;i <= RULES.horizontalCellsCount;i++)
-                    _matrix[i][r]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
-        }},
-        endAnimFunc: function() { with(this) { // NOT GRAPHIC PROCESS
-            // _rowsToClearArray.forEach(function(myRow) {
-            //     clearFullRowAfterClearingAnim(myRow); }); // now erasing animated cleared rows datas // bad code:_rowsToClearArray = [];
-            for (let r in _rowsToClearList.listTable)
-                clearFullRowAfterClearingAnim(r); // so erasing previous
-            _lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
-            gridAnimsStackPop();
-        }},
+                    this._matrix[i][r]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
+        },
+        endAnimFunc: function(){ // NOT GRAPHIC PROCESS
+            // this._rowsToClearArray.forEach(function(myRow) {
+            //     this.clearFullRowAfterClearingAnim(myRow); }); // now erasing animated cleared rows datas // bad code:this._rowsToClearArray = [];
+            for (let r in this._rowsToClearList.listTable)
+                this.clearFullRowAfterClearingAnim(r); // so erasing previous
+            this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
+            this.gridAnimsStackPop();
+        },
         timingAnimFunc: function(x) {
             return 1 - Math.pow(x, 2);
         },
-        animDuration: DURATIONS.movingGridsDuration
+        animDuration: DURATIONS.movingGridsDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
-        animateFunc: function(animOutput) { with(this) {
-            for (let p in _lockedShapes) // to animate block, we move the DomNode element
-                _lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
-        }},
-        endAnimFunc: function() { with(this) {
-            for (let p in _lockedShapes) { // fetch rows to remove
-                _lockedShapes[p]
+    this._anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
+        animateFunc: function(animOutput){
+            for (let p in this._lockedShapes) // to animate block, we move the DomNode element
+                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
+        },
+        endAnimFunc: function(){
+            for (let p in this._lockedShapes) { // fetch rows to remove
+                this._lockedShapes[p]
                     .putShapeInRealBlocksNode() // remove from moving div
                     .drawShape()
                     ._domNode.destroyDomNode();
             }
-            _lockedShapes = [];
-            gridAnimsStackPush(_anims.quakeAnim, _anims.quakeAnim.startAnim); // startAnim() function stacked
-            gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); // we stack AUDIO.audioPlay('landFX');
-            gridAnimsStackPop();
-            // old: _anims.quakeAnim.startAnim();
-            // old: gridAnimsStackPop();
-        }},
+            this._lockedShapes = [];
+            this.gridAnimsStackPush(this._anims.quakeAnim, this._anims.quakeAnim.startAnim); // startAnim() function stacked
+            this.gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); // we stack AUDIO.audioPlay('landFX');
+            this.gridAnimsStackPop();
+            // old: this._anims.quakeAnim.startAnim();
+            // old: this.gridAnimsStackPop();
+        },
         timingAnimFunc: function(x) {
             return Math.pow(x, 3);
         },
-        animDuration: DURATIONS.hardDropDuration
+        animDuration: DURATIONS.hardDropDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.rising1RowAnim = new Animation({
-        animateFunc: function(animOutput) { with(this) {        // "this" display animation instancied object
-            for (let p in _lockedShapes) // to animate block, we move the DomNode element
-                _lockedShapes[p]._domNode.moveNodeTo(0, - _lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
-        }},
-        endAnimFunc: function() { with(this) {
-            for (let p in _lockedShapes) {
-                _lockedShapes[p].putShapeInRealBlocksNode();
-                _lockedShapes[p].drawShape();
-                _lockedShapes[p]._domNode.destroyDomNode(); // _isLockedShape always true, so optimized
+    this._anims.rising1RowAnim = new Animation({
+        animateFunc: function(animOutput){        // "this" display animation instancied object
+            for (let p in this._lockedShapes) // to animate block, we move the DomNode element
+                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
+        },
+        endAnimFunc: function(){
+            for (let p in this._lockedShapes) {
+                this._lockedShapes[p].putShapeInRealBlocksNode();
+                this._lockedShapes[p].drawShape();
+                this._lockedShapes[p]._domNode.destroyDomNode(); // _isLockedShape always true, so optimized
             }
-            _lockedShapes = [];
-            _ghostBlocksNode.show();
-            gridAnimsStackPop(); // unstack all countandclearrows and _gridEventsQueue.dequeue() in stack
-        }},
+            this._lockedShapes = [];
+            this._ghostBlocksNode.show();
+            this.gridAnimsStackPop(); // unstack all countandclearrows and this._gridEventsQueue.dequeue() in stack
+        },
         timingAnimFunc: function(x) {
             return x; // linear rising of rows, not (2*Math.sqrt(x)-x);
         },
-        animDuration: DURATIONS.rising1RowDuration
+        animDuration: DURATIONS.rising1RowDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.shapeRotateAnim = new Animation({     // loading animation to use later
-        startAnimFunc: function() { with(this) { // to animate block, we temporary apply a transform rotation
-            _fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.fx(_fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.fy(_fallingShape._jPosition-0.5)+"px");
-        }},
-        animateFunc: function(animOutput) { with(this) {
-            if ((_fallingShape._pivotsCount==2) && (_fallingShape._pivot==0))
-                _fallingShape._domNode.setRotate(-90 + animOutput);
+    this._anims.shapeRotateAnim = new Animation({     // loading animation to use later
+        startAnimFunc: function(){ // to animate block, we temporary apply a transform rotation
+            this._fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.fx(this._fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.fy(this._fallingShape._jPosition-0.5)+"px");
+        },
+        animateFunc: function(animOutput){
+            if ((this._fallingShape._pivotsCount==2) && (this._fallingShape._pivot==0))
+                this._fallingShape._domNode.setRotate(-90 + animOutput);
             else
-                _fallingShape._domNode.setRotate(90 - animOutput);
-        }},
-        endAnimFunc: function() { with(this) {
-            _fallingShape._domNode.delTransform(); // at end, we remove transform effect
-        }},
+                this._fallingShape._domNode.setRotate(90 - animOutput);
+        },
+        endAnimFunc: function(){
+            this._fallingShape._domNode.delTransform(); // at end, we remove transform effect
+        },
         timingAnimFunc: function(x) {
             return -90*(x-2*Math.sqrt(x));
         },
-        animDuration: DURATIONS.rotatingDuration
+        animDuration: DURATIONS.rotatingDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _anims.messageAnim = new Animation({
-        startAnimFunc: function(textInfos) { with(this) {
-            _domNode._childs.messageZone.setTextIntoSizedField.call(_domNode._childs.messageZone, textInfos);
-        }},
-        animateFunc: function(animOutput) { with(this) {
-            _domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES._pxCellSize);// _YMessagePosition);
-            _domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
-        }},
-        endAnimFunc: function() { with(this) {
-            _domNode._childs.messageZone.moveTemporaryRestore();
-            _domNode._childs.messageZone.setDomNode({opacity: 0});
-            _gridMessagesQueue.dequeue();
-        }},
+    this._anims.messageAnim = new Animation({
+        startAnimFunc: function(textInfos){
+            this._domNode._childs.messageZone.setTextIntoSizedField.call(this._domNode._childs.messageZone, textInfos);
+        },
+        animateFunc: function(animOutput){
+            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES._pxCellSize);// _YMessagePosition);
+            this._domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
+        },
+        endAnimFunc: function(){
+            this._domNode._childs.messageZone.moveTemporaryRestore();
+            this._domNode._childs.messageZone.setDomNode({opacity: 0});
+            this._gridMessagesQueue.dequeue();
+        },
         timingAnimFunc: function(x) {
             return Math.pow(2*(x-0.5), 3);    // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0;
         },
         animDuration: DURATIONS.centralMessagesDuration,
+        optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    _gridMessagesQueue = new EventsQueue();    // used only when lost
-}};
+    this._gridMessagesQueue = new EventsQueue();    // used only when lost
+};
 Grid.prototype = {
     _gridId                            : null,
     _gridState                        : GRID_STATES.connected,
@@ -1120,7 +1131,7 @@ Grid.prototype = {
     _nextShape                        : null,            // next shape about to be place
     _nextShapePreview                : null,            // preview on top of grid
     _score                            : null,
-    _dropTimer                        : null,
+    _normalDropTimer                        : null,
     _softDropTimer                    : null,         // animation
     _softDropping                    : false,        // animation
     _softDroppingReloaded            : true,            // keyup
@@ -1135,96 +1146,97 @@ Grid.prototype = {
     // _rowsToClearArray                : null,            // arrays to prepare rows to clear to anim when animating clearing rows
     _rowsToClearList                : null,            // arrays to prepare rows to clear to anim when animating clearing rows
     _vector                            : null,
-    destroyGrid: function() { with(this) {
+    destroyGrid: function(){
         if (GAME._gameState !== GAME_STATES.paused)
-            pauseOrResume();                        // to stop all timers, all anims
-        _lockedBlocks.destroyLockedBlocks();
-        _domNode.destroyDomNode();
-    }},
-    isBusy: function() { with(this) { // if grid is busy, doesn't care about message displaying
-        return ( (_gridState !== GRID_STATES.playing) // if grid is losing/finishing, return busy
-            || _anims.clearRowsAnim.isAnimating()
-            || _anims.shapeHardDropAnim.isAnimating()
-            || _anims.rising1RowAnim.isAnimating()
-            || _anims.quakeAnim.isAnimating() // to have exclusive quake anim
+            this.pauseOrResume();                        // to stop all timers, all anims
+        this._lockedBlocks.destroyLockedBlocks();
+        this._domNode.destroyDomNode();
+    },
+    isBusy: function(){ // if grid is busy, doesn't care about message displaying
+        return ( (this._gridState !== GRID_STATES.playing) // if grid is losing/finishing, return busy
+            || this._anims.clearRowsAnim.isAnimating()
+            || this._anims.shapeHardDropAnim.isAnimating()
+            || this._anims.rising1RowAnim.isAnimating()
+            || this._anims.quakeAnim.isAnimating() // to have exclusive quake anim
         );
-    }},
-    gridAnimsStackPush: function(o, func, param) { with(this) {// o object who contains func method, this by default
-        _animsStack.push([o, func, param]);
-    }},
-    gridAnimsStackPop: function() { with(this) {
-        while (!isBusy() && (_animsStack.length > 0)) {// unstack only when not busy, 2nd condition equivalent to while (_animsStack.length)
-            let last = _animsStack.pop();
+    },
+    gridAnimsStackPush: function(o, func, param){// o object who contains func method, this by default
+        this._animsStack.push([o, func, param]);
+    },
+    gridAnimsStackPop: function(){
+        while (!this.isBusy() && (this._animsStack.length > 0)) {// unstack only when not busy, 2nd condition equivalent to while (this._animsStack.length)
+            let last = this._animsStack.pop();
             last[1].call(last[0], last[2]);
         }
-        if (_animsStack.length === 0) // dequeue at end of anims stack, equivalent to (!_animsStack.length), #DEBUG before
-            _gridEventsQueue.dequeue();
-    }},
-    startGrid: function() { with(this) {
+        if (this._animsStack.length === 0) // dequeue at end of anims stack, equivalent to (!this._animsStack.length), #DEBUG before
+            this._gridEventsQueue.dequeue();
+    },
+    startGrid: function(){
         if (GAME._gameState === GAME_STATES.waiting)
             GAME.startGame();
-        _gridState = GRID_STATES.playing
-        _nextShape = new TetrisShape(this);
-        newFallingShape();
+        this._gridState = GRID_STATES.playing
+        this._nextShape = new TetrisShape(this);
+        this.newFallingShape();
         // putRowsAtStart, 0 when no shape
         let myRowsCount = Math.round( GAME.averageBlocksByPlayingGrid() // average blocks per grid
             / (RULES.horizontalCellsCount * (1-RULES.risingRowsHolesCountMaxRatio)) ); // divided by 10, or 10*(100%-30%) = 7
         while (myRowsCount-- > 0) // we put same quanity of rows
-            _gridEventsQueue.execNowOrEnqueue(_lockedBlocks, _lockedBlocks.put1NewRisingRow);
+            this._gridEventsQueue.execNowOrEnqueue(this._lockedBlocks, this._lockedBlocks.put1NewRisingRow);
         // end putRowsAtStart
         if (GAME._gameState === GAME_STATES.paused)
-            pauseOrResume();
-    }},
-    newFallingShape: function() { with(this) {
-        _fallingShape = _nextShape;
-        _fallingShape.putShapeInGame();
-        if (_fallingShape.canMoveToPlaced(0, 0)) {// test if lost: can move at starting position, so it's playing
-            _nextShapePreview.unMark(_fallingShape); // change current shape preview by a new shape
-            _nextShape = new TetrisShape(this); // change current shape preview by a new shape
-            _nextShapePreview.mark(_nextShape); // change current shape preview by a new shape
-            _fallingShape.moveAndPutShapeToPlaced(0, 0) // only place with call without previous removeShapeFromPlace()
+            this.pauseOrResume();
+    },
+    newFallingShape: function(){
+        this._fallingShape = this._nextShape;
+        this._fallingShape.putShapeInGame();
+        if (this._fallingShape.canMoveToPlaced(0, 0)) {// test if lost: can move at starting position, so it's playing
+            this._nextShapePreview.unMark(this._fallingShape); // change current shape preview by a new shape
+            this._nextShape = new TetrisShape(this); // change current shape preview by a new shape
+            this._nextShapePreview.mark(this._nextShape); // change current shape preview by a new shape
+            this._fallingShape.moveAndPutShapeToPlaced(0, 0) // only place with call without previous removeShapeFromPlace()
                 .drawShape()
                 .drawGhostAfterCompute();
-            _dropTimer.runTimer();
+            this._normalDropTimer._timerOwner = this._fallingShape; //$$$$$$$$
+            this._normalDropTimer.runTimer();
         } else { // it's lost
-            _fallingShape.drawShape()
+            this._fallingShape.drawShape()
                 .clearGhostBlocks()
                 ._domNode.setDomNode({opacity: SPRITES._lostShapeOpacity});
-            lose();
+            this.lose();
         }
-    }},
-    lockFallingShapePrepareMoving: function() { with(this) { // can be called recursively, when falling shape or locked shapes in game hit floor
-        gridAnimsStackPush(this, newFallingShape); // newFallingShape()
-        _lockedShapes = []; // release for garbage collector
-        _lockedShapes[_fallingShape._shapeIndex] = _fallingShape;
-        if (!_fallingShape.finishSoftDropping(false)); // drop timer stopped without running again
-            _dropTimer.finishTimer(); // drop timer stopped, others to end?
-        _anims.shapeRotateAnim.endAnim(); // because made by drop period
-        moveShapesInMatrix(_lockedShapes);
-        if (_fallingShape._jVector === 0) { // if played single falling shape
-            _fallingShape.putShapeInRealBlocksNode()
+    },
+    lockFallingShapePrepareMoving: function(){ // can be called recursively, when falling shape or locked shapes in game hit floor
+        this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
+        this._lockedShapes = []; // release for garbage collector
+        this._lockedShapes[this._fallingShape._shapeIndex] = this._fallingShape;
+        if (!this._fallingShape.finishSoftDropping(false)); // drop timer stopped without running again
+            this._normalDropTimer.finishTimer(); // drop timer stopped, others to end?
+        this._anims.shapeRotateAnim.endAnim(); // because made by drop period
+        this.moveShapesInMatrix(this._lockedShapes);
+        if (this._fallingShape._jVector === 0) { // if played single falling shape
+            this._fallingShape.putShapeInRealBlocksNode()
                 ._domNode.destroyDomNode();
             // AUDIO.audioPlay('landFX');
-            _gridEventsQueue.execNowOrEnqueue(this, countAndClearRows);    // exec countAndClearRows immediately
+            this._gridEventsQueue.execNowOrEnqueue(this, this.countAndClearRows);    // exec this.countAndClearRows immediately
         } else { // if locked shapes to drop, have to make animation before next counting
-            gridAnimsStackPush(this, countAndClearRows); // firstly stack countAndClearRows() for later
-            _gridEventsQueue.execNowOrEnqueue(_anims.shapeHardDropAnim, _anims.shapeHardDropAnim.startAnim); // secondly exec hard drop startAnim() immediately
+            this.gridAnimsStackPush(this, this.countAndClearRows); // firstly stack this.countAndClearRows() for later
+            this._gridEventsQueue.execNowOrEnqueue(this._anims.shapeHardDropAnim, this._anims.shapeHardDropAnim.startAnim); // secondly exec hard drop startAnim() immediately
             // sound played before after hardDrop and before Quake
         }
-    }},
-    moveShapesInMatrix: function(myShapes) { with(this) { // move locked shapes to drop (after clearing rows) into matrix
+    },
+    moveShapesInMatrix: function(myShapes){ // move locked shapes to drop (after clearing rows) into matrix
         myShapes.forEach( (myShape)=>{ myShape.removeShapeFromPlaced(); }) // move to a tested place
         myShapes.forEach( (myShape)=>{ myShape.moveAndPutShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) // move to placed on grid
-    }},
-    countAndClearRows: function() { with(this) { // locks block and computes rows to transfer and _scores
+    },
+    countAndClearRows: function(){ // locks block and computes rows to transfer and _scores
         // old: AUDIO.audioPlay('landFX');
-        if (_fallingShape) // for recursive calls with fallingshape = null
-            _fallingShape.clearGhostBlocks();
-        // let rowsToClearCount = _rowsToClearArray.length;
-        let rowsToClearCount = _rowsToClearList.listSize;
+        if (this._fallingShape) // for recursive calls with fallingshape = null
+            this._fallingShape.clearGhostBlocks();
+        // let rowsToClearCount = this._rowsToClearArray.length;
+        let rowsToClearCount = this._rowsToClearList.listSize;
         if (rowsToClearCount > 0) { // if there's rows to clear
-            _score.combosCompute();
-            _score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
+            this._score.combosCompute();
+            this._score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
             if (rowsToClearCount >= RULES.transferRowsCountMin)    // if 2 rows cleared, tranfer rule
                 GAME.transferRows(this, rowsToClearCount);
             if (rowsToClearCount >= RULES.pentominoesRowsCountMin) {// if 3 rows cleared, pentominoes rule: player have 3 blocks per shape, and others players have 5 blocks per shape
@@ -1232,66 +1244,66 @@ Grid.prototype = {
                 AUDIO.audioPlay('quadrupleFX');
             } else
                 AUDIO.audioPlay('clearFX');
-            _fallingShape = null; // to avoid combo reset scores
-            _anims.clearRowsAnim.startAnim();
+            this._fallingShape = null; // to avoid combo reset scores
+            this._anims.clearRowsAnim.startAnim();
         } else {
-            _score.displays(); // to refresh score
-            if (_fallingShape)
-                _score.combosReset();
-            gridAnimsStackPop();
+            this._score.displays(); // to refresh score
+            if (this._fallingShape)
+                this._score.combosReset();
+            this.gridAnimsStackPop();
         }
-    }},
-    lose: function() { with(this) {    // lives during _score duration
-        _score.displays();
-        _anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
-        _gridMessagesQueue.execNowOrEnqueue(
-            _anims.messageAnim,
-            _anims.messageAnim.startAnim,
+    },
+    lose: function(){    // lives during this._score duration
+        this._score.displays();
+        this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
+        this._gridMessagesQueue.execNowOrEnqueue(
+            this._anims.messageAnim,
+            this._anims.messageAnim.startAnim,
             [{text: 'You<BR/>lose', fieldCharCount: 4}]);
-        _gridMessagesQueue.execNowOrEnqueue(this, afterLost_);
+        this._gridMessagesQueue.execNowOrEnqueue(this, this.afterLost_);
         // AUDIO.audioStop('musicMusic');
-        _gridState = GRID_STATES.lost;
-        for (let p in _lockedBlocks._lockedBlocksArray)
-            _lockedBlocks._lockedBlocksArray[p].setColor('grey');
-    }},
-    setVectorLost_: function() { with(this) {
-        _vector = [0,    -SPRITES._pxTopMenuZoneHeight -SPRITES._pxGameHeight    ]; // prepare vector
+        this._gridState = GRID_STATES.lost;
+        for (let p in this._lockedBlocks._lockedBlocksArray)
+            this._lockedBlocks._lockedBlocksArray[p].setColor('grey');
+    },
+    setAnimLostVector_: function(){
+        this._vector = [0, -SPRITES._pxTopMenuZoneHeight -SPRITES._pxGameHeight ]; // prepare vector
         GAME._gameEventsQueue.dequeue();
-    }},
-    afterLost_: function() { with(this) {
-        GAME._gameEventsQueue.execNowOrEnqueue(this, setVectorLost_);
+    },
+    afterLost_: function(){
+        GAME._gameEventsQueue.execNowOrEnqueue(this, this.setAnimLostVector_);
         GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.startAnim);    // prepare move up
         GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);    // prepare remove
-    }},
-    putBlockInMatrix: function(block) { with(this) { // only put placed block on grid, not testing one, set to block
-        _matrix[block._iPosition][block._jPosition] = block;
-    }},
-    removeBlockFromMatrix: function(block) { with(this) { // only remove placed block on grid, not testing one, set to null
-        _matrix[block._iPosition][block._jPosition] = null;
-    }},
-    clearFullRowAfterClearingAnim: function(jRow) { with(this) { // we suppose that row is full
+    },
+    putBlockInMatrix: function(block){ // only put placed block on grid, not testing one, set to block
+        this._matrix[block._iPosition][block._jPosition] = block;
+    },
+    removeBlockFromMatrix: function(block){ // only remove placed block on grid, not testing one, set to null
+        this._matrix[block._iPosition][block._jPosition] = null;
+    },
+    clearFullRowAfterClearingAnim: function(jRow){ // we suppose that row is full
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
-            _matrix[i][jRow].destroyBlock();
-    }},
-    chooseAction: function(event) { with(this) {
+            this._matrix[i][jRow].destroyBlock();
+    },
+    chooseAction: function(event){
         if (event.type === 'keyup') {                                // touche relevée
-            if (event.keyCode === _keyboard.keys[1]) 
-                _softDroppingReloaded = true;
+            if (event.keyCode === this._keyboard.keys[1]) 
+                this._softDroppingReloaded = true;
         }
-        else if (!isBusy())
+        else if (!this.isBusy())
             switch (event.keyCode) {
-                case _keyboard.keys[0]: _fallingShape.fallingShapeTriesRotate();  break; // up
-                case _keyboard.keys[1]: _fallingShape.beginSoftDropping();        break; // down
-                case _keyboard.keys[2]: _fallingShape.fallingShapeTriesMove(-1,0);break; // left
-                case _keyboard.keys[3]: _fallingShape.fallingShapeTriesMove(1,0); break; // right
+                case this._keyboard.keys[0]: this._fallingShape.fallingShapeTriesRotate();  break; // up
+                case this._keyboard.keys[1]: this._fallingShape.beginSoftDropping();        break; // down
+                case this._keyboard.keys[2]: this._fallingShape.fallingShapeTriesMove(-1,0);break; // left
+                case this._keyboard.keys[3]: this._fallingShape.fallingShapeTriesMove(1,0); break; // right
             }
-    }},
-    pauseOrResume: function() { with(this) {    // pause or resume this grid
-        for (let p in _anims) // _anims is object, not array, contains animations of this grid
-            _anims[p].pauseOrResume();
-        _softDropTimer.pauseOrResume();
-        _dropTimer.pauseOrResume();
-    }}
+    },
+    pauseOrResume: function(){    // pause or resume this grid
+        for (let p in this._anims) // this._anims is object, not array, contains animations of this grid
+            this._anims[p].pauseOrResume();
+        this._softDropTimer.pauseOrResume();
+        this._normalDropTimer.pauseOrResume();
+    }
 };
 // TETRIS SHAPE Class
 class TetrisShape {
@@ -1437,7 +1449,7 @@ class TetrisShape {
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this.canMoveFromPlacedToPlaced(iRight, jUp)) {
             if (iRight === 0)
-                this._grid._dropTimer.runTimer(); // shape go down, new period
+                this._grid._normalDropTimer.runTimer(); // shape go down, new period
             else // shape move side
                 if (this._grid._softDropping) // if falling
                     this.finishSoftDropping(true);
@@ -1526,10 +1538,11 @@ class TetrisShape {
         return this;
     }
     startSoftDropping() { // full falling iterative
-        this._grid._dropTimer.finishTimer();
+        this._grid._normalDropTimer.finishTimer();
         this._grid._softDropping = true;            
         if (this.canMoveFromPlacedToPlaced(0, -1)) {
             this.moveFalling(0, -1);
+            this._grid._softDropTimer._timerOwner = this; //$$$$$$$$$
             this._grid._softDropTimer.runTimer();
         } else
             this.finishSoftDropping(true); // ends fall and launching drop timer
@@ -1540,12 +1553,12 @@ class TetrisShape {
             this._grid._softDropTimer.finishTimer();
             this._grid._softDropping = false;
             if (keep)
-                this._grid._dropTimer.runTimer(); // shape can move after fall or stopped
+                this._grid._normalDropTimer.runTimer(); // shape can move after fall or stopped
         }
         return this;
     }
     hardDropping() {
-        this._grid._dropTimer.finishTimer();
+        this._grid._normalDropTimer.finishTimer();
         this.finishSoftDropping();
         this._grid.lockFallingShapePrepareMoving();
         return this;
@@ -1671,7 +1684,7 @@ LockedBlocks.prototype = {
                     _grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); // countAndClearRows()
                 } else {
                     _grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute); // drawGhostAfterCompute()
-                    _grid.gridAnimsStackPush(_grid._dropTimer, _grid._dropTimer.runTimer); // runTimer()
+                    _grid.gridAnimsStackPush(_grid._normalDropTimer, _grid._normalDropTimer.runTimer); // runTimer()
                 }
             }
         }
@@ -1707,7 +1720,7 @@ LockedBlocks.prototype = {
     }},
     put1NewRisingRow: function() { with(this) { // will stack all countandclearrows callee
         _grid._anims.shapeRotateAnim.endAnim();
-        _grid._dropTimer.finishTimer();
+        _grid._normalDropTimer.finishTimer();
         _grid._softDropTimer.finishTimer();
         let rowFilledSlots, tempBlock; // prepareNewRisingRowAt_jPos0
         let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalCellsCount);
@@ -1824,7 +1837,7 @@ class Score {
                 return -(x-2*Math.sqrt(x));
             },
             animDuration: DURATIONS.displayingScoreDuration,
-            optionalAnimOwner: this // because score anim not declared in grid
+            optionalAnimOwner: this // otherwise, it's animation context by default
         });
         this.writeScore_(this._scoreShowed);
     }
@@ -1856,7 +1869,7 @@ class Score {
         let newLevel = Math.min(Math.floor(this._totalSweptRows/10), RULES.topLevel);
         if (this._level < newLevel) {
             this._level = newLevel;
-            this._grid._dropTimer.setPeriod(
+            this._grid._normalDropTimer.setPeriod(
                 DURATIONS.softDropPeriod
                 + (DURATIONS.initialDropPeriod - DURATIONS.softDropPeriod)
                 * (1 - this._level/RULES.topLevel ) ); // changing timerPeriod, approaching DURATIONS.softDropPeriod
@@ -1992,10 +2005,11 @@ ListAutoIndex.prototype = {
     }},
 };
 // TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
-class Timer {
-    constructor(func, timerPeriod) {    // args never used here, so removed
-        this._funcAtTimeOut = func;
-        this._timerPeriod = timerPeriod;
+class Timer { //$$$$$$$$$$
+    constructor(timerObject) { // args never used here, so removed
+        this._funcAtTimeOut = timerObject.funcAtTimeOut;
+        this._timerPeriod = timerObject.timerPeriod;
+        this._timerOwner = timerObject.timerOwner;
         this._paused = false;
         this._running = false;
         this._beginTime;
@@ -2009,7 +2023,7 @@ class Timer {
         let needToKill = this.finishTimer();
         this._running = true;
         this._beginTime = (new Date).getTime();
-        this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod); // setInterval is useless here, not used
+        this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod); // setInterval is useless here, not used
         return needToKill;
     }
     isRunning() {
@@ -2019,7 +2033,7 @@ class Timer {
         if (this._running) { // if paused, resume and return false
             if (this._paused) { // if not paused, pause and return true
                 this._paused = false;
-                this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod-(this._pauseTime-this._beginTime));
+                this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod-(this._pauseTime-this._beginTime));
             } else {
                 clearTimeout(this._timeOut);
                 this._paused = true;
@@ -2453,7 +2467,7 @@ class Animation {
         this.endAnimFunc_    = animObject.endAnimFunc; // function to set the last position after animation
         this.timingAnimFunc_ = animObject.timingAnimFunc; // f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
         this._duration       = animObject.animDuration; // duration of animation
-        this._animOwner      = isValued(animObject.optionalAnimOwner) ? animObject.optionalAnimOwner : this; // because score anim not declared in grid
+        this._animOwner      = animObject.optionalAnimOwner; // object owner of animation
         this.animOutput; // public value of f(x), current animation position after timingAnimFunc_, any value possible
         this._paused;
         this._animating;
