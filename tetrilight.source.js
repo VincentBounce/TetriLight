@@ -1133,7 +1133,7 @@ Grid.prototype = {
     _score                            : null,
     _normalDropTimer                        : null,
     _softDropTimer                    : null,         // animation
-    _softDropping                    : false,        // animation
+    _isSoftDropping                    : false,        // animation
     _softDroppingReloaded            : true,            // keyup
     _playedPolyominoesType            : 'tetrominoes',// starts tetris with 4 blocks shape
     _keyboard                        : null,
@@ -1451,7 +1451,7 @@ class TetrisShape {
             if (iRight === 0)
                 this._grid._normalDropTimer.runTimer(); // shape go down, new period
             else // shape move side
-                if (this._grid._softDropping) // if falling
+                if (this._grid._isSoftDropping) // if falling
                     this.finishSoftDropping(true);
             this.moveFalling(iRight, jUp);
         } else { // shape can't move...
@@ -1524,13 +1524,13 @@ class TetrisShape {
         return this;
     }
     beginSoftDropping(force) { // full falling, called by keydown, call falling()
-        if (!this._grid._softDropping && (this._grid._softDroppingReloaded || force) ) { // if not falling and reloaded
+        if (!this._grid._isSoftDropping && (this._grid._softDroppingReloaded || force) ) { // if not falling and reloaded
             this._grid._softDroppingReloaded = false; // keydown
             if (this.canMoveFromPlacedToPlaced(0, -1))      
                 this.startSoftDropping(); // we run fall
             else // if shape is on floor and wants fall
                 this._grid.lockFallingShapePrepareMoving();
-        } else if (this._grid._softDropping) {
+        } else if (this._grid._isSoftDropping) {
                 this._grid._softDroppingReloaded = false;
                 this.finishSoftDropping();
                 this._grid.lockFallingShapePrepareMoving();
@@ -1539,7 +1539,7 @@ class TetrisShape {
     }
     startSoftDropping() { // full falling iterative
         this._grid._normalDropTimer.finishTimer();
-        this._grid._softDropping = true;            
+        this._grid._isSoftDropping = true;            
         if (this.canMoveFromPlacedToPlaced(0, -1)) {
             this.moveFalling(0, -1);
             this._grid._softDropTimer._timerOwner = this; //$$$$$$$$$
@@ -1549,9 +1549,9 @@ class TetrisShape {
         return this;
     }
     finishSoftDropping(keep) { // stop fall in all cases, keep if new period, return false if not falling
-        if (this._grid._softDropping) {
+        if (this._grid._isSoftDropping) {
             this._grid._softDropTimer.finishTimer();
-            this._grid._softDropping = false;
+            this._grid._isSoftDropping = false;
             if (keep)
                 this._grid._normalDropTimer.runTimer(); // shape can move after fall or stopped
         }
@@ -1583,58 +1583,58 @@ class NextShapePreview {
     }
 }
 // LOCKED BLOCKS Class, for locked blocks on the ground
-function LockedBlocks(grid) { with(this) {
-    _grid = grid;
-    _lockedBlocksArray = []; // empty or TetrisBlock inside
-    _lockedBlocksArrayByRow = []; // empty or TetrisBlock inside
+function LockedBlocks(grid) {
+    this._grid = grid;
+    this._lockedBlocksArray = []; // empty or TetrisBlock inside
+    this._lockedBlocksArrayByRow = []; // empty or TetrisBlock inside
     for (let row=GAME._matrixBottom;row <= GAME._matrixHeight;row++) {
-        _lockedBlocksArrayByRow[row] = {};
-        _lockedBlocksArrayByRow[row].rowBlocksCount = 0;    // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalCellsCount+1)
-        _lockedBlocksArrayByRow[row].blocks = [];
+        this._lockedBlocksArrayByRow[row] = {};
+        this._lockedBlocksArrayByRow[row].rowBlocksCount = 0;    // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalCellsCount+1)
+        this._lockedBlocksArrayByRow[row].blocks = [];
     }
-}}
+}
 LockedBlocks.prototype = {
     _grid                      : null,
     _lockedBlocksArray         : null,
     _lockedBlocksArrayByRow    : null, // -20 +40 +up que les boxes visibles
     _blocksCount             : 0,
     _searchDirections         : [[1, 0], [0, -1], [-1, 0], [0, 1]],// right, bottom, left, up
-    destroyLockedBlocks: function() { with(this) { // removes placed blocks
-        for (let b=0;b < _lockedBlocksArray.length;b++)
-            if (_lockedBlocksArray[b])    // if block exist
-                _lockedBlocksArray[b].destroyBlock();
-    }},
-    putBlockInLockedBlocks: function(block) { with(this) { // here we fill _lockedBlocksArray
-        _lockedBlocksArray[block._blockIndex] = block;
-        _blocksCount++; // we increment
-        _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
-        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++; // we increment
-         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
-         // if (_grid._rowsToClearArray.lastIndexOf(block._jPosition) === -1)// $$$$$$$ if value not found
-            _grid._rowsToClearList.putInList(block._jPosition, true); // true to put something
-            // _grid._rowsToClearArray.push(block._jPosition); // preparing rows to clear, not negative values
-    }},
-    removeBlockFromLockedBlocks: function(block) { with(this) {
-        delete _lockedBlocksArray[block._blockIndex]; // remove block from locked blocks
-        delete _lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
-        _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--; // we decrement
-        _blocksCount--; // we decrement
-         if ( _lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
-            _grid._rowsToClearList.eraseItemFromList(block._jPosition);
-        // _grid._rowsToClearArray.splice( // necessary for correct exection
-        //         _grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); // we remove position of block._jPosition in _rowsToClearArra
+    destroyLockedBlocks: function() { // removes placed blocks
+        for (let b=0;b < this._lockedBlocksArray.length;b++)
+            if (this._lockedBlocksArray[b])    // if block exist
+                this._lockedBlocksArray[b].destroyBlock();
+    },
+    putBlockInLockedBlocks: function(block) { // here we fill this._lockedBlocksArray
+        this._lockedBlocksArray[block._blockIndex] = block;
+        this._blocksCount++; // we increment
+        this._lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
+        this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++; // we increment
+         if ( this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
+         // if (this._grid._rowsToClearArray.lastIndexOf(block._jPosition) === -1)// $$$$$$$ if value not found
+            this._grid._rowsToClearList.putInList(block._jPosition, true); // true to put something
+            // this._grid._rowsToClearArray.push(block._jPosition); // preparing rows to clear, not negative values
+    },
+    removeBlockFromLockedBlocks: function(block) {
+        delete this._lockedBlocksArray[block._blockIndex]; // remove block from locked blocks
+        delete this._lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
+        this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--; // we decrement
+        this._blocksCount--; // we decrement
+         if ( this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
+            this._grid._rowsToClearList.eraseItemFromList(block._jPosition);
+        // this._grid._rowsToClearArray.splice( // necessary for correct exection
+        //         this._grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); // we remove position of block._jPosition in _rowsToClearArra
                 
-    }},
-    chainSearchOrphan: function(mode) { with(this) {
+    },
+    chainSearchOrphan: function(mode) {
         if (mode === SEARCH_MODE.up)
-            _grid._fallingShape.shapeSwitchFromTestToPlaced(false);// falling shape temporary removed, in testing mode
+            this._grid._fallingShape.shapeSwitchFromTestToPlaced(false);// falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
-        // console.log(_lockedBlocksArray);
+        // console.log(this._lockedBlocksArray);
         // console.log('bb');
-        for (let p in _lockedBlocksArray)
-            if (_lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
-                toProcessList.putInList(_lockedBlocksArray[p]._blockIndex, _lockedBlocksArray[p]);
+        for (let p in this._lockedBlocksArray)
+            if (this._lockedBlocksArray[p] !== undefined) // this._lockedBlocksArray has TetrisBlock or empty values
+                toProcessList.putInList(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
         let groups = []; // below we make isolated groups
         while (toProcessList.listSize > 0) { // equivalent to while (toProcessList.listSize)
             block = toProcessList.unList(); // block impossible to be null
@@ -1643,66 +1643,66 @@ LockedBlocks.prototype = {
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
             for (let dir=0;dir < 4;dir++)
-                chainSearch3Ways(block, group, toProcessList, dir); // chainSearch3Ways is recursive
+                this.chainSearch3Ways(block, group, toProcessList, dir); // this.chainSearch3Ways is recursive
             if ((( mode === SEARCH_MODE.down) && (group.jMin >= 2 ))
                 || mode === SEARCH_MODE.up )
                 groups.push(group);
         }; // below, (groups.length === 0) occured 3 times between 2020 05 01 and 2020 04 30 with SEARCH_MODE.down === 1, no pb
         if (groups.length > 0) { // here we decide, we have at least 1 group equivalent. Normally, if (groups.length === 0) the mode === SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
-            _grid._lockedShapes = [];
+            this._grid._lockedShapes = [];
             groups.sort(function(a, b) {return a.jMin - b.jMin;}); // regular sort: lines full disapear
             let jEquals = []; let group, shape; // [if shape blocks color]            
             while (groups.length > 0) { // equivalent to while (groups.length)
                 group = groups.shift(); // lower block
-                shape = new TetrisShape(_grid, group); // creating new dropable shape based on locked blocks ready to run drop animation
-                _grid._lockedShapes[shape._shapeIndex] = shape; // add
+                shape = new TetrisShape(this._grid, group); // creating new dropable shape based on locked blocks ready to run drop animation
+                this._grid._lockedShapes[shape._shapeIndex] = shape; // add
                 if (mode === SEARCH_MODE.down) { // [if shape blocks color] to sort equals
                     if ( !jEquals.length || (group.jMin === jEquals[jEquals.length-1].jMin) )
                         jEquals.push({jMin: group.jMin, shape: shape});
                     else {
-                        tryMoveShapesSamejEquals(jEquals);
+                        this.tryMoveShapesSamejEquals(jEquals);
                         jEquals = [{jMin: group.jMin, shape: shape}]; // [if shape blocks color]
                     }
                 }
             }
             if (mode === SEARCH_MODE.down) {
-                tryMoveShapesSamejEquals(jEquals);
-                _grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); // countAndClearRows()
-                _grid._anims.shapeHardDropAnim.startAnim();
+                this.tryMoveShapesSamejEquals(jEquals);
+                this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
+                this._grid._anims.shapeHardDropAnim.startAnim();
             } else { // mode === SEARCH_MODE.up
-                _grid._fallingShape.shapeSwitchFromTestToPlaced(true); // falling is back
-                for (let p in _grid._lockedShapes)
-                    if (_grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
-                        _grid._lockedShapes[p]._jVector = 1;
-                        _grid._lockedShapes[p].shapesHitIfMove(0, 1);
+                this._grid._fallingShape.shapeSwitchFromTestToPlaced(true); // falling is back
+                for (let p in this._grid._lockedShapes)
+                    if (this._grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
+                        this._grid._lockedShapes[p]._jVector = 1;
+                        this._grid._lockedShapes[p].shapesHitIfMove(0, 1);
                     }
-                _grid.moveShapesInMatrix(_grid._lockedShapes);
-                if (_lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount)
-                    _grid.gridAnimsStackPush(_grid, _grid.lose); // lose()
-                else if (_grid._fallingShape._shapeIndex in _grid._lockedShapes) { // if falling shape hit ground
-                    _grid.gridAnimsStackPush(_grid, _grid.newFallingShape); // newFallingShape()
-                    _grid.gridAnimsStackPush(_grid, _grid.countAndClearRows); // countAndClearRows()
+                this._grid.moveShapesInMatrix(this._grid._lockedShapes);
+                if (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount)
+                    this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
+                else if (this._grid._fallingShape._shapeIndex in this._grid._lockedShapes) { // if falling shape hit ground
+                    this._grid.gridAnimsStackPush(this._grid, this._grid.newFallingShape); // newFallingShape()
+                    this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                 } else {
-                    _grid.gridAnimsStackPush(_grid._fallingShape, _grid._fallingShape.drawGhostAfterCompute); // drawGhostAfterCompute()
-                    _grid.gridAnimsStackPush(_grid._normalDropTimer, _grid._normalDropTimer.runTimer); // runTimer()
+                    this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.drawGhostAfterCompute); // drawGhostAfterCompute()
+                    this._grid.gridAnimsStackPush(this._grid._normalDropTimer, this._grid._normalDropTimer.runTimer); // runTimer()
                 }
             }
         }
-    }},
-    chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { with(this) { // recursive
-        let block = _grid._matrix
-            [blockFrom._iPosition + _searchDirections[dir][0]]
-            [blockFrom._jPosition + _searchDirections[dir][1]];
+    },
+    chainSearch3Ways: function(blockFrom, group, toProcessList, dir) { // recursive
+        let block = this._grid._matrix
+            [blockFrom._iPosition + this._searchDirections[dir][0]]
+            [blockFrom._jPosition + this._searchDirections[dir][1]];
         if (block && toProcessList.listTable[block._blockIndex] // [if shape blocks contact]
         && (blockFrom._color === block._color) ) { // [if shape blocks color]
             toProcessList.eraseItemFromList(block._blockIndex); // call del from list
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
             for (let delta=-1;delta <= 1; delta++)
-                chainSearch3Ways(block, group, toProcessList, (dir+4+delta)%4);
+                this.chainSearch3Ways(block, group, toProcessList, (dir+4+delta)%4);
         }
-    }},
-    tryMoveShapesSamejEquals: function(jEquals) { with(this) { // if shape blocks color
+    },
+    tryMoveShapesSamejEquals: function(jEquals) { // if shape blocks color
         let changed = true;
         while (changed) {
             changed = false;
@@ -1717,22 +1717,22 @@ LockedBlocks.prototype = {
             }           
         }
         
-    }},
-    put1NewRisingRow: function() { with(this) { // will stack all countandclearrows callee
-        _grid._anims.shapeRotateAnim.endAnim();
-        _grid._normalDropTimer.finishTimer();
-        _grid._softDropTimer.finishTimer();
+    },
+    put1NewRisingRow: function() { // will stack all countandclearrows callee
+        this._grid._anims.shapeRotateAnim.endAnim();
+        this._grid._normalDropTimer.finishTimer();
+        this._grid._softDropTimer.finishTimer();
         let rowFilledSlots, tempBlock; // prepareNewRisingRowAt_jPos0
         let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalCellsCount);
         rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
             delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
         rowFilledSlots.forEach( (uselessArg, slotIndex)=>{ // we skip delete rowFilledSlots
-            tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, _grid, slotIndex+1, 0, 'grey'); }); // iPosition=[1-10], jPosition=0 just under game
+            tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, 'grey'); }); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
-        chainSearchOrphan(SEARCH_MODE.up); // _grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
-        _grid._anims.rising1RowAnim.startAnim();
-    }}
+        this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
+        this._grid._anims.rising1RowAnim.startAnim();
+    }
 };
 // TETRIS BLOCK Class
 class TetrisBlock {
