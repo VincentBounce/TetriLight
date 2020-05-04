@@ -1172,14 +1172,14 @@ Grid.prototype            = {
                 break;
             default: // case DOWN key keep pressed down since last shape, wait for DOWN key pressed up
         }
-        return this;
+        //return this;
     },
     continueSoftDropping() { // full falling iterative, called by timer
         this._fallingShape.unplaceAndMoveAndPlaceAndDrawShape(0, -1);
         this._isSoftDropping = true;            
         this._dropTimer.setPeriod(DURATIONS.softDropPeriod);
         this._dropTimer.restartTimer();
-        return this;
+        //return this;
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
@@ -1193,7 +1193,7 @@ Grid.prototype            = {
                 else
                     this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
         }
-        return this;
+        //return this;
     },
     unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows() { // can be called recursively, when falling shape or locked shapes in game hit floor
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
@@ -1368,19 +1368,19 @@ class TetrisShape {
                 this._jPosition + this._polyominoBlocks[b][1],
                 this._colorTxt);
         }
-        return this;
+        return this; // to use chained calls
     }
     putShapeInRealBlocksNode() {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockInRealBlocksNode(); });
-        return this;
+        return this; // to use chained calls
     }
     putShapeNodeIn() {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); // this === TetrisShape context necessary fot this._domNode
-        return this;
+        return this; // to use chained calls
     }
     drawShape() { // show hidden shapes
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlockInCell(); });
-        return this;
+        return this; // to use chained calls
     }
     findNewPositionAndDrawGhost() {
         if (this._ghostBlocks) {
@@ -1391,14 +1391,14 @@ class TetrisShape {
                 this._ghostBlocks[b].drawBlockInCell();
             }, this) // this = Window context by default, puting this here makes this === TetrisShape
         }
-        return this;
+        return this; // to use chained calls
     }
     clearGhostBlocks() {
         if (this._ghostBlocks) { // if ghost blocks (not in chain)
             this._ghostBlocks.forEach( (myBlock)=>{ myBlock._domNode.destroyDomNode(); });
             this._ghostBlocks = null;
         }
-        return this;
+        return this; // to use chained calls
     }
     unplaceAndMoveAndPlaceAndDrawShape(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
         this._grid._anims.shapeRotateAnim.endAnim(); // comment/remove this line to continue animating rotation when drop #DEBUG
@@ -1410,7 +1410,7 @@ class TetrisShape {
         if (jUp === 0) this.findNewPositionAndDrawGhost(); // if we move left or right
         else this._jVector -= jUp; // if ghostshape covered, new block layer hides it
         AUDIO.audioPlay('moveFX');
-        return this;
+        return this; // to use chained calls
     }
     moveAndPlaceShape(iRight, jUp, dropType=null) { // move to placed
         this._shapeBlocks.forEach(
@@ -1421,7 +1421,7 @@ class TetrisShape {
             });
         if ((dropType !== null) && (jUp < 0))
             this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
-        return this;
+        return this; // to use chained calls
     }
     canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
         this.unplaceShape();
@@ -1485,7 +1485,7 @@ class TetrisShape {
         this.placeShape();
         while (shapesHit.length > 0) // equivalent to while (shapesHit.length)
             shapesHit.pop().shapesHitIfMove(iRight, jUp);
-        return this;
+        return this; // to use chained calls
     }
     placeShape() {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.placeBlock(); });
