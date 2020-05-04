@@ -1536,7 +1536,7 @@ LockedBlocks.prototype = {
             if (this._lockedBlocksArray[b])    // if block exist
                 this._lockedBlocksArray[b].destroyBlock();
     },
-    putBlockInLockedBlocks(block) { // here we fill this._lockedBlocksArray
+    /*putBlockInLockedBlocks(block) { // here we fill this._lockedBlocksArray
         this._lockedBlocksArray[block._blockIndex] = block;
         this._blocksCount++; // we increment
         this._lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
@@ -1556,7 +1556,7 @@ LockedBlocks.prototype = {
         // this._grid._rowsToClearArray.splice( // necessary for correct exection
         //         this._grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); // we remove position of block._jPosition in _rowsToClearArra
                 
-    },
+    },*/
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
             this._grid._fallingShape.unplaceShape();// falling shape temporary removed, in testing mode
@@ -1709,21 +1709,28 @@ class TetrisBlock {
     }
     placeBlock() {
         this._grid._matrix[this._iPosition][this._jPosition] = this;
-        this._grid._lockedBlocks.putBlockInLockedBlocks(this);
+        let locked = this._grid._lockedBlocks; //this._grid._lockedBlocks.putBlockInLockedBlocks(this);
+        locked._lockedBlocksArray[this._blockIndex] = this; // here we fill this._lockedBlocksArray
+        locked._blocksCount++; // we increment
+        locked._lockedBlocksArrayByRow[this._jPosition].blocks[this._blockIndex] = this;
+        locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount++; // we increment
+         if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
+         // if (this._grid._rowsToClearArray.lastIndexOf(this._jPosition) === -1)// $$$$$$$ if value not found
+            this._grid._rowsToClearList.putInList(this._jPosition, true); // true to put something
+            // this._grid._rowsToClearArray.push(this._jPosition); // preparing rows to clear, not negative values
     }
     unplaceBlock() {
         this._grid._matrix[this._iPosition][this._jPosition] = null;
-        this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
+        let locked = this._grid._lockedBlocks; //this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
+        delete locked._lockedBlocksArray[this._blockIndex]; // remove block from locked blocks
+        delete locked._lockedBlocksArrayByRow[this._jPosition].blocks[this._blockIndex];
+        locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount--; // we decrement
+        locked._blocksCount--; // we decrement
+         if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
+            this._grid._rowsToClearList.eraseItemFromList(this._jPosition);
+        // this._grid._rowsToClearArray.splice( // necessary for correct exection
+        //         this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
     }
-
-   /* putBlockInMatrix(block) { // only put placed block on grid, not testing one, set to block
-        this._matrix[block._iPosition][block._jPosition] = block;
-    },
-    removeBlockFromMatrix(block) { // only remove placed block on grid, not testing one, set to null
-        this._matrix[block._iPosition][block._jPosition] = null;
-    },*/
-
-
     setColor(colorTxt)  {
         this._colorTxt = colorTxt;
         this._color = SPRITES._colors[this.colorTxt];
