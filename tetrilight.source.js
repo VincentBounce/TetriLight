@@ -1162,14 +1162,14 @@ Grid.prototype            = {
                 if (this._fallingShape.canMoveFromPlacedToPlaced(0, -1))      
                     this.continueSoftDropping(); // we run fall
                 else // if shape is on floor and wants fall
-                    this.lockFallingShapeThenDroppingAndClearing();
+                    this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
                 break;
             case (this._isSoftDropping): // case soft drop, then hard drop requested
                 this._keyPressedUpForNextShape = false;
                 this._isSoftDropping = false;
                 this._dropTimer.setPeriod(this._normalDropPeriod);
                 this._dropTimer.finishTimer();
-                this.lockFallingShapeThenDroppingAndClearing();
+                this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
                 break;
             default: // case DOWN key keep pressed down since last shape, wait for DOWN key pressed up
         }
@@ -1192,16 +1192,16 @@ Grid.prototype            = {
                 if (this._isSoftDropping) //if shapes hit floor, but still can move left or right
                     this.turnsTimerToNormalDrop_()
                 else
-                    this.lockFallingShapeThenDroppingAndClearing();
+                    this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
         }
         return this;
     },
-    lockFallingShapeThenDroppingAndClearing() { // can be called recursively, when falling shape or locked shapes in game hit floor
+    unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows() { // can be called recursively, when falling shape or locked shapes in game hit floor
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
         this._lockedShapes = []; // release for garbage collector
         this._lockedShapes[this._fallingShape._shapeIndex] = this._fallingShape;
         this._anims.shapeRotateAnim.endAnim(); // because made by drop period
-        this.moveShapesInMatrix(this._lockedShapes);
+        this.unplaceAndMoveAndPlaceHardDroppingShape(this._lockedShapes);
         if (this._fallingShape._jVector === 0) { // if played single falling shape
             this._fallingShape.putShapeInRealBlocksNode()
                 ._domNode.destroyDomNode();
@@ -1213,7 +1213,7 @@ Grid.prototype            = {
             // sound played before after hardDrop and before Quake
         }
     },
-    moveShapesInMatrix(myShapes) { // move locked shapes to drop (after clearing rows) into matrix
+    unplaceAndMoveAndPlaceHardDroppingShape(myShapes) { // move locked shapes to drop (after clearing rows) into matrix
         myShapes.forEach( (myShape)=>{ myShape.unplaceShape(); }) // move to a tested place
         myShapes.forEach( (myShape)=>{ myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard); }) // move to placed on grid
     },
@@ -1420,14 +1420,6 @@ class TetrisShape {
         AUDIO.audioPlay('moveFX');
         return this;
     }
-    unplaceShape() { // move in testing mode
-        this._shapeBlocks.forEach(
-            (myBlock)=>{
-                this._grid.removeBlockFromMatrix(myBlock);
-                this._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
-            }, this);
-        return this;
-    }
     moveAndPlaceShape(iRight, jUp, dropType=null) { // move to placed
         this._shapeBlocks.forEach(
             (myBlock)=>{
@@ -1441,9 +1433,9 @@ class TetrisShape {
         return this;
     }
     canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
-        this.placeOrUnplaceShape(false);
+        this.unplaceShape2();
         let result = this.canMoveToPlaced(iRight, jUp);
-        this.placeOrUnplaceShape(true);
+        this.placeShape();
         return result;
     }
     canMoveToPlaced(iRight, jUp) {
@@ -1460,7 +1452,7 @@ class TetrisShape {
             return false;
         else {
             let result = true;
-            this.placeOrUnplaceShape(false);
+            this.unplaceShape2();
             for (let b=0;b < this._shapeBlocks.length;b++)
                 if ( !this._shapeBlocks[b].isFreeSlot(
                     this._iPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][0],
@@ -1469,7 +1461,7 @@ class TetrisShape {
                         result = false;
                         break; // exit loop
                 }
-            this.placeOrUnplaceShape(true);
+            this.placeShape();
             return result;
         }
     }
@@ -1490,7 +1482,7 @@ class TetrisShape {
         AUDIO.audioPlay('rotateFX');
     }
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
-        this.placeOrUnplaceShape(false);
+        this.unplaceShape2();
         let shapesHit = [];
         let blockHit; //block who was hit, === TetrisBlock or null in _matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
@@ -1501,22 +1493,30 @@ class TetrisShape {
                     shapesHit.push(blockHit._shape);
                 }
         }
-        this.placeOrUnplaceShape(true);
+        this.placeShape();
         while (shapesHit.length > 0) // equivalent to while (shapesHit.length)
             shapesHit.pop().shapesHitIfMove(iRight, jUp);
         return this;
     }
-    placeOrUnplaceShape(fromTestToPlaced) { // called only by pairs placeOrUnplaceShape(false) then (true)
+    placeShape() {
         this._shapeBlocks.forEach( (myBlock)=>{            
-            if (fromTestToPlaced) {
-                myBlock._grid.putBlockInMatrix(myBlock);
-                myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock)
-            } else {
-                myBlock._grid.removeBlockFromMatrix(myBlock);
-                myBlock._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock)
-            }
+            myBlock._grid.putBlockInMatrix(myBlock);
+            myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock)
         });
+    }
+    unplaceShape() { // move in testing mode
+        this._shapeBlocks.forEach(
+            (myBlock)=>{
+                this._grid.removeBlockFromMatrix(myBlock);
+                this._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
+            }, this);
         return this;
+    }
+    unplaceShape2() {
+        this._shapeBlocks.forEach( (myBlock)=>{
+            myBlock._grid.removeBlockFromMatrix(myBlock);
+            myBlock._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock)
+        });
     }
 }
 // TETRIS NEXT SHAPE PREVIEW Class
@@ -1582,7 +1582,7 @@ LockedBlocks.prototype = {
     },
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
-            this._grid._fallingShape.placeOrUnplaceShape(false);// falling shape temporary removed, in testing mode
+            this._grid._fallingShape.unplaceShape2();// falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
         // console.log(this._lockedBlocksArray);
@@ -1625,13 +1625,13 @@ LockedBlocks.prototype = {
                 this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                 this._grid._anims.shapeHardDropAnim.startAnim();
             } else { // mode === SEARCH_MODE.up, need to check if hitting shape, not best code
-                this._grid._fallingShape.placeOrUnplaceShape(true); // falling is back
+                this._grid._fallingShape.placeShape(); // falling is back
                 for (let p in this._grid._lockedShapes)
                     if (this._grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
                         this._grid._lockedShapes[p]._jVector = 1;
                         this._grid._lockedShapes[p].shapesHitIfMove(0, 1);
                     }
-                this._grid.moveShapesInMatrix(this._grid._lockedShapes);
+                this._grid.unplaceAndMoveAndPlaceHardDroppingShape(this._grid._lockedShapes);
                 switch (true) { // we exclusives cases
                     case (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount > 0): 
                         this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
@@ -1749,7 +1749,7 @@ class TetrisBlock {
     drawBlockInCell() { // here you can hide top block outside grid
         this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
     }
-    /*blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs TetrisShape.placeOrUnplaceShape(false) then (true)
+    /*blockSwitchFromTestToPlaced(fromTestToPlaced)  {
         if (fromTestToPlaced) {
             this._grid.putBlockInMatrix(this);
             this._grid._lockedBlocks.putBlockInLockedBlocks(this)
