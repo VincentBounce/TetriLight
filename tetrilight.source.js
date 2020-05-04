@@ -1,6 +1,6 @@
 /******************************************************************
 ****************   TetriLight - Vincent BOURDEAU   ****************
-****************           2011-2020               ****************
+****************   2011 and 2020 - v0.1            ****************
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
@@ -92,9 +92,8 @@ only Object or Array variables can be assigned by references
 myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 >= operator
 => used to define a func 
-In regular functions the this keyword represented the object that called the function, which could be the window, the document, a button or whatever.
-With arrow functions the this keyword always represents the object that defined the arrow function.
-
+    In regular functions the this keyword represented the object that called the function, which could be the window, the document, a button or whatever.
+    With arrow functions the this keyword always represents the object that defined the arrow function.
 
 **************** CODE JS ARRAY ****************
 queue(fifo) / gridAnimsStackPush(filo)
@@ -306,11 +305,11 @@ function MainMenu() { // queue or stack
 }
 MainMenu.prototype = {
     _domNode    : null,
-    cancelEvent_: function(event) { with(this) {
+    cancelEvent_: function(event) {
         event.stopPropagation();
         event.preventDefault();
-    }},
-    keyCapture_: function(event) { with(this) {
+    },
+    keyCapture_: function(event) {
         // let s='';for (let p in event) {s += p+' '+event[p]+'\n'};
         MAIN_MENU.cancelEvent_(event);
         switch (event.keyCode) {
@@ -322,17 +321,17 @@ MainMenu.prototype = {
                 if (GAME._gameState === GAME_STATES.running)
                     GAME.chooseAction(event);
         }
-    }},
-    keyPressCapture_: function(event) { with(this) { // #DEBUG changing volume seems to not work
+    },
+    keyPressCapture_: function(event) { // #DEBUG changing volume seems to not work
         switch (event.keyCode) {
-        case 43: //  +
-            changeVolume(1);
-            break;
-        case 45: //  -
-            changeVolume(-1);
-            break;    
-        }
-    }}
+            case 43: //  +
+                this.changeVolume(1);
+                break;
+            case 45: //  -
+                this.changeVolume(-1);
+                break;    
+            }
+    }
 };
 // AUDIO Class, sounds management
 function Audio(sounds) { // constructor
