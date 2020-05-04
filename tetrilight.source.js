@@ -1265,12 +1265,6 @@ Grid.prototype            = {
         GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.startAnim);    // prepare move up
         GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);    // prepare remove
     },
-    putBlockInMatrix(block) { // only put placed block on grid, not testing one, set to block
-        this._matrix[block._iPosition][block._jPosition] = block;
-    },
-    removeBlockFromMatrix(block) { // only remove placed block on grid, not testing one, set to null
-        this._matrix[block._iPosition][block._jPosition] = null;
-    },
     clearFullRowAfterClearingAnim(jRow) { // we suppose that row is full
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
             this._matrix[i][jRow].destroyBlock();
@@ -1714,13 +1708,22 @@ class TetrisBlock {
         this.unplaceBlock();
     }
     placeBlock() {
-        this._grid.putBlockInMatrix(this);
+        this._grid._matrix[this._iPosition][this._jPosition] = this;
         this._grid._lockedBlocks.putBlockInLockedBlocks(this);
     }
     unplaceBlock() {
-        this._grid.removeBlockFromMatrix(this);
+        this._grid._matrix[this._iPosition][this._jPosition] = null;
         this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
     }
+
+   /* putBlockInMatrix(block) { // only put placed block on grid, not testing one, set to block
+        this._matrix[block._iPosition][block._jPosition] = block;
+    },
+    removeBlockFromMatrix(block) { // only remove placed block on grid, not testing one, set to null
+        this._matrix[block._iPosition][block._jPosition] = null;
+    },*/
+
+
     setColor(colorTxt)  {
         this._colorTxt = colorTxt;
         this._color = SPRITES._colors[this.colorTxt];
