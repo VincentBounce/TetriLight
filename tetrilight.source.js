@@ -1433,7 +1433,7 @@ class TetrisShape {
         return this;
     }
     canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
-        this.unplaceShape2();
+        this.unplaceShape();
         let result = this.canMoveToPlaced(iRight, jUp);
         this.placeShape();
         return result;
@@ -1452,7 +1452,7 @@ class TetrisShape {
             return false;
         else {
             let result = true;
-            this.unplaceShape2();
+            this.unplaceShape();
             for (let b=0;b < this._shapeBlocks.length;b++)
                 if ( !this._shapeBlocks[b].isFreeSlot(
                     this._iPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][0],
@@ -1482,7 +1482,7 @@ class TetrisShape {
         AUDIO.audioPlay('rotateFX');
     }
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
-        this.unplaceShape2();
+        this.unplaceShape();
         let shapesHit = [];
         let blockHit; //block who was hit, === TetrisBlock or null in _matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
@@ -1504,15 +1504,15 @@ class TetrisShape {
             myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock)
         });
     }
-    unplaceShape() { // move in testing mode
+    /*unplaceShape() { // move in testing mode
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 this._grid.removeBlockFromMatrix(myBlock);
                 this._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock);
             }, this);
         return this;
-    }
-    unplaceShape2() {
+    }*/
+    unplaceShape() {
         this._shapeBlocks.forEach( (myBlock)=>{
             myBlock._grid.removeBlockFromMatrix(myBlock);
             myBlock._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock)
@@ -1582,7 +1582,7 @@ LockedBlocks.prototype = {
     },
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
-            this._grid._fallingShape.unplaceShape2();// falling shape temporary removed, in testing mode
+            this._grid._fallingShape.unplaceShape();// falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
         // console.log(this._lockedBlocksArray);
