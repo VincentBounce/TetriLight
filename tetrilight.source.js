@@ -88,10 +88,13 @@ console.table() to have a clear table
 var result = myClassInstance.publicMethod(); <> var myMethod = myClassInstance.publicMethod;
 callee function (appelée), calling function (appelante)
 (function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
-=> used to define a func 
->= operator
 only Object or Array variables can be assigned by references
 myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
+>= operator
+=> used to define a func 
+In regular functions the this keyword represented the object that called the function, which could be the window, the document, a button or whatever.
+With arrow functions the this keyword always represents the object that defined the arrow function.
+
 
 **************** CODE JS ARRAY ****************
 queue(fifo) / gridAnimsStackPush(filo)
@@ -159,7 +162,8 @@ var i, j are positions of blocks into grid (i -> right, j -> up)
 var o is generic object
 var p is variable to browse in object
 var event is generic event
-var item is generic item
+var item is generic item, object or array or string boolean number
+forEach( (myVar)=>{ return myVar++; } );
 
 **************** ANIMATIONS SEQUENCES ****************
 Events program, reacts to:
@@ -211,7 +215,7 @@ Examples of listAutoIndex: _gridsListAuto
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
 // GLOBAL CONSTANTS
 const RULES                     = { // tetris rules
-    gameSpeedRatio              : 1, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+    gameSpeedRatio              : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
     initialVolume               : 0.1, // default 0.6, 0 to 1, if #DEBUG
     transferRowsCountMin        : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
     pentominoesRowsCountMin     : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
@@ -249,26 +253,26 @@ const PIXELS                    = {
         pxFullGridHeight        : null,
     pxCeilHeight                : null,
     pxFullGridAndCeil           : null,
-    pxPreviewFullSize           : null, // 2*36                 = 72
+    pxPreviewFullSize           : null, // 2*36===72
     pxPreviewBlockSize          : null,
     pxPreviewLineWidth          : null,
     pxButtonSize                : 50, // default 50
 }
-const FONTS                           = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
-const SOUNDS                          = {
-    landFX:                           {ext:'wav'},
-    rotateFX:                         {ext:'wav'},
-    moveFX:                           {ext:'wav', vol:0.2},
-    clearFX:                          {ext:'wav'},
-    quadrupleFX:                      {ext:'wav'},
-    selectFX:                         {ext:'wav'},
-    musicMusic:                       {ext:'mp3', vol:0.5} };
+const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
+const SOUNDS                  = { 
+    landFX                    :   {ext: 'wav'},
+    rotateFX                  :   {ext: 'wav'},
+    moveFX                    :   {ext: 'wav', vol: 0.2},
+    clearFX                   :   {ext: 'wav'},
+    quadrupleFX               :   {ext: 'wav'},
+    selectFX                  :   {ext: 'wav'},
+    musicMusic                :   {ext: 'mp3', vol: 0.5} };
 // values > 0 to avoid (value === 0 == false)
-const GAME_STATES                     = {paused: 1, running: 2, waiting: 3};
-const GRID_STATES                     = {connected: 1, playing: 2, lost: 3}; // connected but not started
-const BLOCK_TYPES                     = {ghost: 1, inShape: 2, orphan: 3};
-const SEARCH_MODE                     = {down: 1, up: 2};
-const DROP_TYPES                      = {soft: 1, hard: 2}; // 1 and 2 are usefull for score: hard drop is double points
+const GAME_STATES = { paused   : 1, running: 2, waiting: 3};
+const GRID_STATES = { connected: 1, playing: 2, lost   : 3}; // connected but not started
+const BLOCK_TYPES = { ghost    : 1, inShape: 2, orphan : 3};
+const SEARCH_MODE = { down     : 1, up     : 2};
+const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are usefull for score: hard drop is double points
 
 // INIT called by HTML browser
 function init() {
@@ -715,7 +719,7 @@ TetrisGame.prototype = {
         pentominoes:     {index: 11, count:14}    // range of 5 blocks shapes
     },
     destroyGame: function(){
-        this._gridsListAuto.runForEachListElement(function(o){o.destroyDomNode()});
+        this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.destroyDomNode()} );
         this._newBlockId = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
@@ -725,7 +729,7 @@ TetrisGame.prototype = {
         AUDIO.pauseOrResume('musicMusic');    // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX');        // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume();    // if pentominoes mode, pause it
-        this._gridsListAuto.runForEachListElement( function(o){o.pauseOrResume()} );    // all players
+        this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.pauseOrResume()} );    // all players
     },
     addGrid: function(){        // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
@@ -813,7 +817,7 @@ TetrisGame.prototype = {
         // AUDIO.audioPlay('musicMusic');
     },
     chooseAction: function(event){
-        this._gridsListAuto.runForEachListElement( function(o){ o.chooseAction(event); } );
+        this._gridsListAuto.runForEachListElement( function(myGrid){ myGrid.chooseAction(event); } );
     },
     transferRows: function(from, count){    // from grid
         let toGrid = [];
@@ -895,6 +899,7 @@ function Grid(playerKeysSet, colorTxt){
             this._matrix[i][j] = null;
     }
     this._dropTimer = new Timer({ // here this._fallingShape is not defined yet
+        //funcAtTimeOut: function(){ console.log(this);this.fallingShapeTriesMove(0,-1); },
         funcAtTimeOut: (grid)=>{ grid.fallingShapeTriesMove(0,-1); },
         timerPeriod: this._normalDropPeriod,
         timerOwner: this
@@ -906,9 +911,9 @@ function Grid(playerKeysSet, colorTxt){
             width:'_pxGridWidth', height:'_pxGridHeight',
             overflow:'hidden',
             back: { // tetris background, if not canvas, it's div
-                background: {type:'canvas', sprite:SPRITES._spriteGridBackground},                
+                background: { type:'canvas', sprite:SPRITES._spriteGridBackground },
                 ghostBlocks:{},
-                realBlocks: {}    }    },
+                realBlocks: {} } },
         frontZone: {
             y:'_pxCeilHeight', type:'canvas', sprite:SPRITES._spriteGridFront, height: '_pxFullGridHeight' },
         controlZone: {
@@ -918,7 +923,7 @@ function Grid(playerKeysSet, colorTxt){
             type:'canvas', width:'_pxPreviewFullSize', height:'_pxPreviewFullSize', sprite:SPRITES._spritePreviewBlock },
         scoreZone: {
             x:'_XScorePosition', y:'_YScorePosition',
-            width:'_XPreviewPosition', height:'_pxPreviewFullSize', vertical_align:'middle'    },
+            width:'_XPreviewPosition', height:'_pxPreviewFullSize', vertical_align:'middle' },
         messageZone: {
             y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
     });
@@ -1064,12 +1069,12 @@ function Grid(playerKeysSet, colorTxt){
             this._gridMessagesQueue.dequeue();
         },
         timingAnimFunc: function(x) {
-            return Math.pow(2*(x-0.5), 3);    // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0;
+            return Math.pow(2*(x-0.5), 3); // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0;
         },
         animDuration: DURATIONS.centralMessagesDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    this._gridMessagesQueue = new EventsQueue();    // used only when lost
+    this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
 Grid.prototype            = {
     _gridId               : null,
@@ -1091,7 +1096,7 @@ Grid.prototype            = {
     _softDroppingReloaded : true, // keyup
     _playedPolyominoesType: 'tetrominoes',// starts tetris with 4 blocks shape
     _playerKeysSet             : null,
-    _lockedBlocks         : null, // placed blocks in grid or locked?
+    _lockedBlocks         : null, // placed blocks in grid, including falling shape?
     _matrix               : null,
     _anims                : null,
     _animsStack           : null, // to stack anims sequences of (hardDrop > quake)0-1 > (clearRows > hardDrop > quake)0-*: riseGreyBlocks actions are stuck
@@ -1102,7 +1107,7 @@ Grid.prototype            = {
     _vector               : null,
     destroyGrid           : function(){
         if (GAME._gameState !== GAME_STATES.paused)
-            this.pauseOrResume();                        // to stop all timers, all anims
+            this.pauseOrResume(); // to stop all timers, all anims
         this._lockedBlocks.destroyLockedBlocks();
         this._domNode.destroyDomNode();
     },
@@ -1114,11 +1119,11 @@ Grid.prototype            = {
             || this._anims.quakeAnim.isAnimating() // to have exclusive quake anim
         );
     },
-    gridAnimsStackPush: function(o, func, param){// o object who contains func method, this by default
+    gridAnimsStackPush: function(o, func, param){ // o object which contains func method, this by default
         this._animsStack.push([o, func, param]);
     },
     gridAnimsStackPop: function(){
-        while (!this.isBusy() && (this._animsStack.length > 0)) {// unstack only when not busy, 2nd condition equivalent to while (this._animsStack.length)
+        while (!this.isBusy() && (this._animsStack.length > 0)) { // unstack only when not busy, 2nd condition equivalent to while (this._animsStack.length)
             let last = this._animsStack.pop();
             last[1].call(last[0], last[2]);
         }
@@ -1143,13 +1148,13 @@ Grid.prototype            = {
     newFallingShape: function(){
         this._fallingShape = this._nextShape;
         this._fallingShape.putShapeInGame();
-        if (this._fallingShape.canMoveToPlaced(0, 0)) {// test if lost: can move at starting position, so it's playing
+        if (this._fallingShape.canMoveToPlaced(0, 0)) { // normal mode, can move at starting position, so it's not lost
             this._nextShapePreview.unMark(this._fallingShape); // change current shape preview by a new shape
             this._nextShape = new TetrisShape(this); // change current shape preview by a new shape
             this._nextShapePreview.mark(this._nextShape); // change current shape preview by a new shape
             this._fallingShape.moveAndPutShapeToPlaced(0, 0) // only place with call without previous removeShapeFromPlace()
                 .drawShape()
-                .drawGhostAfterCompute();
+                .giveGhostNewPositionAndDraw();
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.runTimer();
         } else { // it's lost
@@ -1159,27 +1164,33 @@ Grid.prototype            = {
             this.lose();
         }
     },
+    rotationAsked: function(){ // do rotation if possible, else nothing
+        this.turnsTimerToNormalDrop_()
+        if (this._fallingShape.canShapeRotate())
+            this._fallingShape.rotateShapeInMatrixAndDraw();
+    },
     horizontalMoveAsked(iRight) {
-        if (this._isSoftDropping) {// if softdropping
-            this._dropTimer.finishTimer();
+        this.turnsTimerToNormalDrop_()
+        this.fallingShapeTriesMove(iRight, 0);
+    },
+    turnsTimerToNormalDrop_() {
+        if (this._isSoftDropping) {// if soft dropping, stops soft drop fall to continue normal timer
+            this._dropTimer.finishTimer(); //optional
             this._isSoftDropping = false;
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.runTimer(); // shape can move after fall or stopped
         }
-        this.fallingShapeTriesMove(iRight, 0);
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
             if (iRight === 0) //no left nor right
                 this._dropTimer.runTimer(); // shape go down, new period
-            this._fallingShape.moveFalling(iRight, jUp);
+            this._fallingShape.moveShapeInMatrixAndDraw(iRight, jUp);
         } else { // shape can't move...
             if (jUp < 0) // ...player or drop timer tries move down
-                if (this._isSoftDropping) { //if we shape can be placed
-                    this._isSoftDropping = false;
-                    this._dropTimer.setPeriod(this._normalDropPeriod);
-                    this._dropTimer.runTimer(); 
-                } else
+                if (this._isSoftDropping) //if shapes hit floor, but still can move left or right
+                    this.turnsTimerToNormalDrop_()
+                else
                     this.lockFallingShapePrepareMoving();
         }
         return this;
@@ -1188,20 +1199,14 @@ Grid.prototype            = {
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
         this._lockedShapes = []; // release for garbage collector
         this._lockedShapes[this._fallingShape._shapeIndex] = this._fallingShape;
-        //if (!this._fallingShape.finishAnyDropping()); // drop timer stopped without running again
-        //    this._dropTimer.finishTimer(); // drop timer stopped, others to end?
-        //ex code for finishAnyDropping useful?
-        this._isSoftDropping = false;
-        this._dropTimer.setPeriod(this._normalDropPeriod);
-        this._dropTimer.finishTimer();
-
+         //ex code for finishAnyDropping useful? this._isSoftDropping always false after tests; this._dropTimer.setPeriod(this._normalDropPeriod); this._dropTimer.finishTimer();
         this._anims.shapeRotateAnim.endAnim(); // because made by drop period
         this.moveShapesInMatrix(this._lockedShapes);
         if (this._fallingShape._jVector === 0) { // if played single falling shape
             this._fallingShape.putShapeInRealBlocksNode()
                 ._domNode.destroyDomNode();
             // AUDIO.audioPlay('landFX');
-            this._gridEventsQueue.execNowOrEnqueue(this, this.countAndClearRows);    // exec this.countAndClearRows immediately
+            this._gridEventsQueue.execNowOrEnqueue(this, this.countAndClearRows); // exec this.countAndClearRows immediately
         } else { // if locked shapes to drop, have to make animation before next counting
             this.gridAnimsStackPush(this, this.countAndClearRows); // firstly stack this.countAndClearRows() for later
             this._gridEventsQueue.execNowOrEnqueue(this._anims.shapeHardDropAnim, this._anims.shapeHardDropAnim.startAnim); // secondly exec hard drop startAnim() immediately
@@ -1239,6 +1244,7 @@ Grid.prototype            = {
     },
     lose: function(){    // lives during this._score duration
         this._score.displays();
+        this._dropTimer.finishTimer();
         this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
         this._gridMessagesQueue.execNowOrEnqueue(
             this._anims.messageAnim,
@@ -1276,7 +1282,7 @@ Grid.prototype            = {
         }
         else if (!this.isBusy())
             switch (event.keyCode) {
-                case this._playerKeysSet.keys[0]: this._fallingShape.rotationAsked(); break; // up
+                case this._playerKeysSet.keys[0]: this.rotationAsked(); break; // up
                 case this._playerKeysSet.keys[1]: this._fallingShape.beginSoftDropping(); break; // down
                 case this._playerKeysSet.keys[2]: this.horizontalMoveAsked(-1); break; // left
                 case this._playerKeysSet.keys[3]: this.horizontalMoveAsked(1); break; // right
@@ -1365,10 +1371,10 @@ class TetrisShape {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlockInCell(); });
         return this;
     }
-    drawGhostAfterCompute() {
+    giveGhostNewPositionAndDraw() {
         if (this._ghostBlocks) {
             this._jVector = this.getjVectorUnderShape(); // if not not placed so deleted so ghost deleted
-            this._shapeBlocks.forEach(function(myBlock, b) {
+            this._shapeBlocks.forEach( (myBlock, b)=>{
                 this._ghostBlocks[b]._iPosition = this._shapeBlocks[b]._iPosition;
                 this._ghostBlocks[b]._jPosition = this._shapeBlocks[b]._jPosition + this._jVector;
                 this._ghostBlocks[b].drawBlockInCell();
@@ -1378,19 +1384,19 @@ class TetrisShape {
     }
     clearGhostBlocks() {
         if (this._ghostBlocks) { // if ghost blocks (not in chain)
-            this._ghostBlocks.forEach(function(myBlock){ myBlock._domNode.destroyDomNode(); });
+            this._ghostBlocks.forEach( (myBlock)=>{ myBlock._domNode.destroyDomNode(); });
             this._ghostBlocks = null;
         }
         return this;
     }
-    moveFalling(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
+    moveShapeInMatrixAndDraw(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
         this._grid._anims.shapeRotateAnim.endAnim(); // comment/remove this line to continue animating rotation when drop #DEBUG
         this._iPosition += iRight;
         this._jPosition += jUp;
         this.removeShapeFromPlaced();
         this.moveAndPutShapeToPlaced(iRight, jUp, DROP_TYPES.soft);
         this.drawShape();
-        if (jUp === 0) this.drawGhostAfterCompute(); // if we move left or right
+        if (jUp === 0) this.giveGhostNewPositionAndDraw(); // if we move left or right
         else this._jVector -= jUp; // if ghostshape covered, new block layer hides it
         AUDIO.audioPlay('moveFX');
         return this;
@@ -1430,18 +1436,6 @@ class TetrisShape {
             }
         return result;
     }
-    rotateDataInMatrix() { // 1 is clockwiseQuarters
-        this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount;// we test need rotating in this.canShapeRotate()
-        for (let b=0;b < this._shapeBlocks.length;b++) {
-            this._grid.removeBlockFromMatrix(this._shapeBlocks[b]);
-            this._grid._lockedBlocks.removeBlockFromLockedBlocks(this._shapeBlocks[b]);
-            this._shapeBlocks[b]._iPosition = this._iPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][0];
-            this._shapeBlocks[b]._jPosition = this._jPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][1];
-            this._grid.putBlockInMatrix(this._shapeBlocks[b]);
-            this._grid._lockedBlocks.putBlockInLockedBlocks(this._shapeBlocks[b]);
-        }
-        return this;
-    }
     canShapeRotate() { // 1 is clockwiseQuarters
         if (this._pivotsCount === 1) // if shape has only 1 orientation
             return false;
@@ -1460,22 +1454,21 @@ class TetrisShape {
             return result;
         }
     }
-    rotationAsked() { // do rotation if possible, else nothing
-        if (this._grid._isSoftDropping) { // stopping soft drop fall by continuing normal timer
-            this._grid._dropTimer.finishTimer(); //optional
-            this._grid._isSoftDropping = false;
-            this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
-            this._grid._dropTimer.runTimer(); //optional
+    rotateShapeInMatrixAndDraw() { // do rotation if possible, else nothing
+        this._grid._anims.shapeRotateAnim.endAnim();
+        this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount; // 1 is clockwiseQuarters
+        for (let b=0;b < this._shapeBlocks.length;b++) {
+            this._grid.removeBlockFromMatrix(this._shapeBlocks[b]);
+            this._grid._lockedBlocks.removeBlockFromLockedBlocks(this._shapeBlocks[b]);
+            this._shapeBlocks[b]._iPosition = this._iPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][0];
+            this._shapeBlocks[b]._jPosition = this._jPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][1];
+            this._grid.putBlockInMatrix(this._shapeBlocks[b]);
+            this._grid._lockedBlocks.putBlockInLockedBlocks(this._shapeBlocks[b]);
         }
-        if (this.canShapeRotate()) { // +this._pivotsCount before modulo % ?
-            this._grid._anims.shapeRotateAnim.endAnim();
-            this.rotateDataInMatrix();
-            this.drawShape();
-            this._grid._anims.shapeRotateAnim.startAnim();
-            this.drawGhostAfterCompute();
-            AUDIO.audioPlay('rotateFX');
-        }
-        return this;
+        this.drawShape();
+        this._grid._anims.shapeRotateAnim.startAnim();
+        this.giveGhostNewPositionAndDraw();
+        AUDIO.audioPlay('rotateFX');
     }
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
         this.shapeSwitchFromTestToPlaced(false);
@@ -1516,7 +1509,7 @@ class TetrisShape {
         return this;
     }
     continueSoftDropping() { // full falling iterative, called by timer
-        this.moveFalling(0, -1);
+        this.moveShapeInMatrixAndDraw(0, -1);
         this._grid._isSoftDropping = true;            
         this._grid._dropTimer.finishTimer(); //ok
         this._grid._dropTimer.setPeriod(DURATIONS.softDropPeriod);
@@ -1635,7 +1628,7 @@ LockedBlocks.prototype = {
                 this.tryMoveShapesSamejEquals(jEquals);
                 this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                 this._grid._anims.shapeHardDropAnim.startAnim();
-            } else { // mode === SEARCH_MODE.up
+            } else { // mode === SEARCH_MODE.up, need to check if hitting shape, not best code
                 this._grid._fallingShape.shapeSwitchFromTestToPlaced(true); // falling is back
                 for (let p in this._grid._lockedShapes)
                     if (this._grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
@@ -1643,14 +1636,17 @@ LockedBlocks.prototype = {
                         this._grid._lockedShapes[p].shapesHitIfMove(0, 1);
                     }
                 this._grid.moveShapesInMatrix(this._grid._lockedShapes);
-                if (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount)
-                    this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
-                else if (this._grid._fallingShape._shapeIndex in this._grid._lockedShapes) { // if falling shape hit ground
-                    this._grid.gridAnimsStackPush(this._grid, this._grid.newFallingShape); // newFallingShape()
-                    this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
-                } else {
-                    this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.drawGhostAfterCompute); // drawGhostAfterCompute()
-                    this._grid.gridAnimsStackPush(this._grid._dropTimer, this._grid._dropTimer.runTimer); // runTimer()
+                switch (true) { // we exclusives cases
+                    case (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount > 0): 
+                        this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
+                        break;
+                    case (this._grid._fallingShape._shapeIndex in this._grid._lockedShapes): // if falling shape hit rising rows
+                        this._grid.gridAnimsStackPush(this._grid, this._grid.newFallingShape); // newFallingShape()
+                        this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
+                        break;
+                    default: // if rising rows rises without hitting shape
+                        this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.giveGhostNewPositionAndDraw); // giveGhostNewPositionAndDraw()
+                        this._grid.gridAnimsStackPush(this._grid._dropTimer, this._grid._dropTimer.runTimer); // runTimer(), seems to work fine
                 }
             }
         }
@@ -1686,8 +1682,7 @@ LockedBlocks.prototype = {
     },
     put1NewRisingRow: function() { // will stack all countandclearrows callee
         this._grid._anims.shapeRotateAnim.endAnim();
-        this._grid._dropTimer.finishTimer();
-        //this._grid._softDropTimer.finishTimer();
+        //this._grid._dropTimer.finishTimer();
         let rowFilledSlots, tempBlock; // prepareNewRisingRowAt_jPos0
         let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalCellsCount);
         rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
@@ -1989,6 +1984,7 @@ class Timer {
         this.finishTimer(); // if still running
         this._running = true;
         this._beginTime = (new Date).getTime();
+        //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod); // setInterval is useless here, not used
         this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod); // setInterval is useless here, not used
     }
     isRunning() {
@@ -2008,7 +2004,6 @@ class Timer {
         }
     }
     finishTimer() {
-        //this._paused = false; // turn pause off, necessary ?
         if (this._running) {
             clearTimeout(this._timeOut);
             this._running = false;
