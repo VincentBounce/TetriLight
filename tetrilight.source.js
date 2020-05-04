@@ -1087,19 +1087,19 @@ Grid.prototype            = {
         this._lockedBlocks.destroyLockedBlocks();
         this._domNode.destroyDomNode();
     },
-    isBusy() { // if grid is busy, doesn't care about message displaying
-        return ( (this._gridState !== GRID_STATES.playing) // if grid is losing/finishing, return busy
-            || this._anims.clearRowsAnim.isAnimating()
-            || this._anims.shapeHardDropAnim.isAnimating()
-            || this._anims.rising1RowAnim.isAnimating()
-            || this._anims.quakeAnim.isAnimating() // to have exclusive quake anim
+    isGridAvailableToPlay() { // if grid is busy, doesn't care about message displaying
+        return ( (this._gridState === GRID_STATES.playing) // if grid is losing/finishing, return busy
+            && !this._anims.clearRowsAnim.isAnimating()
+            && !this._anims.shapeHardDropAnim.isAnimating()
+            && !this._anims.rising1RowAnim.isAnimating()
+            && !this._anims.quakeAnim.isAnimating() // to have exclusive quake anim
         );
     },
     gridAnimsStackPush(o, func, param) { // o object which contains func method, this by default
         this._animsStack.push([o, func, param]);
     },
     gridAnimsStackPop() {
-        while (!this.isBusy() && (this._animsStack.length > 0)) { // unstack only when not busy, 2nd condition equivalent to while (this._animsStack.length)
+        while (this.isGridAvailableToPlay() && (this._animsStack.length > 0)) { // unstack only when not busy, 2nd condition equivalent to while (this._animsStack.length)
             let last = this._animsStack.pop();
             last[1].call(last[0], last[2]);
         }
@@ -1268,8 +1268,8 @@ Grid.prototype            = {
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
             this._matrix[i][jRow].destroyBlock();
     },
-    chooseControlAction(keyboardEvent) { //no controls during animations, this.isBusy() solves bug of not reloading on keyup after a drop
-        if ( (!this.isBusy()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
+    chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
+        if ( (this.isGridAvailableToPlay()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]:
                 this.rotationAsked();
                 break; // up
