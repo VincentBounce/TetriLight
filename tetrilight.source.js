@@ -655,40 +655,40 @@ TetrisGame.prototype = {
     _gameEventsQueue        : null,
     _anims                  : {}, // only 1 instance of game
     _freeColors             : null, // for name of free colors for players
-    _gameKeysSets           : [ // up down left right
-        {symbols:['Z','S','Q','D'], keys:['KeyW', 'KeyS', 'KeyA', 'KeyD'], free:true}, // WSAD on QWERTY for left player, ZSQD on AZERTY
-        {symbols:['I','K','J','L'], keys:['KeyI', 'KeyK', 'KeyJ', 'KeyL'], free:true},
-        {symbols:['\u2227','\u2228','<','>'], keys:['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], free:true}
+    _gameKeysSets           : [ // up down left right, https://keycode.info/
+        {symbols: ['Z','S','Q','D'], keys          : ['KeyW', 'KeyS', 'KeyA', 'KeyD'], free                   : true}, // WSAD on QWERTY for left player, ZSQD on AZERTY
+        {symbols: ['I','K','J','L'], keys          : ['KeyI', 'KeyK', 'KeyJ', 'KeyL'], free                   : true},
+        {symbols: ['\u2227','\u2228','<','>'], keys: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], free: true}
     ],
     _storedPolyominoes : [                                                                 // 5x5 shapes only, coordinates, angles count
         // 4 trominoes or domino or monomino
-        {blocks:[[ 0, 0]],                                 quarters:1, color:'grey_blue'},        //  - default quarters 1
-        {blocks:[[ 0, 1],[0, 0]],                         quarters:2, color:'grey_white'},    //  -- default quarters 2
-        {blocks:[[ 0, 1],[0, 0],[0,-1]],                 quarters:2, color:'grey_blue'},        //  --- default quarters 2
-        {blocks:[[ 0, 1],[0, 0],[1, 0]],                 quarters:4, color:'grey_white'},    //  |_
+        {blocks: [[ 0, 0]],                              quarters: 1, color: 'grey_blue'},  //  - default quarters 1
+        {blocks: [[ 0, 1],[0, 0]],                       quarters: 2, color: 'grey_white'}, //  -- default quarters 2
+        {blocks: [[ 0, 1],[0, 0],[0,-1]],                quarters: 2, color: 'grey_blue'},  //  --- default quarters 2
+        {blocks: [[ 0, 1],[0, 0],[1, 0]],                quarters: 4, color: 'grey_white'}, //  |_
         // 7 tetrominoes
-        {blocks:[[ 0, 1],[0, 0],[0,-1],[0,-2]],         quarters:2, color:'green' },        //  I default quarters 2
-        {blocks:[[-1, 0],[0, 0],[1, 0],[1,-1]],            quarters:4, color:'blue'  },        //  J
-        {blocks:[[-1, 0],[0, 0],[1, 0],[1, 1]],            quarters:4, color:'orange'},        //  L
-        {blocks:[[ 0, 0],[0, 1],[1, 0],[1, 1]],         quarters:1, color:'pink'  },        //  O default quarters 1
-        {blocks:[[-1,-1],[0,-1],[0, 0],[1, 0]],         quarters:2, color:'purple'},        //  S default quarters 2
-        {blocks:[[-1, 0],[0, 0],[0,-1],[1,-1]],         quarters:2, color:'red'   },        //  Z default quarters 2
-        {blocks:[[-1, 0],[0, 0],[0, 1],[1, 0]],            quarters:4, color:'yellow'},        //  T
+        {blocks: [[ 0, 1],[0, 0],[0,-1],[0,-2]],         quarters: 2, color: 'green' },     //  I default quarters 2
+        {blocks: [[-1, 0],[0, 0],[1, 0],[1,-1]],         quarters: 4, color: 'blue'  },     //  J
+        {blocks: [[-1, 0],[0, 0],[1, 0],[1, 1]],         quarters: 4, color: 'orange'},     //  L
+        {blocks: [[ 0, 0],[0, 1],[1, 0],[1, 1]],         quarters: 1, color: 'pink'  },     //  O default quarters 1
+        {blocks: [[-1,-1],[0,-1],[0, 0],[1, 0]],         quarters: 2, color: 'purple'},     //  S default quarters 2
+        {blocks: [[-1, 0],[0, 0],[0,-1],[1,-1]],         quarters: 2, color: 'red'   },     //  Z default quarters 2
+        {blocks: [[-1, 0],[0, 0],[0, 1],[1, 0]],         quarters: 4, color: 'yellow'},     //  T
         // 14 pentominoes
-        {blocks:[[ 0, 0],[0, 1],[1, 0],[1, 1],[ 0,-1]],    quarters:4, color:'pink'  },        //  O¨
-        {blocks:[[ 0, 0],[0, 1],[1, 0],[1, 1],[-1, 0]],    quarters:4, color:'pink'  },        //  O_
-        {blocks:[[-1,-1],[0,-1],[0, 0],[1, 0],[ 2, 0]],    quarters:4, color:'purple'},        //  S¨
-        {blocks:[[-1, 1],[0, 1],[0, 0],[1, 0],[ 2, 0]],    quarters:4, color:'red'   },        //  ¨Z
-        {blocks:[[ 0, 2],[0, 1],[0, 0],[0,-1],[ 0,-2]],    quarters:2, color:'green' },        //  -----
-        {blocks:[[-1, 0],[0, 1],[0, 0],[0,-1],[ 0,-2]],    quarters:4, color:'green' },        //  T¨
-        {blocks:[[ 1, 0],[0, 1],[0, 0],[0,-1],[ 0,-2]],    quarters:4, color:'green' },        //  ¨T
-        {blocks:[[-1, 0],[0, 0],[0, 1],[1, 0],[ 0,-1]],    quarters:4, color:'yellow'},        //  -|- default quarters 1
-        {blocks:[[-1, 1],[-1,0],[-1,-1],[0,-1],[1,-1]],    quarters:4, color:'orange'},        //  L_
-        {blocks:[[-1, 0],[0, 0],[0, 1],[1, 0],[-1,-1]],    quarters:4, color:'orange'},        //  -L
-        {blocks:[[-1, 0],[0, 0],[0, 1],[1, 0],[ 1,-1]],    quarters:4, color:'blue'  },        //  J-
-        {blocks:[[-1, 1],[-1,0],[ 0, 0],[1, 0],[1,-1]],    quarters:2, color:'purple'},        //  J¨
-        {blocks:[[-1,-1],[-1,0],[ 0, 0],[1, 0],[1, 1]],    quarters:2, color:'red'   },        //  ¨L
-        {blocks:[[-1, 1],[-1,0],[ 0, 0],[1, 0],[1, 1]],    quarters:4, color:'blue'  }            //  L¨
+        {blocks: [[ 0, 0],[0, 1],[1, 0],[1, 1],[ 0,-1]], quarters: 4, color: 'pink'  },     //  O¨
+        {blocks: [[ 0, 0],[0, 1],[1, 0],[1, 1],[-1, 0]], quarters: 4, color: 'pink'  },     //  O_
+        {blocks: [[-1,-1],[0,-1],[0, 0],[1, 0],[ 2, 0]], quarters: 4, color: 'purple'},     //  S¨
+        {blocks: [[-1, 1],[0, 1],[0, 0],[1, 0],[ 2, 0]], quarters: 4, color: 'red'   },     //  ¨Z
+        {blocks: [[ 0, 2],[0, 1],[0, 0],[0,-1],[ 0,-2]], quarters: 2, color: 'green' },     //  -----
+        {blocks: [[-1, 0],[0, 1],[0, 0],[0,-1],[ 0,-2]], quarters: 4, color: 'green' },     //  T¨
+        {blocks: [[ 1, 0],[0, 1],[0, 0],[0,-1],[ 0,-2]], quarters: 4, color: 'green' },     //  ¨T
+        {blocks: [[-1, 0],[0, 0],[0, 1],[1, 0],[ 0,-1]], quarters: 4, color: 'yellow'},     //  -|- default quarters 1
+        {blocks: [[-1, 1],[-1,0],[-1,-1],[0,-1],[1,-1]], quarters: 4, color: 'orange'},     //  L_
+        {blocks: [[-1, 0],[0, 0],[0, 1],[1, 0],[-1,-1]], quarters: 4, color: 'orange'},     //  -L
+        {blocks: [[-1, 0],[0, 0],[0, 1],[1, 0],[ 1,-1]], quarters: 4, color: 'blue'  },     //  J-
+        {blocks: [[-1, 1],[-1,0],[ 0, 0],[1, 0],[1,-1]], quarters: 2, color: 'purple'},     //  J¨
+        {blocks: [[-1,-1],[-1,0],[ 0, 0],[1, 0],[1, 1]], quarters: 2, color: 'red'   },     //  ¨L
+        {blocks: [[-1, 1],[-1,0],[ 0, 0],[1, 0],[1, 1]], quarters: 4, color: 'blue'  }      //  L¨
     ],
     _playedPolyominoesType: {
         trominoes:        {index: 0, count: 4},    // range of 3 blocks shapes
