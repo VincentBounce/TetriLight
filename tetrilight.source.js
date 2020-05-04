@@ -1426,8 +1426,6 @@ class TetrisShape {
                 myBlock._iPosition += iRight; // updating position
                 myBlock._jPosition += jUp; // updating position // after 'without this' change, this is Windows object here
                 myBlock.placeBlock();
-                //myBlock._grid.putBlockInMatrix(myBlock); // put to new slot
-                //myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock); // put block with new position
             });
         if ((dropType !== null) && (jUp < 0))
             this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
@@ -1470,14 +1468,10 @@ class TetrisShape {
         this._grid._anims.shapeRotateAnim.endAnim();
         this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount; // 1 is clockwiseQuarters
         for (let b=0;b < this._shapeBlocks.length;b++) {
-            //this._grid.removeBlockFromMatrix(this._shapeBlocks[b]);
-            //this._grid._lockedBlocks.removeBlockFromLockedBlocks(this._shapeBlocks[b]);
             this._shapeBlocks[b].unplaceBlock();
             this._shapeBlocks[b]._iPosition = this._iPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][0];
             this._shapeBlocks[b]._jPosition = this._jPosition + GAME._gameShapesWithRotations[this._shapeType][this._pivot][b][1];
             this._shapeBlocks[b].placeBlock();
-            //this._grid.putBlockInMatrix(this._shapeBlocks[b]);
-            //this._grid._lockedBlocks.putBlockInLockedBlocks(this._shapeBlocks[b]);
         }
         this.drawShape();
         this._grid._anims.shapeRotateAnim.startAnim();
@@ -1502,18 +1496,10 @@ class TetrisShape {
         return this;
     }
     placeShape() {
-        this._shapeBlocks.forEach( (myBlock)=>{            
-            myBlock.placeBlock();
-            //myBlock._grid.putBlockInMatrix(myBlock); // 3 times in code
-            //myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock) // 3 times in code
-        });
+        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.placeBlock(); });
     }
     unplaceShape() {
-        this._shapeBlocks.forEach( (myBlock)=>{
-            myBlock.unplaceBlock();
-            //myBlock._grid.removeBlockFromMatrix(myBlock); // 2 times in code
-            //myBlock._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock) // 2 times in code
-        });
+        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.unplaceBlock(); });
     }
 }
 // TETRIS NEXT SHAPE PREVIEW Class
@@ -1718,8 +1704,6 @@ class TetrisBlock {
                 this.putBlockInRealBlocksNode();
                 this._blockIndex = GAME._newBlockId++;
                 this.placeBlock();
-                //this._grid.putBlockInMatrix(this);
-                //this._grid._lockedBlocks.putBlockInLockedBlocks(this);
                 this.drawBlockInCell();
                 break;
             default: console.log(this) // bug if this case occurs #DEBUG
@@ -1728,8 +1712,6 @@ class TetrisBlock {
     destroyBlock() { // destructor, remove block anywhere
         this._domNode.destroyDomNode();
         this.unplaceBlock();
-        //this._grid.removeBlockFromMatrix(this);
-        //this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
     }
     placeBlock() {
         this._grid.putBlockInMatrix(this);
