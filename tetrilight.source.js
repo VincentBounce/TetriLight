@@ -278,9 +278,8 @@ function init() {
 }
 // MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { // queue or stack
-    window.addEventListener('keydown', this.keyCapture_, false); // old: window.document.documentElement
-    window.addEventListener('keyup', this.keyCapture_, false);
-    //window.addEventListener('keypress', this.keyPressCapture_, false);
+    window.addEventListener('keydown', this.keyCapture_, false); //for all keys, producing value or not
+    window.addEventListener('keyup', this.keyCapture_, false); //for all keys, producing value or not
     window.oncontextmenu = function(event){ this.cancelEvent_(event); };
     // below creation for MAIN dom node
     this._domNode = new DomNode({body: true});
