@@ -160,7 +160,6 @@ var x, y are positions on browser, in pixels (x -> right, y -> down)
 var i, j are positions of blocks into grid (i -> right, j -> up)
 var o is generic object
 var p is variable to browse in object
-var event is generic event
 var item is generic item, object or array or string boolean number
 forEach( (myVar)=>{ return myVar++; } );
 
@@ -294,10 +293,10 @@ function MainMenu() { // queue or stack
         });
     this._domNode._childs.background.nodeDrawSprite(); // paint black background
     this._domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
-    // this._domNode._childs.message1.setTex('totototo'); //$$$$$$$$$$
+    // this._domNode._childs.message1.setTex('totototo');
     this._domNode._htmlElement.addEventListener('click',
-        function(event) {
-            if ((event.offsetX < SPRITES._pxButtonSize) && (event.offsetY < SPRITES._pxButtonSize))
+        function(eventClick) {
+            if ((eventClick.offsetX < SPRITES._pxButtonSize) && (eventClick.offsetY < SPRITES._pxButtonSize))
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
     window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
@@ -305,21 +304,20 @@ function MainMenu() { // queue or stack
 MainMenu.prototype = {
     _domNode    : null,
     cancelEvent_(event) { //seems useless
-        event.stopPropagation(); //method prevents propagation of the same event from being called
+        keyboardEvent.stopPropagation(); //method prevents propagation of the same event from being called
         event.preventDefault();
     },
-    keyCapture_(event) {
-        // let s='';for (let p in event) {s += p+' '+event[p]+'\n'};
-        //MAIN_MENU.cancelEvent_(event);
-        switch (event.keyCode) { //key press: both keydown and keyup
-            case 'P'.charCodeAt(0):
-                if (event.type=='keydown' && !event.repeat) //avoid P keydown repeated
+    keyCapture_(keyboardEvent) {
+        //MAIN_MENU.cancelEvent_(keyboardEvent);
+        switch (keyboardEvent.code) { //key press: both keydown and keyup
+            case 'KeyP':
+                if (keyboardEvent.type=='keydown' && !keyboardEvent.repeat) //avoid P keydown repeated
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
                 if (GAME._gameState === GAME_STATES.running) // if game is not paused
                     GAME._gridsListAuto.runForEachListElement( (myGrid)=>{
-                        if (!myGrid.isBusy()) myGrid.chooseControlAction(event); } );
+                        if (!myGrid.isBusy()) myGrid.chooseControlAction(keyboardEvent); } );
         }
     },
 };
@@ -643,24 +641,24 @@ function TetrisGame() {
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
 TetrisGame.prototype = {
-    _gridsListAuto                    : null,
-    _matrixHeight                    : null,
-    _matrixBottom                    : -1,                    // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
-    _iPositionStart                    : null,
-    _jPositionStart                    : null,
-    _playersCount                    : 0,
-    _gameState                        : GAME_STATES.running,    // others: GAME_STATES.paused, GAME_STATES.running
-    _shapeIdTick                    : 0,
-    _newBlockId                        : 0,
-    _pentominoesBriefMode            : null,            
-    _gameShapesWithRotations        : null,
-    _gameEventsQueue                : null,
-    _anims                            : {},                    // only 1 instance of game
-    _freeColors                        : null,                    // for name of free colors for players
-    _gameKeysSets : [                    // up down left right
-        {symbols:['Z','S','Q','D'], keys:['Z'.charCodeAt(0), 'S'.charCodeAt(0), 'Q'.charCodeAt(0), 'D'.charCodeAt(0)], free:true},
-        {symbols:['I','K','J','L'], keys:['I'.charCodeAt(0), 'K'.charCodeAt(0), 'J'.charCodeAt(0), 'L'.charCodeAt(0)], free:true},
-        {symbols:['\u2227','\u2228','<','>'], keys:[38, 40, 37, 39], free:true}
+    _gridsListAuto          : null,
+    _matrixHeight           : null,
+    _matrixBottom           : -1, // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
+    _iPositionStart         : null,
+    _jPositionStart         : null,
+    _playersCount           : 0,
+    _gameState              : GAME_STATES.running, // others: GAME_STATES.paused, GAME_STATES.running
+    _shapeIdTick            : 0,
+    _newBlockId             : 0,
+    _pentominoesBriefMode   : null,            
+    _gameShapesWithRotations: null,
+    _gameEventsQueue        : null,
+    _anims                  : {}, // only 1 instance of game
+    _freeColors             : null, // for name of free colors for players
+    _gameKeysSets           : [ // up down left right
+        {symbols:['Z','S','Q','D'], keys:['KeyW', 'KeyS', 'KeyA', 'KeyD'], free:true}, // WSAD on QWERTY for left player, ZSQD on AZERTY
+        {symbols:['I','K','J','L'], keys:['KeyI', 'KeyK', 'KeyJ', 'KeyL'], free:true},
+        {symbols:['\u2227','\u2228','<','>'], keys:['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], free:true}
     ],
     _storedPolyominoes : [                                                                 // 5x5 shapes only, coordinates, angles count
         // 4 trominoes or domino or monomino
@@ -1280,14 +1278,14 @@ Grid.prototype            = {
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
             this._matrix[i][jRow].destroyBlock();
     },
-    chooseControlAction(event) {
-        if (event.type === 'keydown') switch (event.keyCode) {
+    chooseControlAction(keyboardEvent) {
+        if (keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]:
                 this.rotationAsked();
                 break; // up
             case this._playerKeysSet.keys[1]:
                 //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
-                if ( !event.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
+                if ( !keyboardEvent.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
                 break; // down
             case this._playerKeysSet.keys[2]:
                 this.horizontalMoveAsked(-1);
@@ -1297,7 +1295,7 @@ Grid.prototype            = {
                 break; // right
             default:
         }
-        else switch (event.keyCode) { //(event.type === 'keyup')
+        else switch (keyboardEvent.code) { //(keyboardEvent.type === 'keyup')
             case (this._playerKeysSet.keys[1]):
                 this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
                 //console.log(this._keyDownPressedAtLeast200ms);
