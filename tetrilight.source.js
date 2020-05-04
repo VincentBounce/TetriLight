@@ -211,7 +211,7 @@ const RULES                     = { // tetris rules
     transferRowsCountMin        : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
     pentominoesRowsCountMin     : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
     horizontalCellsCount        : 5, // default 10, min 5 #DEBUG
-    verticalCellsCount          : 41, // default 21             = (20 visible + 1 hidden) #DEBUG
+    verticalCellsCount          : 21, // default 21             = (20 visible + 1 hidden) #DEBUG
     topLevel                    : 25, // default 25, max level (steps of drop acceleration)
     risingRowsHolesCountMaxRatio: 0.3, // default 0.3, <        = 0.5, max holes into each rising row, example: 0.5 = 50% means 5 holes for 10 columns
     fps                         : 60/1000 }; // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
@@ -317,9 +317,9 @@ MainMenu.prototype = {
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
-                if (GAME._gameState === GAME_STATES.running) //
+                if (GAME._gameState === GAME_STATES.running) // if game is not paused
                     GAME._gridsListAuto.runForEachListElement( (myGrid)=>{
-                        if (!myGrid.isBusy()) myGrid.chooseAction(event); } );
+                        if (!myGrid.isBusy()) myGrid.chooseControlAction(event); } );
         }
     },
 };
@@ -1280,39 +1280,36 @@ Grid.prototype            = {
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
             this._matrix[i][jRow].destroyBlock();
     },
-    chooseAction(event) {
-        if (event.type === 'keyup') {
-            switch (event.keyCode) {
-                case (this._playerKeysSet.keys[1]):
-                    this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
-                    //console.log(this._keyDownPressedAtLeast200ms);
-                    //if ( this._keyDownPressedAtLeast200ms )
-                        this.turnsTimerToNormalDrop_();
-                    //else {
-                    //    this._keyDownPressedAtLeast200ms = false;
-                    //    this._keyPressTimer.finishTimer()
-                    //}
-                    break;
-                default: 
-            }
-        } else //(event.type === 'keydown')
-            switch (event.keyCode) {
-                case this._playerKeysSet.keys[0]:
-                    this.rotationAsked();
-                    break; // up
-                case this._playerKeysSet.keys[1]:
-                    //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
-                    //if ( !event.repeat)
-                        this.beginSoftDropping();
-                    break; // down
-                case this._playerKeysSet.keys[2]:
-                    this.horizontalMoveAsked(-1);
-                    break; // left
-                case this._playerKeysSet.keys[3]:
-                    this.horizontalMoveAsked(1);
-                    break; // right
-                default:
-            }
+    chooseControlAction(event) {
+        if (event.type === 'keydown') switch (event.keyCode) {
+            case this._playerKeysSet.keys[0]:
+                this.rotationAsked();
+                break; // up
+            case this._playerKeysSet.keys[1]:
+                //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
+                if ( !event.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
+                break; // down
+            case this._playerKeysSet.keys[2]:
+                this.horizontalMoveAsked(-1);
+                break; // left
+            case this._playerKeysSet.keys[3]:
+                this.horizontalMoveAsked(1);
+                break; // right
+            default:
+        }
+        else switch (event.keyCode) { //(event.type === 'keyup')
+            case (this._playerKeysSet.keys[1]):
+                this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
+                //console.log(this._keyDownPressedAtLeast200ms);
+                //if ( this._keyDownPressedAtLeast200ms )
+                //    this.turnsTimerToNormalDrop_();
+                //else {
+                //    this._keyDownPressedAtLeast200ms = false;
+                //    this._keyPressTimer.finishTimer()
+                //}
+                break;
+            default: 
+        }
     },
     pauseOrResume() {    // pause or resume this grid
         for (let p in this._anims) // this._anims is object, not array, contains animations of this grid
