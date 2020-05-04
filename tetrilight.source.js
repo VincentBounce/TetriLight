@@ -316,8 +316,7 @@ MainMenu.prototype = {
                 break; // always exit after this instruction
             default:
                 if (GAME._gameState === GAME_STATES.running) // if game is not paused
-                    GAME._gridsListAuto.runForEachListElement( (myGrid)=>{
-                        if (!myGrid.isBusy()) myGrid.chooseControlAction(keyboardEvent); } );
+                    GAME._gridsListAuto.runForEachListElement( (myGrid)=>{ myGrid.chooseControlAction(keyboardEvent); } );
         }
     },
 };
@@ -1269,15 +1268,14 @@ Grid.prototype            = {
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
             this._matrix[i][jRow].destroyBlock();
     },
-    chooseControlAction(keyboardEvent) {
-        if (keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
+    chooseControlAction(keyboardEvent) { //no controls during animations, this.isBusy() solves bug of not reloading on keyup after a drop
+        if ( (!this.isBusy()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]:
                 this.rotationAsked();
                 break; // up
             case this._playerKeysSet.keys[1]:
                 //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
-                if ( !keyboardEvent.repeat) // pb for next part, blocked?
-                    this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
+                if ( !keyboardEvent.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
                 break; // down
             case this._playerKeysSet.keys[2]:
                 this.horizontalMoveAsked(-1);
@@ -1287,7 +1285,7 @@ Grid.prototype            = {
                 break; // right
             default:
         }
-        else switch (keyboardEvent.code) { //(keyboardEvent.type === 'keyup')
+        else switch (keyboardEvent.code) { //(keyboardEvent.type === 'keyup'), allow reload on DOWN key pressed yup even during animation
             case (this._playerKeysSet.keys[1]):
                 this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
                 //console.log(this._keyDownPressedAtLeast200ms);
@@ -1536,27 +1534,6 @@ LockedBlocks.prototype = {
             if (this._lockedBlocksArray[b])    // if block exist
                 this._lockedBlocksArray[b].destroyBlock();
     },
-    /*putBlockInLockedBlocks(block) { // here we fill this._lockedBlocksArray
-        this._lockedBlocksArray[block._blockIndex] = block;
-        this._blocksCount++; // we increment
-        this._lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex] = block;
-        this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount++; // we increment
-         if ( this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
-         // if (this._grid._rowsToClearArray.lastIndexOf(block._jPosition) === -1)// $$$$$$$ if value not found
-            this._grid._rowsToClearList.putInList(block._jPosition, true); // true to put something
-            // this._grid._rowsToClearArray.push(block._jPosition); // preparing rows to clear, not negative values
-    },
-    removeBlockFromLockedBlocks(block) {
-        delete this._lockedBlocksArray[block._blockIndex]; // remove block from locked blocks
-        delete this._lockedBlocksArrayByRow[block._jPosition].blocks[block._blockIndex];
-        this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount--; // we decrement
-        this._blocksCount--; // we decrement
-         if ( this._lockedBlocksArrayByRow[block._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
-            this._grid._rowsToClearList.eraseItemFromList(block._jPosition);
-        // this._grid._rowsToClearArray.splice( // necessary for correct exection
-        //         this._grid._rowsToClearArray.lastIndexOf(block._jPosition), 1 ); // we remove position of block._jPosition in _rowsToClearArra
-                
-    },*/
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
             this._grid._fallingShape.unplaceShape();// falling shape temporary removed, in testing mode
@@ -1709,27 +1686,27 @@ class TetrisBlock {
     }
     placeBlock() {
         this._grid._matrix[this._iPosition][this._jPosition] = this;
-        let locked = this._grid._lockedBlocks; //this._grid._lockedBlocks.putBlockInLockedBlocks(this);
+        let locked = this._grid._lockedBlocks; // previously putBlockInLockedBlocks(this)
         locked._lockedBlocksArray[this._blockIndex] = this; // here we fill this._lockedBlocksArray
         locked._blocksCount++; // we increment
         locked._lockedBlocksArrayByRow[this._jPosition].blocks[this._blockIndex] = this;
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount++; // we increment
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
-         // if (this._grid._rowsToClearArray.lastIndexOf(this._jPosition) === -1)// $$$$$$$ if value not found
+         // if (this._grid._rowsToClearArray.lastIndexOf(this._jPosition) === -1)// check, if value not found
             this._grid._rowsToClearList.putInList(this._jPosition, true); // true to put something
             // this._grid._rowsToClearArray.push(this._jPosition); // preparing rows to clear, not negative values
     }
     unplaceBlock() {
         this._grid._matrix[this._iPosition][this._jPosition] = null;
-        let locked = this._grid._lockedBlocks; //this._grid._lockedBlocks.removeBlockFromLockedBlocks(this);
+        let locked = this._grid._lockedBlocks; // previously removeBlockFromLockedBlocks(this)
         delete locked._lockedBlocksArray[this._blockIndex]; // remove block from locked blocks
         delete locked._lockedBlocksArrayByRow[this._jPosition].blocks[this._blockIndex];
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount--; // we decrement
         locked._blocksCount--; // we decrement
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
             this._grid._rowsToClearList.eraseItemFromList(this._jPosition);
-        // this._grid._rowsToClearArray.splice( // necessary for correct exection
-        //         this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
+            // this._grid._rowsToClearArray.splice( // necessary for correct exection
+            // this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
     }
     setColor(colorTxt)  {
         this._colorTxt = colorTxt;
