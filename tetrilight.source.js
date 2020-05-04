@@ -876,7 +876,7 @@ class PentominoesBriefMode {
                 }
             }, gridWichTriggeredPentoMode ); // this way to pass argument1 to pointed function
         this._pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount); // *3 for 3 lines cleared, *4 for 4 lines cleared
-        this._pentoModeTimer.runTimer();
+        this._pentoModeTimer.restartTimer();
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.startAnim();
     }
@@ -1156,7 +1156,7 @@ Grid.prototype            = {
                 .drawShape()
                 .giveGhostNewPositionAndDraw();
             this._dropTimer.setPeriod(this._normalDropPeriod);
-            this._dropTimer.runTimer();
+            this._dropTimer.restartTimer();
         } else { // it's lost
             this._fallingShape.drawShape()
                 .clearGhostBlocks()
@@ -1175,16 +1175,15 @@ Grid.prototype            = {
     },
     turnsTimerToNormalDrop_() {
         if (this._isSoftDropping) {// if soft dropping, stops soft drop fall to continue normal timer
-            this._dropTimer.finishTimer(); //optional
             this._isSoftDropping = false;
             this._dropTimer.setPeriod(this._normalDropPeriod);
-            this._dropTimer.runTimer(); // shape can move after fall or stopped
+            this._dropTimer.restartTimer(); // shape can move after fall or stopped
         }
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
             if (iRight === 0) //no left nor right
-                this._dropTimer.runTimer(); // shape go down, new period
+                this._dropTimer.restartTimer(); // shape go down, new period
             this._fallingShape.moveShapeInMatrixAndDraw(iRight, jUp);
         } else { // shape can't move...
             if (jUp < 0) // ...player or drop timer tries move down
@@ -1219,7 +1218,7 @@ Grid.prototype            = {
     },
     countAndClearRows: function(){ // locks block and computes rows to transfer and _scores
         // old: AUDIO.audioPlay('landFX');
-        if (this._fallingShape) // for recursive calls with fallingshape = null
+        if (this._fallingShape !== null) // for recursive calls with fallingshape === null
             this._fallingShape.clearGhostBlocks();
         // let rowsToClearCount = this._rowsToClearArray.length;
         let rowsToClearCount = this._rowsToClearList.listSize;
@@ -1233,18 +1232,18 @@ Grid.prototype            = {
                 AUDIO.audioPlay('quadrupleFX');
             } else
                 AUDIO.audioPlay('clearFX');
+            this._dropTimer.finishTimer() // need to finish timer before voiding _fallingShape, otherwise 'canMoveFromPlacedToPlaced of null' error
             this._fallingShape = null; // to avoid combo reset scores
             this._anims.clearRowsAnim.startAnim();
         } else {
             this._score.displays(); // to refresh score
-            if (this._fallingShape)
+            if (this._fallingShape !== null)
                 this._score.combosReset();
             this.gridAnimsStackPop();
         }
     },
     lose: function(){    // lives during this._score duration
         this._score.displays();
-        this._dropTimer.finishTimer();
         this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
         this._gridMessagesQueue.execNowOrEnqueue(
             this._anims.messageAnim,
@@ -1500,7 +1499,6 @@ class TetrisShape {
                 this._grid.lockFallingShapePrepareMoving();
         } else if (this._grid._isSoftDropping) { // if soft dropping
                 this._grid._softDroppingReloaded = false;
-                //below ex code this.finishAnyDropping();
                 this._grid._isSoftDropping = false;
                 this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
                 this._grid._dropTimer.finishTimer();
@@ -1511,9 +1509,8 @@ class TetrisShape {
     continueSoftDropping() { // full falling iterative, called by timer
         this.moveShapeInMatrixAndDraw(0, -1);
         this._grid._isSoftDropping = true;            
-        this._grid._dropTimer.finishTimer(); //ok
         this._grid._dropTimer.setPeriod(DURATIONS.softDropPeriod);
-        this._grid._dropTimer.runTimer();
+        this._grid._dropTimer.restartTimer();
         return this;
     }
     hardDropping() {
@@ -1646,7 +1643,7 @@ LockedBlocks.prototype = {
                         break;
                     default: // if rising rows rises without hitting shape
                         this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.giveGhostNewPositionAndDraw); // giveGhostNewPositionAndDraw()
-                        this._grid.gridAnimsStackPush(this._grid._dropTimer, this._grid._dropTimer.runTimer); // runTimer(), seems to work fine
+                        this._grid.gridAnimsStackPush(this._grid._dropTimer, this._grid._dropTimer.restartTimer); // restartTimer(), seems to work fine
                 }
             }
         }
@@ -1678,18 +1675,17 @@ LockedBlocks.prototype = {
                 }
             }           
         }
-        
     },
     put1NewRisingRow: function() { // will stack all countandclearrows callee
         this._grid._anims.shapeRotateAnim.endAnim();
-        //this._grid._dropTimer.finishTimer();
-        let rowFilledSlots, tempBlock; // prepareNewRisingRowAt_jPos0
+        this._grid._dropTimer.finishTimer();
+        let rowFilledSlots; // prepareNewRisingRowAt_jPos0
         let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalCellsCount);
         rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
             delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
         rowFilledSlots.forEach( (uselessArg, slotIndex)=>{ // we skip delete rowFilledSlots
-            tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, 'grey'); }); // iPosition=[1-10], jPosition=0 just under game
+            let tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, 'grey'); }); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
         this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
         this._grid._anims.rising1RowAnim.startAnim();
@@ -1980,11 +1976,11 @@ class Timer {
         this._timerPeriod;
         this._timeOut;
     }
-    runTimer() { // return true if killing previous
+    restartTimer() { // return true if killing previous
         this.finishTimer(); // if still running
         this._running = true;
         this._beginTime = (new Date).getTime();
-        //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod); // setInterval is useless here, not used
+        //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod);
         this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod); // setInterval is useless here, not used
     }
     isRunning() {
