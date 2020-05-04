@@ -1507,7 +1507,15 @@ class TetrisShape {
         return this;
     }
     placeOrUnplaceShape(fromTestToPlaced) { // called only by pairs placeOrUnplaceShape(false) then (true)
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); }) // only called here
+        this._shapeBlocks.forEach( (myBlock)=>{            
+            if (fromTestToPlaced) {
+                myBlock._grid.putBlockInMatrix(myBlock);
+                myBlock._grid._lockedBlocks.putBlockInLockedBlocks(myBlock)
+            } else {
+                myBlock._grid.removeBlockFromMatrix(myBlock);
+                myBlock._grid._lockedBlocks.removeBlockFromLockedBlocks(myBlock)
+            }
+        });
         return this;
     }
 }
@@ -1741,7 +1749,7 @@ class TetrisBlock {
     drawBlockInCell() { // here you can hide top block outside grid
         this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
     }
-    blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs TetrisShape.placeOrUnplaceShape(false) then (true)
+    /*blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs TetrisShape.placeOrUnplaceShape(false) then (true)
         if (fromTestToPlaced) {
             this._grid.putBlockInMatrix(this);
             this._grid._lockedBlocks.putBlockInLockedBlocks(this)
@@ -1749,7 +1757,7 @@ class TetrisBlock {
             this._grid.removeBlockFromMatrix(this);
             this._grid._lockedBlocks.removeBlockFromLockedBlocks(this)
         }
-    }
+    }*/
     putBlockInRealBlocksNode() {
         this._grid._realBlocksNode.putChild(this._domNode);
     }
