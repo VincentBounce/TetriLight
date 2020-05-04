@@ -180,8 +180,7 @@ pauseOrResume stops every timers, music. It let FX finish. It block controls
 **************** CLASS ****************
 MainMenu [1 instance]
     DomNode [1 instance]
-    SPRITES: TetrisSpritesCreation [1 instance] ()
-        DomNode [same instance]
+    SPRITES: TetrisSpritesCreation [1 instance]
     GAME: TetrisGame [1 instance]
         _gameEventsQueue
         PentominoesBriefMode
@@ -193,17 +192,10 @@ MainMenu [1 instance]
             _gridEventsQueue
             _gridMessagesQueue
             lose()
-            _nextShape
-                Blocks
-            _lockedBlocks: []
-            _lockedShapes
-                Shapes
-                    Blocks
-                        Node
-            _fallingShape
-                Blocks
-            FrozenBlocks
-                Blocks
+            _lockedBlocks: [] of Blocks
+            _lockedShapes: [] of Shapes: Blocks: Node
+            _fallingShape: Shape
+            _nextShape: Shape
             Score
                 _score
                 _level
@@ -272,7 +264,7 @@ const GAME_STATES = { paused   : 1, running: 2, waiting: 3};
 const GRID_STATES = { connected: 1, playing: 2, lost   : 3}; // connected but not started
 const BLOCK_TYPES = { ghost    : 1, inShape: 2, orphan : 3};
 const SEARCH_MODE = { down     : 1, up     : 2};
-const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are usefull for score: hard drop is double points
+const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are useful for score: hard drop is double points
 
 // INIT called by HTML browser
 function init() {
@@ -327,10 +319,8 @@ MainMenu.prototype = {
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
-                if (GAME._gameState === GAME_STATES.running) {
+                if (GAME._gameState === GAME_STATES.running)
                     GAME.chooseAction(event);
-                }
-                break;
         }
     }},
     keyPressCapture_: function(event) { with(this) { // #DEBUG changing volume seems to not work
@@ -603,7 +593,7 @@ TetrisSpritesCreation.prototype = {
                 c.beginPath();c.moveTo(x,y+_pxBlockSize);c.lineTo(x+half,y+half);
                 c.lineTo(x+_pxBlockSize,y+_pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,_pxBlockSize-2*margin,_pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
-                c.fillRect(x+margin,y+margin,_pxBlockSize-2*margin,_pxBlockSize-2*margin)    },
+                c.fillRect(x+margin,y+margin,_pxBlockSize-2*margin,_pxBlockSize-2*margin) },
             fx: function (i) { return _pxGridLineWidth + ( i-1 ) * _pxCellSize },
             fy: function (j) { return _pxGridLineWidth + ( RULES.verticalCellsCount-j ) * _pxCellSize }
         });
@@ -611,28 +601,28 @@ TetrisSpritesCreation.prototype = {
 };
 // TETRIS GAME Class
 function TetrisGame() {
-    this._matrixHeight                = RULES.verticalCellsCount * 2;                // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
-    this._iPositionStart                = Math.ceil(RULES.horizontalCellsCount/2);    // shape start position
+    this._matrixHeight                = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
+    this._iPositionStart                = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
     this._jPositionStart                = RULES.verticalCellsCount - 1;
-    this._gridsListAuto                = new ListAutoIndex();                        // players' grids' lists
+    this._gridsListAuto                = new ListAutoIndex(); // players' grids' lists
     this._pentominoesBriefMode        = new PentominoesBriefMode();
-    this._gameShapesWithRotations     = new Array(this._storedPolyominoes.length);        // table of all shapes with rotations
-    for (let s=0;s < this._storedPolyominoes.length;s++) {                          // creating all shapes variations: browsing shapes
+    this._gameShapesWithRotations     = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
+    for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
         shapeBlocksCount        = this._storedPolyominoes[s].blocks.length;
         quarters                = this._storedPolyominoes[s].quarters;
         this._gameShapesWithRotations[s]    = new Array(quarters);
-        for (let pivot=0;pivot < quarters;pivot++) {                         // creating all shapes rotations: browsing rotations
+        for (let pivot=0;pivot < quarters;pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
             if(pivot === 0)
-                for (let b=0;b < shapeBlocksCount;b++)                        // browsing 4 blocks
+                for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         this._storedPolyominoes[s].blocks[b][0],
                         this._storedPolyominoes[s].blocks[b][1]    ];
             else
-                for (let b=0;b < shapeBlocksCount;b++)                        // browsing 4 blocks
+                for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
-                        - this._gameShapesWithRotations[s][pivot-1][b][1],        // minus here (default) for unclockwise
-                          this._gameShapesWithRotations[s][pivot-1][b][0]     ]    // minus here for clockwise
+                        - this._gameShapesWithRotations[s][pivot-1][b][1], // minus here (default) for unclockwise
+                          this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus here for clockwise
         }
     }
     this._freeColors = new List();
@@ -1089,13 +1079,12 @@ Grid.prototype            = {
     _nextShape            : null, // next shape about to be place
     _nextShapePreview     : null, // preview on top of grid
     _score                : null,
-    _dropTimer      : null,
+    _dropTimer            : null,
     _normalDropPeriod     : DURATIONS.initialDropPeriod, // going to DURATIONS.softDropPeriod
-    //_softDropTimer      : null, // animation
     _isSoftDropping       : false, // false means normal dropping, true means soft dropping
     _softDroppingReloaded : true, // keyup
     _playedPolyominoesType: 'tetrominoes',// starts tetris with 4 blocks shape
-    _playerKeysSet             : null,
+    _playerKeysSet        : null,
     _lockedBlocks         : null, // placed blocks in grid, including falling shape?
     _matrix               : null,
     _anims                : null,
@@ -1198,7 +1187,6 @@ Grid.prototype            = {
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
         this._lockedShapes = []; // release for garbage collector
         this._lockedShapes[this._fallingShape._shapeIndex] = this._fallingShape;
-         //ex code for finishAnyDropping useful? this._isSoftDropping always false after tests; this._dropTimer.setPeriod(this._normalDropPeriod); this._dropTimer.finishTimer();
         this._anims.shapeRotateAnim.endAnim(); // because made by drop period
         this.moveShapesInMatrix(this._lockedShapes);
         if (this._fallingShape._jVector === 0) { // if played single falling shape
@@ -1771,8 +1759,8 @@ class Score {
     constructor(grid) {
         this._grid = grid;
         this._combos = -1;
-        this._score = 0; // public real score
-        this._scoreShowed = 0;
+        this._digitalScore = 0; // public real score
+        this._displayedScore = 0;
         this._delta = 0;
         this._deltaShowed;
         this._factors = [null, 40, 100, 300, 1200, 6600]; // a single line clear is worth 400 points at level 0, clearing 4 lines at once (known as a Tetris) is worth 1200, max 5 lines with pento mode
@@ -1785,10 +1773,10 @@ class Score {
                 this._delta = 0;
             },
             animateFunc: function(animOutput) {
-                this.writeScore_(Math.ceil(this._scoreShowed + animOutput*this._deltaShowed));
+                this.writeScore_(Math.ceil(this._displayedScore + animOutput*this._deltaShowed));
             },
             endAnimFunc: function() {
-                this.writeScore_(this._scoreShowed += this._deltaShowed);
+                this.writeScore_(this._displayedScore += this._deltaShowed);
             },
             timingAnimFunc: function(x) {
                 return -(x-2*Math.sqrt(x));
@@ -1796,13 +1784,13 @@ class Score {
             animDuration: DURATIONS.displayingScoreDuration,
             optionalAnimOwner: this // otherwise, it's animation context by default
         });
-        this.writeScore_(this._scoreShowed);
+        this.writeScore_(this._displayedScore);
     }
     displays() {
         if (this._delta !== 0) {                        // if delta changed !== 0
             this._grid._anims.score.endAnim();    // need to end before setting variables
-            this._scoreShowed = this._score;
-            this._score += this._delta;
+            this._displayedScore = this._digitalScore;
+            this._digitalScore += this._delta;
             this._grid._anims.score.startAnim();
         }
     }
