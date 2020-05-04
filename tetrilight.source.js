@@ -335,9 +335,6 @@ Audio.prototype = {
         this._sounds[name] = {};
         this._sounds[name].sound = window.document.createElement('audio');
         window.document.body.appendChild(this._sounds[name].sound);
-        // this._sounds[name].sound.setAttribute('preload', 'auto');    // old
-        // this._sounds[name].sound.autoplay = true; // old
-        // this._sounds[name].sound.controls = true; // displays controls for #DEBUG
         if (name.indexOf('Music') !== -1) // check if contains Music in name, if so then play with loop
             this._sounds[name].sound.loop = 'loop';
         this._sounds[name].sound.setAttribute('src', 'audio/' + name + '.' + ext); // (ext ? ext : 'wav')
@@ -1130,9 +1127,9 @@ Grid.prototype            = {
             this._nextShapePreview.unMark(this._fallingShape); // change current shape preview by a new shape
             this._nextShape = new TetrisShape(this); // change current shape preview by a new shape
             this._nextShapePreview.mark(this._nextShape); // change current shape preview by a new shape
-            this._fallingShape.moveAndPutShapeToPlaced(0, 0) // only place with call without previous removeShapeFromPlace()
+            this._fallingShape.moveAndPlaceShape(0, 0) // only place with call without previous removeShapeFromPlace()
                 .drawShape()
-                .giveGhostNewPositionAndDraw();
+                .findNewPositionAndDrawGhost();
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.restartTimer();
         } else { // it's lost
@@ -1145,7 +1142,7 @@ Grid.prototype            = {
     rotationAsked() { // do rotation if possible, else nothing
         this.turnsTimerToNormalDrop_()
         if (this._fallingShape.canShapeRotate())
-            this._fallingShape.rotateShapeInMatrixAndDraw();
+            this._fallingShape.unplaceAndRotateAndPlaceAndDrawShape();
     },
     horizontalMoveAsked(iRight) {
         this.turnsTimerToNormalDrop_()
@@ -1179,7 +1176,7 @@ Grid.prototype            = {
         return this;
     },
     continueSoftDropping() { // full falling iterative, called by timer
-        this._fallingShape.moveShapeInMatrixAndDraw(0, -1);
+        this._fallingShape.unplaceAndMoveAndPlaceAndDrawShape(0, -1);
         this._isSoftDropping = true;            
         this._dropTimer.setPeriod(DURATIONS.softDropPeriod);
         this._dropTimer.restartTimer();
@@ -1189,7 +1186,7 @@ Grid.prototype            = {
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
             if (iRight === 0) //no left nor right
                 this._dropTimer.restartTimer(); // shape go down, new period
-            this._fallingShape.moveShapeInMatrixAndDraw(iRight, jUp);
+            this._fallingShape.unplaceAndMoveAndPlaceAndDrawShape(iRight, jUp);
         } else { // shape can't move...
             if (jUp < 0) // ...player or drop timer tries move down
                 if (this._isSoftDropping) //if shapes hit floor, but still can move left or right
@@ -1217,8 +1214,8 @@ Grid.prototype            = {
         }
     },
     moveShapesInMatrix(myShapes) { // move locked shapes to drop (after clearing rows) into matrix
-        myShapes.forEach( (myShape)=>{ myShape.removeShapeFromPlaced(); }) // move to a tested place
-        myShapes.forEach( (myShape)=>{ myShape.moveAndPutShapeToPlaced(0, myShape._jVector, DROP_TYPES.hard); }) // move to placed on grid
+        myShapes.forEach( (myShape)=>{ myShape.unplaceShape(); }) // move to a tested place
+        myShapes.forEach( (myShape)=>{ myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard); }) // move to placed on grid
     },
     countAndClearRows() { // locks block and computes rows to transfer and _scores
         // old: AUDIO.audioPlay('landFX');
@@ -1285,7 +1282,8 @@ Grid.prototype            = {
                 break; // up
             case this._playerKeysSet.keys[1]:
                 //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
-                if ( !keyboardEvent.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
+                if ( !keyboardEvent.repeat) // pb for next part, blocked?
+                    this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
                 break; // down
             case this._playerKeysSet.keys[2]:
                 this.horizontalMoveAsked(-1);
@@ -1392,7 +1390,7 @@ class TetrisShape {
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlockInCell(); });
         return this;
     }
-    giveGhostNewPositionAndDraw() {
+    findNewPositionAndDrawGhost() {
         if (this._ghostBlocks) {
             this._jVector = this.getjVectorUnderShape(); // if not not placed so deleted so ghost deleted
             this._shapeBlocks.forEach( (myBlock, b)=>{
@@ -1410,19 +1408,19 @@ class TetrisShape {
         }
         return this;
     }
-    moveShapeInMatrixAndDraw(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
+    unplaceAndMoveAndPlaceAndDrawShape(iRight, jUp) { // iRight === 0 or jUp === 0, jUp negative to fall
         this._grid._anims.shapeRotateAnim.endAnim(); // comment/remove this line to continue animating rotation when drop #DEBUG
         this._iPosition += iRight;
         this._jPosition += jUp;
-        this.removeShapeFromPlaced();
-        this.moveAndPutShapeToPlaced(iRight, jUp, DROP_TYPES.soft);
+        this.unplaceShape();
+        this.moveAndPlaceShape(iRight, jUp, DROP_TYPES.soft);
         this.drawShape();
-        if (jUp === 0) this.giveGhostNewPositionAndDraw(); // if we move left or right
+        if (jUp === 0) this.findNewPositionAndDrawGhost(); // if we move left or right
         else this._jVector -= jUp; // if ghostshape covered, new block layer hides it
         AUDIO.audioPlay('moveFX');
         return this;
     }
-    removeShapeFromPlaced() { // move in testing mode
+    unplaceShape() { // move in testing mode
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 this._grid.removeBlockFromMatrix(myBlock);
@@ -1430,7 +1428,7 @@ class TetrisShape {
             }, this);
         return this;
     }
-    moveAndPutShapeToPlaced(iRight, jUp, dropType=null) { // move to placed
+    moveAndPlaceShape(iRight, jUp, dropType=null) { // move to placed
         this._shapeBlocks.forEach(
             (myBlock)=>{
                 myBlock._iPosition += iRight; // updating position
@@ -1443,9 +1441,9 @@ class TetrisShape {
         return this;
     }
     canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
-        this.shapeSwitchFromTestToPlaced(false);
+        this.placeOrUnplaceShape(false);
         let result = this.canMoveToPlaced(iRight, jUp);
-        this.shapeSwitchFromTestToPlaced(true);
+        this.placeOrUnplaceShape(true);
         return result;
     }
     canMoveToPlaced(iRight, jUp) {
@@ -1462,7 +1460,7 @@ class TetrisShape {
             return false;
         else {
             let result = true;
-            this.shapeSwitchFromTestToPlaced(false);
+            this.placeOrUnplaceShape(false);
             for (let b=0;b < this._shapeBlocks.length;b++)
                 if ( !this._shapeBlocks[b].isFreeSlot(
                     this._iPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][0],
@@ -1471,11 +1469,11 @@ class TetrisShape {
                         result = false;
                         break; // exit loop
                 }
-            this.shapeSwitchFromTestToPlaced(true);
+            this.placeOrUnplaceShape(true);
             return result;
         }
     }
-    rotateShapeInMatrixAndDraw() { // do rotation if possible, else nothing
+    unplaceAndRotateAndPlaceAndDrawShape() { // do rotation if possible, else nothing
         this._grid._anims.shapeRotateAnim.endAnim();
         this._pivot = (this._pivot+1+this._pivotsCount) % this._pivotsCount; // 1 is clockwiseQuarters
         for (let b=0;b < this._shapeBlocks.length;b++) {
@@ -1488,11 +1486,11 @@ class TetrisShape {
         }
         this.drawShape();
         this._grid._anims.shapeRotateAnim.startAnim();
-        this.giveGhostNewPositionAndDraw();
+        this.findNewPositionAndDrawGhost();
         AUDIO.audioPlay('rotateFX');
     }
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
-        this.shapeSwitchFromTestToPlaced(false);
+        this.placeOrUnplaceShape(false);
         let shapesHit = [];
         let blockHit; //block who was hit, === TetrisBlock or null in _matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
@@ -1503,12 +1501,12 @@ class TetrisShape {
                     shapesHit.push(blockHit._shape);
                 }
         }
-        this.shapeSwitchFromTestToPlaced(true);
+        this.placeOrUnplaceShape(true);
         while (shapesHit.length > 0) // equivalent to while (shapesHit.length)
             shapesHit.pop().shapesHitIfMove(iRight, jUp);
         return this;
     }
-    shapeSwitchFromTestToPlaced(fromTestToPlaced) {
+    placeOrUnplaceShape(fromTestToPlaced) { // called only by pairs placeOrUnplaceShape(false) then (true)
         this._shapeBlocks.forEach( (myBlock)=>{ myBlock.blockSwitchFromTestToPlaced(fromTestToPlaced); }) // only called here
         return this;
     }
@@ -1576,7 +1574,7 @@ LockedBlocks.prototype = {
     },
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
-            this._grid._fallingShape.shapeSwitchFromTestToPlaced(false);// falling shape temporary removed, in testing mode
+            this._grid._fallingShape.placeOrUnplaceShape(false);// falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
         // console.log(this._lockedBlocksArray);
@@ -1597,7 +1595,7 @@ LockedBlocks.prototype = {
                 || mode === SEARCH_MODE.up )
                 groups.push(group);
         }; // below, (groups.length === 0) occured 3 times between 2020 05 01 and 2020 04 30 with SEARCH_MODE.down === 1, no pb
-        if (groups.length > 0) { // here we decide, we have at least 1 group equivalent. Normally, if (groups.length === 0) the mode === SEARCH_MODE.down, to avoid error of not calling pair shapeSwitchFromTestToPlaced false then true
+        if (groups.length > 0) { // here we decide, we have at least 1 group equivalent. Normally, if (groups.length === 0) the mode === SEARCH_MODE.down, to avoid error of not calling pair placeOrUnplaceShape false then true
             this._grid._lockedShapes = [];
             groups.sort(function(a, b) {return a.jMin - b.jMin;}); // regular sort: lines full disapear
             let jEquals = []; let group, shape; // [if shape blocks color]            
@@ -1619,7 +1617,7 @@ LockedBlocks.prototype = {
                 this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                 this._grid._anims.shapeHardDropAnim.startAnim();
             } else { // mode === SEARCH_MODE.up, need to check if hitting shape, not best code
-                this._grid._fallingShape.shapeSwitchFromTestToPlaced(true); // falling is back
+                this._grid._fallingShape.placeOrUnplaceShape(true); // falling is back
                 for (let p in this._grid._lockedShapes)
                     if (this._grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
                         this._grid._lockedShapes[p]._jVector = 1;
@@ -1635,7 +1633,7 @@ LockedBlocks.prototype = {
                         this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                         break;
                     default: // if rising rows rises without hitting shape
-                        this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.giveGhostNewPositionAndDraw); // giveGhostNewPositionAndDraw()
+                        this._grid.gridAnimsStackPush(this._grid._fallingShape, this._grid._fallingShape.findNewPositionAndDrawGhost); // findNewPositionAndDrawGhost()
                         this._grid.gridAnimsStackPush(this._grid._dropTimer, this._grid._dropTimer.restartTimer); // restartTimer(), seems to work fine
                 }
             }
@@ -1662,8 +1660,8 @@ LockedBlocks.prototype = {
                 let j = jEquals[p].shape.getjVectorUnderShape();
                 if (j !== 0) { // getjVectorUnderShape() negative or zero, equivalent if (j) or if (j < 0)
                     jEquals[p].shape._jVector = j;
-                    jEquals[p].shape.removeShapeFromPlaced();
-                    jEquals[p].shape.moveAndPutShapeToPlaced(0, j, DROP_TYPES.hard);
+                    jEquals[p].shape.unplaceShape();
+                    jEquals[p].shape.moveAndPlaceShape(0, j, DROP_TYPES.hard);
                     changed = true;
                 }
             }           
@@ -1743,7 +1741,7 @@ class TetrisBlock {
     drawBlockInCell() { // here you can hide top block outside grid
         this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
     }
-    blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs TetrisShape.shapeSwitchFromTestToPlaced(false) then (true)
+    blockSwitchFromTestToPlaced(fromTestToPlaced)  { // called only by pairs TetrisShape.placeOrUnplaceShape(false) then (true)
         if (fromTestToPlaced) {
             this._grid.putBlockInMatrix(this);
             this._grid._lockedBlocks.putBlockInLockedBlocks(this)
