@@ -200,7 +200,7 @@ MainMenu [1 instance]
 Examples of list: toProcessList / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
-// "use strict"; // use JavaScript in strict mode to make code better and prevent errors
+//"use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
 // GLOBAL CONSTANTS
@@ -2027,6 +2027,127 @@ class EventsQueue {
         }
     }
 }
+//SvgObject Class
+//new(parent:): optional parent
+//newChild(name:): optional unique attribute name
+function SvgObject(svgDefinition) { //svgDefinition is attributes
+    this._svgElement = document.createElementNS(SVG_NS, svgDefinition.type);
+    this._childs = {};
+    this._translateText = "";
+    this._rotateText = "";
+    if (svgDefinition.parent) //if parent is supplied OR is not null
+        svgDefinition.parent.appendChild(this._svgElement);
+    delete svgDefinition.parent; //to avoid it in set()
+    set(svgDefinition);
+}
+SvgObject.prototype = {
+    _count        : 0, //for unamed elements
+    _svgElement         : null, //public, DOM SVG
+    _childs       : null,
+    _parent       : null, //pointer to parent
+    _parentIndex  : null, //index of child in _childs, integer or name
+    _translateText: null,
+    _scaleText    : null,
+    _rotateText   : null,
+    del() { with(this) { //optional because garbbage collector
+        for (var p in _childs)
+            _childs[p].del(); //delete _childs[p] made by child
+        _count = 0;
+        if (_parent) delete _parent._childs[_parentIndex]; //manage parent
+        delete _childs;
+        _svgElement.parentNode.removeChild(_svgElement);
+        delete _svgElement;
+    }},
+    get(svgDefinition) { with(this) {
+        return _svgElement.getAttributeNS(null, svgDefinition);
+    }},
+    set1(svgDefinition, value) { with(this) {    
+        _svgElement.setAttributeNS(null, svgDefinition, value);
+    }},
+    set(svgDefinition) { with(this) {
+        for (var p in svgDefinition)
+            if (!svgDefinition[p].type) //if sheet attribute without type
+                _svgElement.setAttributeNS(null, p.replace(/_/, "-"), svgDefinition[p]); //<=> new RegExp("_","g"),
+            else {
+                svgDefinition[p].parent = _svgElement;
+                _childs[p] = new SvgObject(svgDefinition[p]);
+                _childs[p]._parent = this; //manage parent
+                _childs[p]._parentIndex = p; //manage parent, create an instance for chars
+            }
+    }},
+    getText() { with(this) { //works only if type == "text"
+        return _svgElement.textContent;
+    }},
+    setText(text, width, maxHeightMinCharCount) { with(this) { //works only if type == "text"
+        _svgElement.textContent = text;
+        if (width) {
+            var charCount = Math.max((""+text).length, maxHeightMinCharCount);
+            set1("font-size", game._fontRatio*width/charCount); 
+        }
+    }},
+    setTranslate(x, y) { with(this) {
+        _translateText = "translate("+x+","+y+")";
+        set({transform: _translateText});
+    }},
+    setScale(sx, sy) { with(this) { //sy optional
+        if (!sy) sy = sx;
+        _scaleText = "scale("+sx+","+sy+")";
+        set({transform: _scaleText});
+    }},
+    setRotate(r, x, y) { with(this) { //sy optional
+        _rotateText = "rotate("+r+","+x+","+y+")";
+        set({transform: _rotateText});
+    }},
+    cancelTransform() { with(this) {
+        _translateText        = "";
+        _scaleText            = "";
+        _rotateText            = "";
+        set({transform:""});
+    }},
+    newChild(svgDefinition) { with(this) { //returns pointer to child
+        svgDefinition.parent = _svgElement;
+        //return _childs[svgDefinition.name?svgDefinition.name:_count++] = new SvgObject(svgDefinition);
+        _childs[_count] = new SvgObject(svgDefinition);
+        _childs[_count]._parent = this; //manage parent
+        _childs[_count]._parentIndex = _count; //manage parent
+        return _childs[_count ++];
+    }},
+    putChild(svg) { with(this) {
+        if (svg._parent) delete svg._parent._childs[svg._parentIndex]; //manage parent
+        if (typeof (svg._parentIndex) == "number")
+            svg._parentIndex = _count ++;
+        _childs[svg._parentIndex] = svg; //manage parent
+        svg._parent = this; //manage parent
+        _svgElement.appendChild(svg._svgElement);
+    }},
+    delChilds() { with(this) {
+        for (var p in _childs)
+            _childs[p].del();
+        _count = 0;
+    }},
+    hide() { with(this) {
+        _svgElement.setAttributeNS(null, "display", "none");
+    }},
+    show() { with(this) {
+        this._svgElement.setAttributeNS(null, "display", "inherit");
+    }},
+    addChildCloneOf(svg) { with(this) {
+        var id = svg._parentIndex;
+        if (typeof (svg._parentIndex) == "number")
+            id = _count ++;
+        var child = _childs[id];
+        child = new SvgObject({});
+        child._parent = this;
+        child._parentIndex = id;
+        child._svgElement = svg._svgElement.cloneNode(false); //don't copy nodes here
+        _svgElement.appendChild(child._svgElement);
+        for (var p in svg._childs)
+            child.addChildCloneOf(svg._childs[p], true); //copying nodes here
+        return child;
+    }}
+};
+
+
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
@@ -2336,7 +2457,6 @@ DomNode.prototype = {
         this._htmlElement.style.visibility = 'inherit';
     }
 };
-"use strict";
 // VECTOR SPRITES Class, vectorial picture, emulates vectorial SVG graphics, generic
 // functions : x, y, fx, fy, sprite, _nocache, reserved; 1 input
 // use nomage: __funcToDoThis (intern)
