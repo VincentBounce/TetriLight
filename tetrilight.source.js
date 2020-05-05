@@ -36,6 +36,7 @@ Canvas:
     blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen //$canvas
     move without calculation
     computing page resize zoom with JS explicit code
+    window.devicePixelRatio: read only, ratio 1.75 on my 4K LCD === physical px / px independant device
     DIV
         _htmlElement: DIV
         _htmlElement: CANVAS
@@ -50,7 +51,6 @@ If top line only is cleared AND top line has blocks under, then the anim and sou
 $$$ test browser when start!
 $$$ display fps
 $$$ ListAutoIndex called 1x, useless?
-$$$ too low rows qty who rise when 5 columns
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 != became !==, 10min tested: stable, check if slower
@@ -597,12 +597,12 @@ function TetrisGame() {
         this._gameShapesWithRotations[s]    = new Array(quarters);
         for (let pivot=0;pivot < quarters;pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
-            if(pivot === 0)
+            if (pivot === 0)
                 for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         this._storedPolyominoes[s].blocks[b][0],
                         this._storedPolyominoes[s].blocks[b][1]    ];
-            else
+            else //(pivot !== 0)
                 for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         - this._gameShapesWithRotations[s][pivot-1][b][1], // minus here (default) for unclockwise
@@ -698,17 +698,17 @@ TetrisGame.prototype = {
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
     },
-    pauseOrResume() {// pause or resume
+    pauseOrResume() { // pause or resume
         this._gameState = (this._gameState === GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
-        AUDIO.pauseOrResume('musicMusic');    // pause or resume playing music only, because FX sounds end quickly
-        AUDIO.audioPlay('selectFX');        // always play sound FX for pause or resume
-        this._pentominoesBriefMode.pauseOrResume();    // if pentominoes mode, pause it
+        AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
+        AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
+        this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
         this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.pauseOrResume()} );    // all players
     },
-    addGrid() {        // return true if added
+    addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
     },
-    addGridBody_() {    // return true if added
+    addGridBody_() { // return true if added
         if (this._freeColors.listSize > 0) {
             this._playersCount ++;
             let p; for (p in this._gameKeysSets)
@@ -725,19 +725,19 @@ TetrisGame.prototype = {
     },
     removeGrid(grid) {
         this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
-        grid._playerKeysSet.free = true;                        // release if keys used
-        this._freeColors.putInList(grid._colorTxt, grid._colorTxt);// we reput color on free colors
+        grid._playerKeysSet.free = true; // release if keys used
+        this._freeColors.putInList(grid._colorTxt, grid._colorTxt); // we reput color on free colors
         this._playersCount--;
-        grid.destroyGrid();    // stops timers etc..
+        grid.destroyGrid(); // stops timers etc..
         this.organizeGrids({oldGrid:true});
     },
-    organizeGrids(instruction) {    // horizontal organization only, zoomToFit makes the correct zoom
+    organizeGrids(instruction) { // horizontal organization only, zoomToFit makes the correct zoom
         SPRITES.zoomToFit(this._playersCount);
-        MAIN_MENU._domNode._childs.background.redrawNode();    // redraw background
+        MAIN_MENU._domNode._childs.background.redrawNode(); // redraw background
         let realIntervalX = (SPRITES._pxGameWidth-(SPRITES._pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
-                if (this._playersCount%2) {    // from left or right
+                if (this._playersCount%2) { // from left or right
                     instruction.newGrid._gridId = this._gridsListAuto.putFirst(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
@@ -749,7 +749,7 @@ TetrisGame.prototype = {
             let count = 0;
             while (grid = this._gridsListAuto.next()) {
                 count++;
-                grid._domNode.redrawNode();                // we change all sizes
+                grid._domNode.redrawNode(); // we change all sizes
                 grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
                 grid._vector = [
                     count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - grid._domNode.getX(),
@@ -758,20 +758,18 @@ TetrisGame.prototype = {
             // old: this._gameEventsQueue.execNowOrEnqueue(this._anims.moveGridsAnim, this._anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
             this._anims.moveGridsAnim.startAnim();
             if (instruction.newGrid)
-                instruction.newGrid.startGrid();    // enqueue?
+                instruction.newGrid.startGrid(); // enqueue?
         } else {
             let grid;
             let count = 0;
             this._gridsListAuto.resetNext();
             while (grid = this._gridsListAuto.next()) {
                 count++;
-                grid._domNode.redrawNode();    // we change all sizes
+                grid._domNode.redrawNode(); // we change all sizes
                 grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
                 grid._domNode.moveNodeTo(count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth, null);
             }
         }
-        //console.log('window.fullScreen: ' + window.fullScreen); // #DEBUG undefined
-        //console.log('window.devicePixelRatio: ' + window.devicePixelRatio); // #DEBUG Read only, ratio 1.75 on my 4K LCD === physical px / px independant device
     },
     averageBlocksByPlayingGrid() {
         let allGridsBlocksCount = 0;
@@ -914,31 +912,31 @@ function Grid(playerKeysSet, colorTxt){
     this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
     this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._color.dark));
     this._nextShapePreview = new NextShapePreview(this);
-    this._anims = {};    // need to initialize before creating new score which contains anim
-    this._score = new Score(this);    // contains animation, 
+    this._anims = {}; // need to initialize before creating new score which contains anim
+    this._score = new Score(this); // contains animation, 
     this._anims.quakeAnim = new Animation({
-        animateFunc(animOutput) {                            // to use context of this Animation
+        animateFunc(animOutput) { // to use context of this Animation
             this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this Grid
         },
         endAnimFunc() {
             this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
-            this.gridAnimsStackPop();                                                // to have exclusive quake anim
+            this.gridAnimsStackPop(); // to have exclusive quake anim
         },
         timingAnimFunc(x) {
-            return Math.sin(x*Math.PI);                                    // or return Math.sin(x*Math.PI*2)*(1-x);
+            return Math.sin(x*Math.PI); // or return Math.sin(x*Math.PI*2)*(1-x);
         },
         animDuration: DURATIONS.gridQuakeDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
     this._anims.pentominoesModeAnim = new Animation({
-        animateFunc(animOutput) {                            // to use context of this Animation // console.log(animOutput); $alert(animOutput);
+        animateFunc(animOutput) { // to use context of this Animation
             this._domNode._childs.frontZone.setDomNode({opacity: Math.abs(animOutput)});
         },
         endAnimFunc() {
-            this._domNode._childs.frontZone.setDomNode({opacity: 1});                // 1 = totalement opaque, visble
+            this._domNode._childs.frontZone.setDomNode({opacity: 1}); // 1 = totalement opaque, visble
         },
-        timingAnimFunc(x) {                                    // console.log(x); $alert(x);
-            return -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5;            // f(x)=-cos(3^(x*3)*pi)/2+0.5
+        timingAnimFunc(x) {
+            return -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5; // f(x)=-cos(3^(x*3)*pi)/2+0.5
         },
         animDuration: 0, // need to set duration for this animation before running
         optionalAnimOwner: this // otherwise, it's animation context by default
@@ -992,7 +990,7 @@ function Grid(playerKeysSet, colorTxt){
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
     this._anims.rising1RowAnim = new Animation({
-        animateFunc(animOutput) {        // "this" display animation instancied object
+        animateFunc(animOutput) { // "this" display animation instancied object
             for (let p in this._lockedShapes) // to animate block, we move the DomNode element
                 this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
         },
@@ -1012,7 +1010,7 @@ function Grid(playerKeysSet, colorTxt){
         animDuration: DURATIONS.rising1RowDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
-    this._anims.shapeRotateAnim = new Animation({     // loading animation to use later
+    this._anims.shapeRotateAnim = new Animation({ // loading animation to use later
         startAnimFunc() { // to animate block, we temporary apply a transform rotation
             this._fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.fx(this._fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.fy(this._fallingShape._jPosition-0.5)+"px");
         },
@@ -1149,7 +1147,7 @@ Grid.prototype            = {
         this.fallingShapeTriesMove(iRight, 0);
     },
     turnsTimerToNormalDrop_() {
-        if (this._isSoftDropping) {// if soft dropping, stops soft drop fall to continue normal timer
+        if (this._isSoftDropping) { // if soft dropping, stops soft drop fall to continue normal timer
             this._isSoftDropping = false;
             this._dropTimer.setPeriod(this._normalDropPeriod);
             this._dropTimer.restartTimer(); // shape can move after fall or stopped
@@ -1228,7 +1226,7 @@ Grid.prototype            = {
             this._score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
             if (rowsToClearCount >= RULES.transferRowsCountMin)    // if 2 rows cleared, tranfer rule
                 GAME.transferRows(this, rowsToClearCount);
-            if (rowsToClearCount >= RULES.pentominoesRowsCountMin) {// if 3 rows cleared, pentominoes rule: player have 3 blocks per shape, and others players have 5 blocks per shape
+            if (rowsToClearCount >= RULES.pentominoesRowsCountMin) { // if 3 rows cleared, pentominoes rule: player have 3 blocks per shape, and others players have 5 blocks per shape
                 GAME._pentominoesBriefMode.runPentoMode(this, rowsToClearCount);// duration of pentominoes is proportional to rowsToClearCount, 3 or 4, it auto stops by timer
                 AUDIO.audioPlay('quadrupleFX');
             } else
@@ -1243,7 +1241,7 @@ Grid.prototype            = {
             this.gridAnimsStackPop();
         }
     },
-    lose() {    // lives during this._score duration
+    lose() { // lives during this._score duration
         this._score.displays();
         this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
         this._gridMessagesQueue.execNowOrEnqueue(
@@ -1263,7 +1261,7 @@ Grid.prototype            = {
     afterLost_() {
         GAME._gameEventsQueue.execNowOrEnqueue(this, this.setAnimLostVector_);
         GAME._gameEventsQueue.execNowOrEnqueue(GAME._anims.moveGridsAnim, GAME._anims.moveGridsAnim.startAnim);    // prepare move up
-        GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]);    // prepare remove
+        GAME._gameEventsQueue.execNowOrEnqueue(GAME, GAME.removeGrid, [this]); // prepare remove
     },
     clearFullRowAfterClearingAnim(jRow) { // we suppose that row is full
         for (let i=1;i <= RULES.horizontalCellsCount;i++)
@@ -1300,7 +1298,7 @@ Grid.prototype            = {
             default: 
         }
     },
-    pauseOrResume() {    // pause or resume this grid
+    pauseOrResume() { // pause or resume this grid
         for (let p in this._anims) // this._anims is object, not array, contains animations of this grid
             this._anims[p].pauseOrResume();
         //this._softDropTimer.pauseOrResume();
@@ -1329,7 +1327,7 @@ class TetrisShape {
         else
             this.newShapeForExistingLockedBlocks_(group); // old: this[shapeOrChain](group);
     }
-    newControlledShape_() {    // pick a new shape falling ramdomly (for next part) to control fall
+    newControlledShape_() { // pick a new shape falling ramdomly (for next part) to control fall
         this._iPosition                = GAME._iPositionStart;
         this._jPosition                = GAME._jPositionStart;
         this._shapeType                = GAME._playedPolyominoesType[this._grid._playedPolyominoesType].index // to reach right polyomino type
@@ -1470,7 +1468,7 @@ class TetrisShape {
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
         this.unplaceShape();
         let shapesHit = [];
-        let blockHit; //block who was hit, === TetrisBlock or null in _matrix
+        let blockHit; // block who was hit, === TetrisBlock or null in _matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
             blockHit = this._grid._matrix[this._shapeBlocks[b]._iPosition + iRight][this._shapeBlocks[b]._jPosition + jUp];
             if ( ( blockHit !== null) && (blockHit._shape._jVector !== 1) ) { // check if jvector not +1
@@ -1504,7 +1502,7 @@ class NextShapePreview {
         for (let b=0;b < shape._polyominoBlocks.length;b++)
             this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: true}); // on
     }
-    unMark(shape) {// optimized to remove only current previewed shape, and not all preview
+    unMark(shape) { // optimized to remove only current previewed shape, and not all preview
         for (let b=0;b < shape._polyominoBlocks.length;b++)
             this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: false }); // off
     }
@@ -1516,7 +1514,7 @@ function LockedBlocks(grid) {
     this._lockedBlocksArrayByRow = []; // empty or TetrisBlock inside
     for (let row=GAME._matrixBottom; row <= GAME._matrixHeight; row++) {
         this._lockedBlocksArrayByRow[row] = {};
-        this._lockedBlocksArrayByRow[row].rowBlocksCount = 0;    // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalCellsCount+1)
+        this._lockedBlocksArrayByRow[row].rowBlocksCount = 0; // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalCellsCount+1)
         this._lockedBlocksArrayByRow[row].blocks = [];
     }
 }
@@ -1528,12 +1526,12 @@ LockedBlocks.prototype = {
     _searchDirections         : [[1, 0], [0, -1], [-1, 0], [0, 1]],// right, bottom, left, up
     destroyLockedBlocks() { // removes placed blocks
         for (let b=0; b < this._lockedBlocksArray.length; b++)
-            if (this._lockedBlocksArray[b])    // if block exist
+            if (this._lockedBlocksArray[b]) // if block exist
                 this._lockedBlocksArray[b].destroyBlock();
     },
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
-            this._grid._fallingShape.unplaceShape();// falling shape temporary removed, in testing mode
+            this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
         // console.log(this._lockedBlocksArray);
@@ -1762,8 +1760,8 @@ class Score {
         this.writeScore_(this._displayedScore);
     }
     displays() {
-        if (this._delta !== 0) {                        // if delta changed !== 0
-            this._grid._anims.score.endAnim();    // need to end before setting variables
+        if (this._delta !== 0) { // if delta changed !== 0
+            this._grid._anims.score.endAnim(); // need to end before setting variables
             this._displayedScore = this._digitalScore;
             this._digitalScore += this._delta;
             this._grid._anims.score.startAnim();
@@ -1826,8 +1824,8 @@ function List() { with(this) {
     listTable = [];
 }}
 List.prototype = {
-    listTable         : null,    // public read only
-    listSize         : 0,    // public read only
+    listTable: null, // public read only
+    listSize: 0, // public read only
     getNthIndex_: function(n) { with(this) {
         let orderedIndex = [];
         for (let p in listTable)
@@ -2012,7 +2010,7 @@ function SvgObject(svgDefinition) { //svgDefinition is attributes
 }
 SvgObject.prototype = {
     _count        : 0, //for unamed elements
-    _svgElement         : null, //public, DOM SVG
+    _svgElement   : null, //public, DOM SVG
     _childs       : null,
     _parent       : null, //pointer to parent
     _parentIndex  : null, //index of child in _childs, integer or name
