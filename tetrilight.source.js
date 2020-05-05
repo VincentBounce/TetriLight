@@ -248,7 +248,8 @@ const PIXELS                    = {
     pxPreviewLineWidth          : null,
     pxButtonSize                : 50, // default 50
 }
-const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' };
+const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
+//const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
     landFX                    :   {ext: 'wav'},
     rotateFX                  :   {ext: 'wav'},
@@ -652,9 +653,9 @@ TetrisGame.prototype = {
     _anims                  : {}, // only 1 instance of game
     _freeColors             : null, // for name of free colors for players
     _gameKeysSets           : [ // up down left right, https://keycode.info/
-        {symbols: ['Z','S','Q','D'], keys          : ['KeyW', 'KeyS', 'KeyA', 'KeyD'], free                   : true}, // WSAD on QWERTY for left player, ZSQD on AZERTY
-        {symbols: ['I','K','J','L'], keys          : ['KeyI', 'KeyK', 'KeyJ', 'KeyL'], free                   : true},
-        {symbols: ['\u2227','\u2228','<','>'], keys: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], free: true}
+        {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true}, // WASD on QWERTY for left player, ZQSD on AZERTY
+        {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
+        {symbols: ['\u2227','<','\u2228','>'], keys: ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'], free: true}
     ],
     _storedPolyominoes : [                                                                 // 5x5 shapes only, coordinates, angles count
         // 4 trominoes or domino or monomino
@@ -906,11 +907,11 @@ function Grid(playerKeysSet, colorTxt){
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
     this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._colorTxt});
-    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light));    // _textCharCountWidthMin : 1 or 7
+    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light)); // _textCharCountWidthMin : 1 or 7
     this._domNode._childs.controlZone.setTextIntoSizedField({
-        text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[3],
+        text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
+    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
     this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._color.dark));
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {};    // need to initialize before creating new score which contains anim
@@ -1270,23 +1271,23 @@ Grid.prototype            = {
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
         if ( (this.isGridAvailableToPlay()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
-            case this._playerKeysSet.keys[0]:
+            case this._playerKeysSet.keys[0]: // UP
                 this.rotationAsked();
                 break; // up
-            case this._playerKeysSet.keys[1]:
+            case this._playerKeysSet.keys[1]: // LEFT
+                this.horizontalMoveAsked(-1);
+                break; // left
+            case this._playerKeysSet.keys[2]: // DOWN
                 //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
                 if ( !keyboardEvent.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
                 break; // down
-            case this._playerKeysSet.keys[2]:
-                this.horizontalMoveAsked(-1);
-                break; // left
-            case this._playerKeysSet.keys[3]:
+            case this._playerKeysSet.keys[3]: // RIGHT
                 this.horizontalMoveAsked(1);
                 break; // right
             default:
         }
         else switch (keyboardEvent.code) { //(keyboardEvent.type === 'keyup'), allow reload on DOWN key pressed yup even during animation
-            case (this._playerKeysSet.keys[1]):
+            case (this._playerKeysSet.keys[2]): // DOWN
                 this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
                 //console.log(this._keyDownPressedAtLeast200ms);
                 //if ( this._keyDownPressedAtLeast200ms )
@@ -1413,12 +1414,11 @@ class TetrisShape {
         return this; // to use chained calls
     }
     moveAndPlaceShape(iRight, jUp, dropType=null) { // move to placed
-        this._shapeBlocks.forEach(
-            (myBlock)=>{
-                myBlock._iPosition += iRight; // updating position
-                myBlock._jPosition += jUp; // updating position // after 'without this' change, this is Windows object here
-                myBlock.placeBlock();
-            });
+        this._shapeBlocks.forEach( (myBlock)=>{
+            myBlock._iPosition += iRight; // updating position
+            myBlock._jPosition += jUp; // updating position // after 'without this' change, this is Windows object here
+            myBlock.placeBlock();
+        });
         if ((dropType !== null) && (jUp < 0))
             this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
         return this; // to use chained calls
@@ -1448,10 +1448,7 @@ class TetrisShape {
                 if ( !this._shapeBlocks[b].isFreeSlot(
                     this._iPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][0],
                     this._jPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][1]
-                    ) ) {
-                        result = false;
-                        break; // exit loop
-                }
+                    ) ) { result = false; break; } // exit loop
             this.placeShape();
             return result;
         }
@@ -1517,7 +1514,7 @@ function LockedBlocks(grid) {
     this._grid = grid;
     this._lockedBlocksArray = []; // empty or TetrisBlock inside
     this._lockedBlocksArrayByRow = []; // empty or TetrisBlock inside
-    for (let row=GAME._matrixBottom;row <= GAME._matrixHeight;row++) {
+    for (let row=GAME._matrixBottom; row <= GAME._matrixHeight; row++) {
         this._lockedBlocksArrayByRow[row] = {};
         this._lockedBlocksArrayByRow[row].rowBlocksCount = 0;    // 0 boxes on floor (row=0) and 0 boxes on ceil (row=RULES.verticalCellsCount+1)
         this._lockedBlocksArrayByRow[row].blocks = [];
@@ -1530,7 +1527,7 @@ LockedBlocks.prototype = {
     _blocksCount             : 0,
     _searchDirections         : [[1, 0], [0, -1], [-1, 0], [0, 1]],// right, bottom, left, up
     destroyLockedBlocks() { // removes placed blocks
-        for (let b=0;b < this._lockedBlocksArray.length;b++)
+        for (let b=0; b < this._lockedBlocksArray.length; b++)
             if (this._lockedBlocksArray[b])    // if block exist
                 this._lockedBlocksArray[b].destroyBlock();
     },
@@ -1783,7 +1780,7 @@ class Score {
     }
     computePerfectClear_(sweptRowsCount) {
         if (this._grid._lockedBlocks._blocksCount === sweptRowsCount * RULES.horizontalCellsCount) { // means same cleared blocks qty than grid currently had
-            this._grid._anims.messageAnim.startAnim({text: 'Perfect<BR/>clear'});
+            this._grid._anims.messageAnim.startAnim({ text: 'Perfect<BR/>clear', fieldCharCount: 5 });
             this._delta += this._factors[2] * (this._level+1);
         }
     }
