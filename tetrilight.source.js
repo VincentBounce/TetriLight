@@ -633,9 +633,7 @@ function TetrisGame() {
             }
             this._gameEventsQueue.dequeue();
         },
-        timingAnimFunc(x) {
-            return -(x-2*Math.sqrt(x));    // old: return -(x-2*Math.sqrt(x));
-        },
+        timingAnimFunc: x => -(x-2*Math.sqrt(x)), // arrow replace a return // canceled: -(x-2*Math.sqrt(x));
         animDuration: DURATIONS.movingGridsDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -928,9 +926,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
             this.gridAnimsStackPop(); // to have exclusive quake anim
         },
-        timingAnimFunc(x) {
-            return Math.sin(x*Math.PI); // or return Math.sin(x*Math.PI*2)*(1-x);
-        },
+        timingAnimFunc: x => Math.sin(x*Math.PI), // arrow replace a return // or return Math.sin(x*Math.PI*2)*(1-x);
         animDuration: DURATIONS.gridQuakeDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -941,9 +937,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         endAnimFunc() {
             this._domNode._childs.frontZone.setDomNode({opacity: 1}); // 1 = totalement opaque, visble
         },
-        timingAnimFunc(x) {
-            return -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5; // f(x)=-cos(3^(x*3)*pi)/2+0.5
-        },
+        timingAnimFunc: x => -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5, // arrow replace a return // f(x)=-cos(3^(x*3)*pi)/2+0.5
         animDuration: 0, // need to set duration for this animation before running
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -964,9 +958,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
             this.gridAnimsStackPop();
         },
-        timingAnimFunc(x) {
-            return 1 - Math.pow(x, 2);
-        },
+        timingAnimFunc: x => 1 - Math.pow(x, 2), // arrow replace a return
         animDuration: DURATIONS.movingGridsDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -989,9 +981,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             // old: this._anims.quakeAnim.startAnim();
             // old: this.gridAnimsStackPop();
         },
-        timingAnimFunc(x) {
-            return Math.pow(x, 3);
-        },
+        timingAnimFunc: x => Math.pow(x, 3), // arrow replace a return
         animDuration: DURATIONS.hardDropDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -1010,9 +1000,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._ghostBlocksNode.show();
             this.gridAnimsStackPop(); // unstack all countandclearrows and this._gridEventsQueue.dequeue() in stack
         },
-        timingAnimFunc(x) {
-            return x; // linear rising of rows, not (2*Math.sqrt(x)-x);
-        },
+        timingAnimFunc: x => x, // arrow replace a return // linear rising of rows, not (2*Math.sqrt(x)-x);
         animDuration: DURATIONS.rising1RowDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -1029,9 +1017,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         endAnimFunc() {
             this._fallingShape._domNode.delTransform(); // at end, we remove transform effect
         },
-        timingAnimFunc(x) {
-            return -90*(x-2*Math.sqrt(x));
-        },
+        timingAnimFunc: x => -90*(x-2*Math.sqrt(x)), // arrow replace a return
         animDuration: DURATIONS.rotatingDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -1048,9 +1034,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._domNode._childs.messageZone.setDomNode({opacity: 0});
             this._gridMessagesQueue.dequeue();
         },
-        timingAnimFunc(x) {
-            return Math.pow(2*(x-0.5), 3); // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0;
-        },
+        timingAnimFunc: x => Math.pow(2*(x-0.5), 3), // arrow replace a return // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0
         animDuration: DURATIONS.centralMessagesDuration,
         optionalAnimOwner: this // otherwise, it's animation context by default
     });
@@ -1757,9 +1741,7 @@ class Score {
             endAnimFunc() {
                 this.writeScore_(this._displayedScore += this._deltaShowed);
             },
-            timingAnimFunc(x) {
-                return -(x-2*Math.sqrt(x));
-            },
+            timingAnimFunc: x => -(x-2*Math.sqrt(x)), // arrow replace a return
             animDuration: DURATIONS.displayingScoreDuration,
             optionalAnimOwner: this // otherwise, it's animation context by default
         });
@@ -2147,26 +2129,26 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     // checking width property
     if (isValued(definitionObject.width)) {
         this._widthVar = definitionObject.width;
-        this.getWidth = ()=>SPRITES[this._widthVar];
+        this.getWidth = () => SPRITES[this._widthVar]; // arrow replace a return
         this.setWidth(this.getWidth());
     } else
-        this.getWidth = ()=>this._parent.getWidth();
+        this.getWidth = () => this._parent.getWidth(); // arrow replace a return
     // checking height property
     if (isValued(definitionObject.height)) {
         this._heightVar = definitionObject.height;
-        this.getHeight = ()=>SPRITES[this._heightVar];
+        this.getHeight = () => SPRITES[this._heightVar]; // arrow replace a return
         this.setHeight(this.getHeight());
     } else
-        this.getHeight = ()=>this._parent.getHeight();
+        this.getHeight = () => this._parent.getHeight(); // arrow replace a return
     // checkingx position property
     if (isValued(definitionObject.x)) {
         this._xVar = definitionObject.x;
-        this.getXInit = ()=>SPRITES[this._xVar];
+        this.getXInit = () => SPRITES[this._xVar]; // arrow replace a return
     }
     // checking y position  property
     if (isValued(definitionObject.y)) {
         this._yVar = definitionObject.y;
-        this.getYInit = ()=>SPRITES[this._yVar];
+        this.getYInit = () => SPRITES[this._yVar]; // arrow replace a return
     }
     this.setX(this.getXInit());
     this.setY(this.getYInit());
@@ -2516,7 +2498,7 @@ class Animation {
         // this.animateFunc_(); // draw frame on display, as defined in the instance of Animation
         if ( (++this._elapsedFrames) < this._plannedFrames) {
             this.animOutput = this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); // input [0;1] animOutput have any value
-            this._windowNextFrameId = window.requestAnimationFrame(()=>{ this.makeNextFrame_(); }); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
+            this._windowNextFrameId = window.requestAnimationFrame( () => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
             //this._windowNextFrameId = window.requestAnimationFrame(this.makeNextFrame_); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
         } else
             this.endAnim();
