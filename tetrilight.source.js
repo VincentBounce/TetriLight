@@ -853,7 +853,7 @@ class PentominoesBriefMode {
 // TETRIS GRID Class
 function Grid(playerKeysSet, colorTxt){
     this._colorTxt            = colorTxt;
-    this._color               = SPRITES._colors[this._colorTxt];
+    this._gridColor               = SPRITES._colors[this._colorTxt];
     this._playerKeysSet       = playerKeysSet;                                    // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
@@ -905,12 +905,12 @@ function Grid(playerKeysSet, colorTxt){
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
     this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._colorTxt});
-    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light)); // _textCharCountWidthMin : 1 or 7
+    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._gridColor.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
     this._domNode._childs.controlZone.setTextIntoSizedField({
         text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', VectorialSprite.rgbaTxt(this._color.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._color.light), 3);
-    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._color.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._color.dark));
+    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', VectorialSprite.rgbaTxt(this._gridColor.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._gridColor.light), 3);
+    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._gridColor.dark));
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {}; // need to initialize before creating new score which contains anim
     this._score = new Score(this); // contains animation, 
@@ -1054,7 +1054,7 @@ Grid.prototype            = {
     _gridId                    : null,
     _gridState                 : GRID_STATES.ready,
     _colorTxt                  : null,
-    _color                     : null,
+    _gridColor                 : null,
     _domNode                   : null,
     _realBlocksNode            : null,
     _ghostBlocksNode           : null,
@@ -1315,7 +1315,7 @@ class TetrisShape {
         this._pivotsCount;
         this._pivot;
         this._colorTxt;
-        this._color;
+        this._shapeColor;
         this._shapeBlocks;
         this._polyominoBlocks; // READ ONLY, reference that points to current shape in GAME shapes store
         this._ghostBlocks; // shadowed blocks
@@ -1335,7 +1335,7 @@ class TetrisShape {
         this._pivotsCount              = GAME._gameShapesWithRotations[this._shapeType].length;
         this._pivot                    = Math.floor(Math.random() * this._pivotsCount);
         this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
-        this._color                    = SPRITES._colors[this._colorTxt];
+        this._shapeColor                    = SPRITES._colors[this._colorTxt];
         this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
     newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
@@ -1601,7 +1601,7 @@ LockedBlocks.prototype = {
             [blockFrom._iPosition + this._searchDirections[dir][0]]
             [blockFrom._jPosition + this._searchDirections[dir][1]];
         if (block && toProcessList.listTable[block._blockIndex] // if shape blocks contact
-        && (blockFrom._color === block._color) ) { // if same shape blocks color
+        && (blockFrom._blockColor === block._blockColor) ) { // if same shape blocks color
             toProcessList.eraseItemFromList(block._blockIndex); // call del from list
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
@@ -1649,7 +1649,7 @@ class TetrisBlock {
         this._shape;
         this._domNode;
         this._colorTxt;
-        this._color;
+        this._blockColor;
         this._blockIndex;
         this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', sprite: SPRITES._spriteBlock}); // creating node
         this.setColor(blockColorTxt);
@@ -1705,7 +1705,7 @@ class TetrisBlock {
     }
     setColor(colorTxt)  {
         this._colorTxt = colorTxt;
-        this._color = SPRITES._colors[this.colorTxt];
+        this._blockColor = SPRITES._colors[this.colorTxt];
         this._domNode.nodeDrawSprite({col: this._colorTxt});
     }
     isFreeSlot(i, j)  { // can move on placed grid, put this into grid
