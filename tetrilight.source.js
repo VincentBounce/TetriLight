@@ -384,8 +384,10 @@ Audio.prototype = {
 // before TETRIS GRAPHICS Class
 function TetrisSpritesCreation(rootNode) {
     this._rootNode = rootNode;
+    for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
     this.zoom1Step(0);
     this.create_();
+    // sprite without 'with this':
     this._spriteBackground = new VectorialSprite({ // define backgroung color here: black > grey
         _nocache: true,
         drawSprite_: (c, x, y, a, w, h)=>{ // context c, x, y, args a, canvas width w, canvas height h
@@ -688,9 +690,9 @@ TetrisGame.prototype = {
         {blocks: [[-1, 1],[-1,0],[ 0, 0],[1, 0],[1, 1]], quarters: 4, color: 'blue'  }      //  L¨
     ],
     _playedPolyominoesType: {
-        trominoes:        {index: 0, count: 4},    // range of 3 blocks shapes
-        tetrominoes:     {index: 4, count: 7},    // range of 4 blocks shapes
-        pentominoes:     {index: 11, count:14}    // range of 5 blocks shapes
+        trominoes  : {index: 0, count : 4}, // range of 3 blocks shapes
+        tetrominoes: {index: 4, count : 7}, // range of 4 blocks shapes
+        pentominoes: {index: 11, count: 14} // range of 5 blocks shapes
     },
     destroyGame() {
         this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.destroyDomNode()} );
@@ -1335,7 +1337,7 @@ class TetrisShape {
         this._pivotsCount              = GAME._gameShapesWithRotations[this._shapeType].length;
         this._pivot                    = Math.floor(Math.random() * this._pivotsCount);
         this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
-        this._shapeColor                    = SPRITES._colors[this._colorTxt];
+        this._shapeColor               = SPRITES._colors[this._colorTxt];
         this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
     newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
