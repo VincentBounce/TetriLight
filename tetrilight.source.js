@@ -1534,10 +1534,10 @@ LockedBlocks.prototype = {
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
-        // console.log(this._lockedBlocksArray);
+        console.table(this._lockedBlocksArray);
         // console.log('bb');
         for (let p in this._lockedBlocksArray)
-            if (this._lockedBlocksArray[p] !== undefined) // this._lockedBlocksArray has TetrisBlock or empty values
+            if (this._lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
                 toProcessList.putInList(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
         let groups = []; // below we make isolated groups
         while (toProcessList.listSize > 0) { // equivalent to while (toProcessList.listSize)
@@ -1600,8 +1600,8 @@ LockedBlocks.prototype = {
         let block = this._grid._matrix
             [blockFrom._iPosition + this._searchDirections[dir][0]]
             [blockFrom._jPosition + this._searchDirections[dir][1]];
-        if (block && toProcessList.listTable[block._blockIndex] // [if shape blocks contact]
-        && (blockFrom._color === block._color) ) { // [if shape blocks color]
+        if (block && toProcessList.listTable[block._blockIndex] // if shape blocks contact
+        && (blockFrom._color === block._color) ) { // if same shape blocks color
             toProcessList.eraseItemFromList(block._blockIndex); // call del from list
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
