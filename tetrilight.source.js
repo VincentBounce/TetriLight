@@ -182,7 +182,7 @@ MainMenu [1 instance]
     GAME: TetrisGame [1 instance]
         _gameEventsQueue
         PentominoesBriefMode
-        Grid [x instance]
+        TetrisGrid [x instance]
             _playedPolyominoesType
             _playerKeysSet
             _animsStack
@@ -717,7 +717,7 @@ TetrisGame.prototype = {
                 if ( this._gameKeysSets[p].free)
                     break;
             this._gameKeysSets[p].free = false;
-            let grid = new Grid( this._gameKeysSets[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
+            let grid = new TetrisGrid( this._gameKeysSets[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
             // old: grid._gridId = (this._playersCount%2)?this._gridsListAuto.putFirst(grid):this._gridsListAuto.putLast(grid);    // from left or right
             this.organizeGrids({newGrid:grid});
             return grid;
@@ -853,9 +853,9 @@ class PentominoesBriefMode {
     }
 }
 // TETRIS GRID Class
-function Grid(playerKeysSet, colorTxt){
+function TetrisGrid(playerKeysSet, colorTxt){
     this._colorTxt            = colorTxt;
-    this._gridColor           = SPRITES._colors[this._colorTxt];
+    this._gridColor           = SPRITES._colors[colorTxt];
     this._playerKeysSet       = playerKeysSet;                                    // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
@@ -903,10 +903,10 @@ function Grid(playerKeysSet, colorTxt){
         messageZone: {
             y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
     });
-    this._domNode._childs.frontZone.nodeDrawSprite({col:this._colorTxt});
+    this._domNode._childs.frontZone.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
-    this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._colorTxt});
+    this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._gridColor.name});
     this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._gridColor.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
     this._domNode._childs.controlZone.setTextIntoSizedField({
         text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
@@ -918,7 +918,7 @@ function Grid(playerKeysSet, colorTxt){
     this._score = new Score(this); // contains animation, 
     this._anims.quakeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
-            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this Grid
+            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
         },
         endAnimFunc() {
             this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
@@ -1052,7 +1052,7 @@ function Grid(playerKeysSet, colorTxt){
     });
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
-Grid.prototype            = {
+TetrisGrid.prototype            = {
     _gridId                    : null,
     _gridState                 : GRID_STATES.ready,
     _colorTxt                  : null,
