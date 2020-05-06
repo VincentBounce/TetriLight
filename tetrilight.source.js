@@ -1402,7 +1402,7 @@ class TetrisShape {
         return this; // to use chained calls
     }
     moveAndPlaceShape(iRight, jUp, dropType=null) { // move to placed
-        this._shapeBlocks.forEach( (myBlock)=>{
+        this._shapeBlocks.forEach( myBlock => {
             myBlock._iPosition += iRight; // updating position
             myBlock._jPosition += jUp; // updating position // after 'without this' change, this is Windows object here
             myBlock.placeBlock();
@@ -1622,8 +1622,8 @@ LockedBlocks.prototype = {
         rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
             delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
-        rowFilledSlots.forEach( (uselessArg, slotIndex)=>{ // we skip delete rowFilledSlots
-            let tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']); }); // iPosition=[1-10], jPosition=0 just under game
+        rowFilledSlots.forEach( (uselessArg, slotIndex) => { // we skip delete rowFilledSlots
+            new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']); }); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
         this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
         this._grid._anims.rising1RowAnim.startAnim();
@@ -1930,7 +1930,7 @@ class Timer {
         this._running = true;
         this._beginTime = (new Date).getTime();
         //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod);
-        this._timeOut = setTimeout(()=>{ this._funcAtTimeOut.call(null, this._timerOwner); }, this._timerPeriod); // setInterval is useless here, not used
+        this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod); // setInterval is useless here, not used
     }
     isRunning() {
         return this._running; // useless for drop timer, not working!!!
@@ -1939,7 +1939,7 @@ class Timer {
         if (this._running) { // if paused, resume and return false
             if (this._paused) { // if not paused, pause and return true
                 this._paused = false;
-                this._timeOut = setTimeout(()=>{this._funcAtTimeOut.call(null, this._timerOwner)}, this._timerPeriod-(this._pauseTime-this._beginTime));
+                this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod-(this._pauseTime-this._beginTime));
             } else {
                 clearTimeout(this._timeOut);
                 this._paused = true;
@@ -2023,7 +2023,7 @@ SvgObject.prototype = {
     set(svgDefinition) { with(this) {
         for (var p in svgDefinition)
             if (!svgDefinition[p].type) //if sheet attribute without type
-                _svgElement.setAttributeNS(null, p.replace(/_/, "-"), svgDefinition[p]); //<=> new RegExp("_","g"),
+                _svgElement.setAttributeNS(null, p.replace(/_/, "-"), svgDefinition[p]); // equivalent new RegExp("_","g"),
             else {
                 svgDefinition[p].parent = _svgElement;
                 _childs[p] = new SvgObject(svgDefinition[p]);
