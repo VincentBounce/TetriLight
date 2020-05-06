@@ -613,8 +613,10 @@ function TetrisGame() {
     }
     this._freeColors = new List();
     for (let p in SPRITES._colors)
-        if (p !== 'grey')
-            this._freeColors.putInList(p, p);// to know available colors
+        if (p !== 'grey') // grey
+            //this._freeColors.putInList(p, SPRITES._colors[p]); // to know available colors
+            this._freeColors.putInList(p, p); // to know available colors
+            //console.table(this._freeColors.listTable);
     this._anims.moveGridsAnim = new Animation({    // make tetris grid coming and leaving
         animateFunc(animOutput){
             this._gridsListAuto.resetNext();
@@ -653,7 +655,7 @@ TetrisGame.prototype = {
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
     _anims                  : {}, // only 1 instance of game
-    _freeColors             : null, // for name of free colors for players
+    _freeColors             : null, // available colors for players
     _gameKeysSets           : [ // up down left right, https://keycode.info/
         {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true}, // WASD on QWERTY for left player, ZQSD on AZERTY
         {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
@@ -729,6 +731,7 @@ TetrisGame.prototype = {
         this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
         grid._playerKeysSet.free = true; // release if keys used
         this._freeColors.putInList(grid._colorTxt, grid._colorTxt); // we reput color on free colors
+        //this._freeColors.putInList(grid._gridColor.name, grid._gridColor); // we reput color on free colors
         this._playersCount--;
         grid.destroyGrid(); // stops timers etc..
         this.organizeGrids({oldGrid:true});
@@ -853,17 +856,18 @@ class PentominoesBriefMode {
     }
 }
 // TETRIS GRID Class
-function TetrisGrid(playerKeysSet, colorTxt){
-    this._colorTxt            = colorTxt;
-    this._gridColor           = SPRITES._colors[colorTxt];
-    this._playerKeysSet       = playerKeysSet;                                    // [up down left right]
+function TetrisGrid(playerKeysSet, gridColor){
+    this._colorTxt            = gridColor;
+    this._gridColor           = SPRITES._colors[gridColor];
+    //this._gridColor           = gridColor;
+    this._playerKeysSet       = playerKeysSet; // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
     this._animsStack          = [];
     this._lockedShapes        = [];
-    // this._rowsToClearArray = [];                                        // no row to clear at the begining
+    // this._rowsToClearArray = []; // no row to clear at the begining
     this._rowsToClearList     = new List();
-    this._matrix = new Array(RULES.horizontalCellsCount + 2);// 12 columns, left and right boxes as margins columns, program fail if removed
+    this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
     for (let i=0;i < this._matrix.length;i++) {
         this._matrix[i] = [];
         for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) // height -1 to +(2x20)
