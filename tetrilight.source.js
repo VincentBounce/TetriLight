@@ -2147,26 +2147,26 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     // checking width property
     if (isValued(definitionObject.width)) {
         this._widthVar = definitionObject.width;
-        this.getWidth = ()=>{ return SPRITES[this._widthVar] };
+        this.getWidth = ()=>SPRITES[this._widthVar];
         this.setWidth(this.getWidth());
     } else
-        this.getWidth = ()=>{ return this._parent.getWidth() };
+        this.getWidth = ()=>this._parent.getWidth();
     // checking height property
     if (isValued(definitionObject.height)) {
         this._heightVar = definitionObject.height;
-        this.getHeight = ()=>{ return SPRITES[this._heightVar] };
+        this.getHeight = ()=>SPRITES[this._heightVar];
         this.setHeight(this.getHeight());
     } else
-        this.getHeight = ()=>{ return this._parent.getHeight() };
+        this.getHeight = ()=>this._parent.getHeight();
     // checkingx position property
     if (isValued(definitionObject.x)) {
         this._xVar = definitionObject.x;
-        this.getXInit = ()=>{ return SPRITES[this._xVar] };
+        this.getXInit = ()=>SPRITES[this._xVar];
     }
     // checking y position  property
     if (isValued(definitionObject.y)) {
         this._yVar = definitionObject.y;
-        this.getYInit = ()=>{ return SPRITES[this._yVar] };
+        this.getYInit = ()=>SPRITES[this._yVar];
     }
     this.setX(this.getXInit());
     this.setY(this.getYInit());
