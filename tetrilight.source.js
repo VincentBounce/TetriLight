@@ -317,7 +317,7 @@ MainMenu.prototype = {
                 break; // always exit after this instruction
             default:
                 if (GAME._gameState === GAME_STATES.running) // if game is not paused
-                    GAME._gridsListAuto.runForEachListElement( (myGrid)=>{ myGrid.chooseControlAction(keyboardEvent); } );
+                    GAME._gridsListAuto.runForEachListElement( myGrid => myGrid.chooseControlAction(keyboardEvent) );
         }
     },
 };
@@ -390,7 +390,7 @@ function TetrisSpritesCreation(rootNode) {
     // sprite without 'with this':
     this._spriteBackground = new VectorialSprite({ // define backgroung color here: black > grey
         _nocache: true,
-        drawSprite_: (c, x, y, a, w, h)=>{ // context c, x, y, args a, canvas width w, canvas height h
+        drawSprite_: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
             c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
             c.fillRect(x,y,w,h) }
     });
@@ -810,7 +810,7 @@ TetrisGame.prototype = {
 class PentominoesBriefMode {
     constructor() {
         this._pentoModeTimer = new Timer({
-            funcAtTimeOut: ()=>{ this.finishPentoMode(); },
+            funcAtTimeOut: () => this.finishPentoMode(),
             timerPeriod: 0,
             timerOwner: this
         });
@@ -827,7 +827,7 @@ class PentominoesBriefMode {
     finishPentoMode() {
         this._pentoModeTimer.finishTimer();
         GAME._gridsListAuto.runForEachListElement(
-            (myGrid)=>{
+            myGrid => {
                 if (myGrid._gridState === GRID_STATES.playing) {
                     myGrid._playedPolyominoesType = 'tetrominoes'
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
@@ -839,7 +839,7 @@ class PentominoesBriefMode {
     runPentoMode(gridWichTriggeredPentoMode, clearedLinesCount) {
         if (this.isRunning()) this.finishPentoMode();
         GAME._gridsListAuto.runForEachListElement(
-            (myGrid)=>{ // here, argument is used
+            myGrid => { // here, argument is used
                 if (myGrid._gridState === GRID_STATES.playing) {
                     myGrid._playedPolyominoesType = (myGrid !== gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
@@ -873,12 +873,12 @@ function TetrisGrid(playerKeysSet, gridColor){
     }
     this._dropTimer = new Timer({ // here this._fallingShape is not defined yet
         //funcAtTimeOut() { console.log(this);this.fallingShapeTriesMove(0,-1); },
-        funcAtTimeOut: (grid)=>{ grid.fallingShapeTriesMove(0,-1); },
+        funcAtTimeOut: grid => grid.fallingShapeTriesMove(0,-1),
         timerPeriod: this._normalDropPeriod,
         timerOwner: this
     });
     this._keyPressTimer = new Timer({
-        funcAtTimeOut: (grid)=>{ grid._keyDownPressedAtLeast200ms = true; },
+        funcAtTimeOut: grid => grid._keyDownPressedAtLeast200ms = true,
         timerPeriod: 30,
         timerOwner: this
     });
@@ -1622,8 +1622,8 @@ LockedBlocks.prototype = {
         rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
             delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
-        rowFilledSlots.forEach( (uselessArg, slotIndex) => { // we skip delete rowFilledSlots
-            new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']); }); // iPosition=[1-10], jPosition=0 just under game
+        rowFilledSlots.forEach( // we skip delete rowFilledSlots
+            (uselessArg, slotIndex) => new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']) ); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
         this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
         this._grid._anims.rising1RowAnim.startAnim();
