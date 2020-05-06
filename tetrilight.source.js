@@ -4,9 +4,9 @@
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
-Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html
+Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
-
+e
 **************** VOCABULARY ****************
 to clear = to sweep, cleared = swept
 a row = a line
@@ -617,7 +617,7 @@ function TetrisGame() {
             //this._freeColors.putInList(p, SPRITES._colors[p]); // to know available colors
             this._freeColors.putInList(p, p); // to know available colors
             //console.table(this._freeColors.listTable);
-    this._anims.moveGridsAnim = new Animation({    // make tetris grid coming and leaving
+    this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
             this._gridsListAuto.resetNext();
             let grid;
@@ -1202,8 +1202,8 @@ TetrisGrid.prototype            = {
         }
     },
     unplaceAndMoveAndPlaceHardDroppingShape(myShapes) { // move locked shapes to drop (after clearing rows) into matrix
-        myShapes.forEach( (myShape)=>{ myShape.unplaceShape(); }) // move to a tested place
-        myShapes.forEach( (myShape)=>{ myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard); }) // move to placed on grid
+        myShapes.forEach( myShape => myShape.unplaceShape() ) // move to a tested place
+        myShapes.forEach( myShape => myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard) ) // move to placed on grid
     },
     countAndClearRows() { // locks block and computes rows to transfer and _scores
         // old: AUDIO.audioPlay('landFX');
@@ -1360,21 +1360,21 @@ class TetrisShape {
         return this; // to use chained calls
     }
     putShapeInRealBlocksNode() {
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockInRealBlocksNode(); });
+        this._shapeBlocks.forEach( myBlock => myBlock.putBlockInRealBlocksNode() );
         return this; // to use chained calls
     }
     putShapeNodeIn() {
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.putBlockNodeIn(this._domNode); }, this); // this === TetrisShape context necessary fot this._domNode
+        this._shapeBlocks.forEach( myBlock => myBlock.putBlockNodeIn(this._domNode), this); // this === TetrisShape context necessary fot this._domNode
         return this; // to use chained calls
     }
     drawShape() { // show hidden shapes
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.drawBlockInCell(); });
+        this._shapeBlocks.forEach( myBlock => myBlock.drawBlockInCell() );
         return this; // to use chained calls
     }
     findNewPositionAndDrawGhost() {
         if (this._ghostBlocks) {
             this._jVector = this.getjVectorUnderShape(); // if not not placed so deleted so ghost deleted
-            this._shapeBlocks.forEach( (myBlock, b)=>{
+            this._shapeBlocks.forEach( (myBlock, b) => {
                 this._ghostBlocks[b]._iPosition = this._shapeBlocks[b]._iPosition;
                 this._ghostBlocks[b]._jPosition = this._shapeBlocks[b]._jPosition + this._jVector;
                 this._ghostBlocks[b].drawBlockInCell();
@@ -1384,7 +1384,7 @@ class TetrisShape {
     }
     clearGhostBlocks() {
         if (this._ghostBlocks) { // if ghost blocks (not in chain)
-            this._ghostBlocks.forEach( (myBlock)=>{ myBlock._domNode.destroyDomNode(); });
+            this._ghostBlocks.forEach( myBlock => myBlock._domNode.destroyDomNode() );
             this._ghostBlocks = null;
         }
         return this; // to use chained calls
