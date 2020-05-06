@@ -855,7 +855,7 @@ class PentominoesBriefMode {
 // TETRIS GRID Class
 function Grid(playerKeysSet, colorTxt){
     this._colorTxt            = colorTxt;
-    this._gridColor               = SPRITES._colors[this._colorTxt];
+    this._gridColor           = SPRITES._colors[this._colorTxt];
     this._playerKeysSet       = playerKeysSet;                                    // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
@@ -1254,7 +1254,7 @@ Grid.prototype            = {
         // AUDIO.audioStop('musicMusic');
         this._gridState = GRID_STATES.lost;
         for (let p in this._lockedBlocks._lockedBlocksArray)
-            this._lockedBlocks._lockedBlocksArray[p].setColor('grey');
+            this._lockedBlocks._lockedBlocksArray[p].setBlockColor(SPRITES._colors['grey']);
     },
     setAnimLostVector_() {
         this._vector = [0, -SPRITES._pxTopMenuZoneHeight -SPRITES._pxGameHeight ]; // prepare vector
@@ -1316,7 +1316,7 @@ class TetrisShape {
         this._shapeType;
         this._pivotsCount;
         this._pivot;
-        this._colorTxt;
+        //this._colorTxt;
         this._shapeColor;
         this._shapeBlocks;
         this._polyominoBlocks; // READ ONLY, reference that points to current shape in GAME shapes store
@@ -1336,8 +1336,8 @@ class TetrisShape {
             + Math.floor(Math.random() * GAME._playedPolyominoesType[this._grid._playedPolyominoesType].count);
         this._pivotsCount              = GAME._gameShapesWithRotations[this._shapeType].length;
         this._pivot                    = Math.floor(Math.random() * this._pivotsCount);
-        this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
-        this._shapeColor               = SPRITES._colors[this._colorTxt];
+        //this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
+        this._shapeColor               = SPRITES._colors[ GAME._storedPolyominoes[this._shapeType].color ];
         this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
     newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
@@ -1362,12 +1362,12 @@ class TetrisShape {
                 BLOCK_TYPES.inShape, this,
                 this._iPosition + this._polyominoBlocks[b][0],
                 this._jPosition + this._polyominoBlocks[b][1],
-                this._colorTxt);
+                this._shapeColor);
             this._ghostBlocks[b] = new TetrisBlock(
                 BLOCK_TYPES.ghost, this._grid,
                 this._iPosition + this._polyominoBlocks[b][0],
                 this._jPosition + this._polyominoBlocks[b][1],
-                this._colorTxt);
+                this._shapeColor);
         }
         return this; // to use chained calls
     }
@@ -1603,7 +1603,7 @@ LockedBlocks.prototype = {
             [blockFrom._iPosition + this._searchDirections[dir][0]]
             [blockFrom._jPosition + this._searchDirections[dir][1]];
         if (block && toProcessList.listTable[block._blockIndex] // if shape blocks contact
-        && (blockFrom._blockColor === block._blockColor) ) { // if same shape blocks color
+        && (blockFrom._blockColor === block._blockColor) ) { // if same shape blocks color #DEBUG rule to check here
             toProcessList.eraseItemFromList(block._blockIndex); // call del from list
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
@@ -1635,7 +1635,7 @@ LockedBlocks.prototype = {
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
             delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
         rowFilledSlots.forEach( (uselessArg, slotIndex)=>{ // we skip delete rowFilledSlots
-            let tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, 'grey'); }); // iPosition=[1-10], jPosition=0 just under game
+            let tempBlock = new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']); }); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
         this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
         this._grid._anims.rising1RowAnim.startAnim();
@@ -1643,18 +1643,18 @@ LockedBlocks.prototype = {
 };
 // TETRIS BLOCK Class
 class TetrisBlock {
-    constructor(blockType, shapeOrGridOwnerOfThisBlock, i, j, blockColorTxt) {
+    constructor(blockType, shapeOrGridOwnerOfThisBlock, i, j, blockColor) {
         this._blockType = blockType;
         this._iPosition = i;
         this._jPosition = j;
         this._grid;
         this._shape;
         this._domNode;
-        this._colorTxt;
+        //this._colorTxt;
         this._blockColor;
         this._blockIndex;
         this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', sprite: SPRITES._spriteBlock}); // creating node
-        this.setColor(blockColorTxt);
+        this.setBlockColor(blockColor);
         switch (this._blockType) {
             case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
                 this._grid = shapeOrGridOwnerOfThisBlock;
@@ -1705,10 +1705,10 @@ class TetrisBlock {
             // this._grid._rowsToClearArray.splice( // necessary for correct exection
             // this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
     }
-    setColor(colorTxt)  {
-        this._colorTxt = colorTxt;
-        this._blockColor = SPRITES._colors[this.colorTxt];
-        this._domNode.nodeDrawSprite({col: this._colorTxt});
+    setBlockColor(blockColor)  {
+        //this._colorTxt = colorTxt;
+        this._blockColor = blockColor;
+        this._domNode.nodeDrawSprite({col: this._blockColor.name});
     }
     isFreeSlot(i, j)  { // can move on placed grid, put this into grid
         return (
