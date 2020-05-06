@@ -62,7 +62,7 @@ frame rate
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
     (`Level ${this._level}`)
-    var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;}
+    var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;} --> x=>x
     cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
     func(arg=null)
     myArray.fill()
@@ -697,7 +697,7 @@ TetrisGame.prototype = {
         pentominoes: {index: 11, count: 14} // range of 5 blocks shapes
     },
     destroyGame() {
-        this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.destroyDomNode()} );
+        this._gridsListAuto.runForEachListElement( myGrid => myGrid.destroyDomNode() );
         this._newBlockId = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
@@ -707,7 +707,7 @@ TetrisGame.prototype = {
         AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
-        this._gridsListAuto.runForEachListElement( (myGrid)=>{myGrid.pauseOrResume()} );    // all players
+        this._gridsListAuto.runForEachListElement( myGrid => myGrid.pauseOrResume() );    // all players
     },
     addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
@@ -1489,10 +1489,10 @@ class TetrisShape {
         return this; // to use chained calls
     }
     placeShape() {
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.placeBlock(); });
+        this._shapeBlocks.forEach( myBlock => myBlock.placeBlock() );
     }
     unplaceShape() {
-        this._shapeBlocks.forEach( (myBlock)=>{ myBlock.unplaceBlock(); });
+        this._shapeBlocks.forEach( myBlock => myBlock.unplaceBlock() );
     }
 }
 // TETRIS NEXT SHAPE PREVIEW Class
