@@ -252,13 +252,13 @@ const PIXELS                    = {
 const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
 //const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
-    landFX                    :   {ext: 'wav'},
-    rotateFX                  :   {ext: 'wav'},
-    moveFX                    :   {ext: 'wav', vol: 0.2},
-    clearFX                   :   {ext: 'wav'},
-    quadrupleFX               :   {ext: 'wav'},
-    selectFX                  :   {ext: 'wav'},
-    musicMusic                :   {ext: 'mp3', vol: 0.5} };
+    landFX                    : {ext: 'wav'},
+    rotateFX                  : {ext: 'wav'},
+    moveFX                    : {ext: 'wav', vol: 0.2},
+    clearFX                   : {ext: 'wav'},
+    quadrupleFX               : {ext: 'wav'},
+    selectFX                  : {ext: 'wav'},
+    musicMusic                : {ext: 'mp3', vol: 0.5} };
 // values > 0 to avoid (value === 0 == false)
 const GAME_STATES = { paused   : 1, running: 2};
 const GRID_STATES = { ready    : 1, playing: 2, lost   : 3}; // connected but not started
@@ -304,7 +304,7 @@ function MainMenu() { // queue or stack
     window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
 }
 MainMenu.prototype = {
-    _domNode    : null,
+    _domNode: null,
     cancelEvent_(event) { //seems useless
         keyboardEvent.stopPropagation(); //method prevents propagation of the same event from being called
         event.preventDefault();
@@ -554,8 +554,8 @@ TetrisSpritesCreation.prototype = {
             _nocache: false,
             _width: '_pxPreviewBlockSize',
             _height: '_pxPreviewBlockSize',
-            drawSprite_(c, x, y, a) {    // context, x, y, args
-                //console.log(this); VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
+            drawSprite_(c, x, y, a) { // context, x, y, args
+                //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
                 let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle=(a.__onOff
                     ?VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
@@ -569,7 +569,7 @@ TetrisSpritesCreation.prototype = {
             _nocache: false,
             _width: '_pxBlockSize',
             _height: '_pxBlockSize',
-            drawSprite_(c, x, y, a) {    // context, x, y, args
+            drawSprite_(c, x, y, a) { // context, x, y, args
                 let half = Math.round(_pxBlockSize/2);
                 let margin = Math.round(_pxBlockSize/7);
                 let col = _colors[a.col];
@@ -608,8 +608,8 @@ function TetrisGame() {
             else //(pivot !== 0)
                 for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
-                        - this._gameShapesWithRotations[s][pivot-1][b][1], // minus here (default) for unclockwise
-                          this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus here for clockwise
+                        -this._gameShapesWithRotations[s][pivot-1][b][1], // minus 1 here (default) for unclockwise
+                        +this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus 1 here for clockwise
         }
     }
     this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
@@ -644,7 +644,7 @@ TetrisGame.prototype = {
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
     _anims                  : {}, // only 1 instance of game
-    _freeColorsArray             : null, // available colors for players
+    _freeColorsArray        : null, // available colors for players
     _gameKeysSets           : [ // up down left right, https://keycode.info/
         {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true}, // WASD on QWERTY for left player, ZQSD on AZERTY
         {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
@@ -1026,7 +1026,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
 TetrisGrid.prototype            = {
-    _gridId                    : null,
+    //_gridId                    : null,
     _gridState                 : GRID_STATES.ready,
     _colorTxt                  : null,
     _gridColor                 : null,
@@ -1863,8 +1863,8 @@ class EventsQueue {
 function SvgObject(svgDefinition) { //svgDefinition is attributes
     this._svgElement = document.createElementNS(SVG_NS, svgDefinition.type);
     this._childs = {};
-    this._translateText = "";
-    this._rotateText = "";
+    this._translateText = '';
+    this._rotateText = '';
     if (svgDefinition.parent) //if parent is supplied OR is not null
         svgDefinition.parent.appendChild(this._svgElement);
     delete svgDefinition.parent; //to avoid it in set()
@@ -1897,7 +1897,7 @@ SvgObject.prototype = {
     set(svgDefinition) { with(this) {
         for (var p in svgDefinition)
             if (!svgDefinition[p].type) //if sheet attribute without type
-                _svgElement.setAttributeNS(null, p.replace(/_/, "-"), svgDefinition[p]); // equivalent new RegExp("_","g"),
+                _svgElement.setAttributeNS(null, p.replace(/_/, '-'), svgDefinition[p]); // equivalent new RegExp("_","g"),
             else {
                 svgDefinition[p].parent = _svgElement;
                 _childs[p] = new SvgObject(svgDefinition[p]);
@@ -1911,28 +1911,28 @@ SvgObject.prototype = {
     setText(text, width, maxHeightMinCharCount) { with(this) { //works only if type == "text"
         _svgElement.textContent = text;
         if (width) {
-            var charCount = Math.max((""+text).length, maxHeightMinCharCount);
-            set1("font-size", game._fontRatio*width/charCount); 
+            var charCount = Math.max((''+text).length, maxHeightMinCharCount);
+            set1('font-size', game._fontRatio * width/charCount); 
         }
     }},
     setTranslate(x, y) { with(this) {
-        _translateText = "translate("+x+","+y+")";
+        _translateText = `translate(${x},${y})`;
         set({transform: _translateText});
     }},
     setScale(sx, sy) { with(this) { //sy optional
         if (!sy) sy = sx;
-        _scaleText = "scale("+sx+","+sy+")";
+        _scaleText = `scale(${sx},${sy})`;
         set({transform: _scaleText});
     }},
     setRotate(r, x, y) { with(this) { //sy optional
-        _rotateText = "rotate("+r+","+x+","+y+")";
+        _rotateText = `rotate(${r},${x},${y})`;
         set({transform: _rotateText});
     }},
     cancelTransform() { with(this) {
-        _translateText        = "";
-        _scaleText            = "";
-        _rotateText            = "";
-        set({transform:""});
+        _translateText = '';
+        _scaleText = '';
+        _rotateText = '';
+        set({transform:''});
     }},
     newChild(svgDefinition) { with(this) { //returns pointer to child
         svgDefinition.parent = _svgElement;
@@ -1944,7 +1944,7 @@ SvgObject.prototype = {
     }},
     putChild(svg) { with(this) {
         if (svg._parent) delete svg._parent._childs[svg._parentIndex]; //manage parent
-        if (typeof (svg._parentIndex) == "number")
+        if (typeof (svg._parentIndex) == 'number')
             svg._parentIndex = _count ++;
         _childs[svg._parentIndex] = svg; //manage parent
         svg._parent = this; //manage parent
@@ -1956,14 +1956,14 @@ SvgObject.prototype = {
         _count = 0;
     }},
     hide() { with(this) {
-        _svgElement.setAttributeNS(null, "display", "none");
+        _svgElement.setAttributeNS(null, 'display', 'none');
     }},
     show() { with(this) {
-        this._svgElement.setAttributeNS(null, "display", "inherit");
+        this._svgElement.setAttributeNS(null, 'display', 'inherit');
     }},
     addChildCloneOf(svg) { with(this) {
         var id = svg._parentIndex;
-        if (typeof (svg._parentIndex) == "number")
+        if (typeof (svg._parentIndex) == 'number')
             id = _count ++;
         var child = _childs[id];
         child = new SvgObject({});
@@ -2046,28 +2046,28 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     this.setDomNode(definitionObject); // others attributes
 }
 DomNode.prototype = {
-    _idCount                        : 0, // for unamed elements
-    _htmlElement                                : null, // public, DOM DomNode or Div
-    _childs                            : null,
-    _parent                            : null, // pointer to parent
-    _nameId                                : null, // =ID, index of child in this._childs, integer or name
-    _x                                : 0,
-    _y                                : 0,
-    _width                            : 0,
-    _height                            : 0,
-    _xVar                            : null,
-    _yVar                            : null,
-    _widthVar                        : null,
-    _heightVar                        : null,
-    _domNodeType                    : null,
-    _drawingContext2D             : null, // _drawingContext2D context
-    _vectorialSprite                        : null,
-    _scaleZoom                        : 1, // float
-    _drawStack                        : null,
-    _moveToGridCellStack                    : null,
-    _text                            : null, // text node
-    _textCharCountWidthMin            : null, // letter number in div width
-    _textCharCountWidth                : null,
+    _idCount              : 0, // for unamed elements
+    _htmlElement          : null, // public, DOM DomNode or Div
+    _childs               : null,
+    _parent               : null, // pointer to parent
+    _nameId               : null, // = ID, index of child in this._childs, integer or name
+    _x                    : 0,
+    _y                    : 0,
+    _width                : 0,
+    _height               : 0,
+    _xVar                 : null,
+    _yVar                 : null,
+    _widthVar             : null,
+    _heightVar            : null,
+    _domNodeType          : null,
+    _drawingContext2D     : null, // _drawingContext2D context
+    _vectorialSprite      : null,
+    _scaleZoom            : 1, // float
+    _drawStack            : null,
+    _moveToGridCellStack  : null,
+    _text                 : null, // text node
+    _textCharCountWidthMin: null, // letter number in div width
+    _textCharCountWidth   : null,
     destroyDomNode() { // destroy all childs, optional because garbbage collector
         for (let p in this._childs)
             this._childs[p].destroyDomNode(); // delete this._childs[p] made by child
