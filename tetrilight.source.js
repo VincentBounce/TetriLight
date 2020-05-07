@@ -6,7 +6,7 @@ Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
 Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
-e
+
 **************** VOCABULARY ****************
 to clear = to sweep, cleared = swept
 a row = a line
@@ -226,7 +226,7 @@ const DURATIONS                 = { // tetris durations, periods in ms
     hardDropDuration            : 200, // 0200 ms, increase for #DEBUG
     lostMessageDuration         : 3500, // 3500 ms, period to display score
     softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
-    initialDropPeriod           : 1100 }; // 0700 ms, >         = _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
+    initialDropPeriod           : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 const PIXELS                    = {
     pxTopMenuZoneHeight         : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
     pxGameWidth                 : null,
@@ -1565,14 +1565,12 @@ LockedBlocks.prototype = {
             }
         }
     },
-    chainSearch3Ways(blockFrom, group, toProcessMap, dir) { // recursive
+    chainSearch3Ways(blockFrom, group, toProcessMap, dir) { // recursive function
         let block = this._grid._matrix
             [blockFrom._iPosition + this._searchDirections[dir][0]]
             [blockFrom._jPosition + this._searchDirections[dir][1]];
-        //if (block && toProcessMap.listTable[block._blockIndex] // if shape blocks contact
-        if (block && toProcessMap.has(block._blockIndex)
+        if (block && toProcessMap.has(block._blockIndex) // if shape blocks contact?
         && (blockFrom._blockColor === block._blockColor) ) { // if same shape blocks color #DEBUG rule to check here
-            //toProcessMap.eraseItemFromList(block._blockIndex); // call del from list
             toProcessMap.delete(block._blockIndex);
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
