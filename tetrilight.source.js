@@ -612,7 +612,7 @@ function TetrisGame() {
                         +this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus 1 here for clockwise
         }
     }
-    this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
+    this._freeColorsArray = Object.values(SPRITES._colors).filter( color => color !== SPRITES._colors['grey'] ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
             this._gridsListArray.forEach( myGrid => myGrid._domNode.moveTemporaryRelatively(myGrid._vector[0]*animOutput, myGrid._vector[1]*animOutput) )
@@ -721,7 +721,7 @@ TetrisGame.prototype = {
     removeGrid(grid) { // require to be sure that grid exists and is removable
         this._gridsListArray.splice(this._gridsListArray.indexOf(grid), 1); // removing grid from array
         grid._playerKeysSet.free = true; // release if keys used
-        this._freeColorsArray.push(grid._colorTxt);
+        this._freeColorsArray.push(grid._gridColor);
         this._playersCount--;
         grid.destroyGrid(); // stops timers etc..
         this.organizeGrids({oldGrid:true});
@@ -846,9 +846,10 @@ class PentominoesBriefMode {
 }
 // TETRIS GRID Class
 function TetrisGrid(playerKeysSet, gridColor){
-    this._colorTxt            = gridColor;
-    this._gridColor           = SPRITES._colors[gridColor];
-    //this._gridColor           = gridColor;
+    //this._colorTxt            = gridColor;
+    //this._gridColor           = SPRITES._colors[gridColor];
+    //console.log(gridColor);
+    this._gridColor           = gridColor;
     this._playerKeysSet       = playerKeysSet; // [up down left right]
     this._lockedBlocks        = new LockedBlocks(this);
     this._gridEventsQueue     = new EventsQueue();
@@ -1028,7 +1029,7 @@ function TetrisGrid(playerKeysSet, gridColor){
 TetrisGrid.prototype            = {
     //_gridId                    : null,
     _gridState                 : GRID_STATES.ready,
-    _colorTxt                  : null,
+    //_colorTxt                  : null,
     _gridColor                 : null,
     _domNode                   : null,
     _realBlocksNode            : null,
@@ -1469,15 +1470,15 @@ class NextShapePreview {
         this._domNode = this._grid._domNode._childs.nextShapePreview;
         for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
             for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
-                this._domNode.nodeDrawSprite({fx: i, fy: j, col: this._grid._colorTxt, __onOff: false}); // off
+                this._domNode.nodeDrawSprite({fx: i, fy: j, col: this._grid._gridColor.name, __onOff: false}); // off
     }
     mark(shape) {
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: true}); // on
+            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: true}); // on
     }
     unMark(shape) { // optimized to remove only current previewed shape, and not all preview
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._colorTxt, __onOff: false }); // off
+            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: false }); // off
     }
 }
 // LOCKED BLOCKS Class, for locked blocks on the ground
