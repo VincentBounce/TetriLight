@@ -117,7 +117,7 @@ myArray[666]=3.14 adds an array index, array length goes to 667
 for (let p in myArray) browse each index AND each properties, WARNING p is string
     browse also ones with null and undefined values
     WARNING excepted Empty slots (without value) in array
-myArray.forEach() browse each index (NOT properties)
+myArray.forEach() browse each index, NOT properties
     browse also ones with null and undefined values
     WARNING excepted Empty slots (without value) in array
 myArray = New Array(6).fill(null).forEach() browse each index
@@ -1532,12 +1532,9 @@ LockedBlocks.prototype = {
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
-        //let toProcessMap = new List();
         let toProcessMap = new Map();
-        for (let p in this._lockedBlocksArray) // see to use filter !!!!!!!!!!!!
-            if (this._lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
-                toProcessMap.set(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
-        //console.table(toProcessMap.listTable);
+        this._lockedBlocksArray.forEach( myBlock => toProcessMap.set(myBlock._blockIndex, myBlock) );
+        // not filtering (this._lockedBlocksArray[p] !== undefined) anymore #DEBUG
         let groups = []; // below we make isolated groups
         //while (toProcessMap.listSize > 0) {
         for (let blockIndex of toProcessMap.keys()) {
