@@ -594,24 +594,24 @@ function TetrisGame() {
     this._gridsListArray          = []; // players grids array
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
-    for (let s=0; s < this._storedPolyominoes.length; s++) { // creating all shapes variations: browsing shapes
-        shapeBlocksCount = this._storedPolyominoes[s].blocks.length;
-        quarters         = this._storedPolyominoes[s].quarters;
+    this._storedPolyominoes.forEach( (storedPolyo, s) => { // creating all shapes variations: browsing shapes
+        shapeBlocksCount = storedPolyo.blocks.length;
+        quarters         = storedPolyo.quarters;
         this._gameShapesWithRotations[s] = new Array(quarters);
         for (let pivot=0; pivot < quarters; pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
             if (pivot === 0)
                 for (let b=0; b < shapeBlocksCount; b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
-                        this._storedPolyominoes[s].blocks[b][0],
-                        this._storedPolyominoes[s].blocks[b][1]    ];
-            else //(pivot !== 0)
+                        storedPolyo.blocks[b][0],
+                        storedPolyo.blocks[b][1]    ];
+            else // (pivot !== 0)
                 for (let b=0; b < shapeBlocksCount; b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         -this._gameShapesWithRotations[s][pivot-1][b][1], // minus 1 here (default) for unclockwise
                         +this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus 1 here for clockwise
         }
-    }
+    } );
     this._freeColorsArray = Object.values(SPRITES._colors).filter( color => color !== SPRITES._colors['grey'] ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
