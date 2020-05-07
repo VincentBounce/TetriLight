@@ -2495,7 +2495,7 @@ class Animation {
     }
     makeNextFrame_() {
         this.animateFunc_.call(this._animOwner, this.animOutput); // because score anim not declared in grid
-        //this.animateFunc_.bind(this._animOwner); this.animateFunc_(this.animOutput); // draw frame on display, as defined in the instance of Animation
+        //this.animateFunc_.bind(this._animOwner); this.animateFunc_(this.animOutput); // draw frame on display, as defined in the instance of Animation, not working
         if ( (++this._elapsedFrames) < this._plannedFrames) {
             this.animOutput = this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); // input [0;1] animOutput have any value
             this._windowNextFrameId = window.requestAnimationFrame( () => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
