@@ -116,10 +116,10 @@ myArray[-1]=3.14 adds a property, NOT an array index, array length still unchang
 myArray[666]=3.14 adds an array index, array length goes to 667
 for (let p in myArray) browse each index AND each properties, WARNING p is string
     browse also ones with null and undefined values
-    WARNING excepted Empty slots (without value) in array
+    WARNING excepted Empty slots (without value) in array (skipping indices that were never assigned a value)
 myArray.forEach() browse each index, NOT properties
     browse also ones with null and undefined values
-    WARNING excepted Empty slots (without value) in array
+    WARNING excepted Empty slots (without value) in array (skipping indices that were never assigned a value)
 myArray = New Array(6).fill(null).forEach() browse each index
     browse also ones with null and undefined values
 delete myArray[4] makes the 5th slot Empty
