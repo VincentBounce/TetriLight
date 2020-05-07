@@ -199,7 +199,7 @@ MainMenu [1 instance]
             Score
                 _score
                 _level
-Examples of list: toProcessMap / _freeColors
+Examples of list: toProcessMap / _freeColorsArray
 Examples of listAutoIndex: _gridsListAuto
 */
 //"use strict"; // use JavaScript in strict mode to make code better and prevent errors
@@ -626,12 +626,12 @@ function TetrisGame() {
                           this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus here for clockwise
         }
     }
-    this._freeColors = new List();
-    for (let p in SPRITES._colors)
+    this._freeColorsArray = [] //new List();
+    for (let p in SPRITES._colors) //get keys!!!!!!!!!!!!
         if (p !== 'grey') // grey
-            //this._freeColors.putInList(p, SPRITES._colors[p]); // to know available colors
-            this._freeColors.putInList(p, p); // to know available colors
-            //console.table(this._freeColors.listTable);
+            //this._freeColorsArray.putInList(p, SPRITES._colors[p]); // to know available colors
+            this._freeColorsArray.push(p); // to know available colors
+            //console.table(this._freeColorsArray.listTable);
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
             this._gridsListAuto.resetNext();
@@ -668,7 +668,7 @@ TetrisGame.prototype = {
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
     _anims                  : {}, // only 1 instance of game
-    _freeColors             : null, // available colors for players
+    _freeColorsArray             : null, // available colors for players
     _gameKeysSets           : [ // up down left right, https://keycode.info/
         {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true}, // WASD on QWERTY for left player, ZQSD on AZERTY
         {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
@@ -725,14 +725,18 @@ TetrisGame.prototype = {
     addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
     },
-    addGridBody_() { // return true if added
-        if (this._freeColors.listSize > 0) {
+    addGridBody_() { // return grid if added, null otherwise, grids qty limit is color qty
+        if (this._freeColorsArray.length > 0) {
             this._playersCount ++;
             let p; for (p in this._gameKeysSets)
                 if ( this._gameKeysSets[p].free)
                     break;
             this._gameKeysSets[p].free = false;
-            let grid = new TetrisGrid( this._gameKeysSets[p], this._freeColors.unListN( Math.floor(Math.random()*this._freeColors.listSize)) );
+            let randomIndex = Math.floor(Math.random()*this._freeColorsArray.length);
+            let randomColor = this._freeColorsArray[randomIndex];
+            this._freeColorsArray.splice(randomIndex, 1); // we remove 
+            let grid = new TetrisGrid( this._gameKeysSets[p], randomColor );
+            //let grid = new TetrisGrid( this._gameKeysSets[p], this._freeColorsArray.unListN( Math.floor(Math.random()*this._freeColorsArray.listSize)) );
             // old: grid._gridId = (this._playersCount%2)?this._gridsListAuto.putFirst(grid):this._gridsListAuto.putLast(grid);    // from left or right
             this.organizeGrids({newGrid:grid});
             return grid;
@@ -743,8 +747,9 @@ TetrisGame.prototype = {
     removeGrid(grid) {
         this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
         grid._playerKeysSet.free = true; // release if keys used
-        this._freeColors.putInList(grid._colorTxt, grid._colorTxt); // we reput color on free colors
-        //this._freeColors.putInList(grid._gridColor.name, grid._gridColor); // we reput color on free colors
+        //this._freeColorsArray.putInList(grid._colorTxt, grid._colorTxt); // we reput color on free colors
+        this._freeColorsArray.push(grid._colorTxt);
+        //this._freeColorsArray.putInList(grid._gridColor.name, grid._gridColor); // we reput color on free colors
         this._playersCount--;
         grid.destroyGrid(); // stops timers etc..
         this.organizeGrids({oldGrid:true});
@@ -1539,7 +1544,7 @@ LockedBlocks.prototype = {
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
         //let toProcessMap = new List();
         let toProcessMap = new Map();
-        for (let p in this._lockedBlocksArray) // see to use filter.
+        for (let p in this._lockedBlocksArray) // see to use filter !!!!!!!!!!!!
             if (this._lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
                 toProcessMap.set(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
         //console.table(toProcessMap.listTable);
