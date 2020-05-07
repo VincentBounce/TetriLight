@@ -99,7 +99,8 @@ myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 queue(fifo) / gridAnimsStackPush(filo)
 shift<<, unshift>> [array] <<push, >>pop
 delete myArray[0]: just set slot to undefined
-myArray.shift(): remove the slot from the table, even an Empty slot
+myArray.shift(): remove the slot from the table
+    WARNING even an Empty slot
 for (let p in MyArray) delete myArray[p]: set to undefined / not Empty slots
 instrument = [...instrument, 'violin', 'guitar'] // same as push violin, push guitar
 instrument = ['violin', 'guitar', ...instrument] // same as unshift violin, unshift guitar
@@ -114,10 +115,10 @@ myArray[-1]=3.14 adds a property, NOT an array index, array length still unchang
 myArray[666]=3.14 adds an array index, array length goes to 667
 for (let p in myArray) browse each index AND each properties, WARNING p is string
     browse also ones with null and undefined values
-    excepted WARNING Empty slots (without value) in array
+    WARNING excepted Empty slots (without value) in array
 myArray.forEach() browse each index (NOT properties)
     browse also ones with null and undefined values
-    excepted WARNING Empty slots (without value) in array
+    WARNING excepted Empty slots (without value) in array
 myArray = New Array(6).fill(null).forEach() browse each index
     browse also ones with null and undefined values
 delete myArray[4] makes the 5th slot Empty
@@ -275,6 +276,15 @@ function init() {
     GAME = new TetrisGame();
     GAME.addGrid();
     //GAME.addGrid(); // #DEBUG
+    let t = []
+    t[5] = 55
+    t[10] = 1010
+    console.log(t)
+    t.shift();
+    t.shift();
+    t.shift();
+    console.log(t)
+
 }
 // MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { // queue or stack
@@ -1009,7 +1019,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.fx(this._fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.fy(this._fallingShape._jPosition-0.5)+"px");
         },
         animateFunc(animOutput) {
-            if ((this._fallingShape._pivotsCount==2) && (this._fallingShape._pivot==0))
+            if ( (this._fallingShape._pivotsCount === 2) && (this._fallingShape._pivot === 0) )
                 this._fallingShape._domNode.setRotate(-90 + animOutput);
             else
                 this._fallingShape._domNode.setRotate(90 - animOutput);
@@ -1524,11 +1534,12 @@ LockedBlocks.prototype = {
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
         let toProcessList = new List();
         // console.log('bbbbb');// $$$$$$$$
-        console.table(this._lockedBlocksArray);
+        //console.table(this._lockedBlocksArray);
         // console.log('bb');
         for (let p in this._lockedBlocksArray)
             if (this._lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
                 toProcessList.putInList(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
+        console.table(toProcessList.listTable);
         let groups = []; // below we make isolated groups
         while (toProcessList.listSize > 0) { // equivalent to while (toProcessList.listSize)
             block = toProcessList.unList(); // block impossible to be null
@@ -1917,6 +1928,7 @@ class Timer {
         this._funcAtTimeOut = timerObject.funcAtTimeOut;
         this._timerPeriod = timerObject.timerPeriod;
         this._timerOwner = timerObject.timerOwner;
+        //this._funcAtTimeOut = timerObject.funcAtTimeOut.bind(this._timerOwner);
         this._paused = false; // if timer is paused
         this._running = false; // if timer is running or finished (can be paused)
         this._beginTime;
@@ -1929,6 +1941,7 @@ class Timer {
         this.finishTimer(); // if still running
         this._running = true;
         this._beginTime = (new Date).getTime();
+        //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod);
         //this._timeOut = setTimeout(this._funcAtTimeOut.bind(this._timerOwner), this._timerPeriod);
         this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod); // setInterval is useless here, not used
     }
@@ -2450,7 +2463,6 @@ class VectorialSprite {
     }
     // Graphic function, convert a [RGB] array + alpha value to text
     static rgbaTxt(color, alpha=null) {
-        //return 'rgba('+color[0]+','+color[1]+','+color[2]+','+((alpha===null)?1:alpha)+')';
         return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
     }
     // Graphic function, to make a linear gradient
@@ -2476,7 +2488,7 @@ class Animation {
         this.animateFunc_    = animObject.animateFunc; // function to set THE movement to execute
         this.endAnimFunc_    = animObject.endAnimFunc; // function to set the last position after animation
         this.timingAnimFunc_ = animObject.timingAnimFunc; // f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
-        this._duration       = animObject.animDuration; // duration of animation
+        this._animDuration   = animObject.animDuration; // duration of animation
         this._animOwner      = animObject.animOwner; // object owner of animation
         this.animOutput; // public value of f(x), current animation position after timingAnimFunc_, any value possible
         this._paused;
@@ -2489,9 +2501,9 @@ class Animation {
         this.reset_();
     }
     reset_() {
-        this._paused         = false;
-        this._animating      = false;
-        this._elapsedFrames  = 0;
+        this._paused        = false;
+        this._animating     = false;
+        this._elapsedFrames = 0;
     }
     makeNextFrame_() {
         this.animateFunc_.call(this._animOwner, this.animOutput); // because score anim not declared in grid
@@ -2512,7 +2524,7 @@ class Animation {
         // if (this.startAnimFunc_) this.startAnimFunc_.apply(arguments); // launch optional startAnimFunc_ function, arguments is array
         if (this.startAnimFunc_) this.startAnimFunc_.apply(this._animOwner, arguments); // launch optional startAnimFunc_ function, arguments is array
         this._beginTime = performance.now();
-        this._plannedFrames = RULES.fps * this._duration;
+        this._plannedFrames = RULES.fps * this._animDuration;
         this.animOutput = this.timingAnimFunc_( (++this._elapsedFrames) / this._plannedFrames ); // input [0;1] animOutput have any value
         this.makeNextFrame_();
     }
@@ -2530,9 +2542,9 @@ class Animation {
             return this._paused;
         }
     }
-    setDuration(duration) { // can't set duration while animation running; return (if set correctly?) boolean
+    setDuration(animDuration) { // can't set duration while animation running; return (if set correctly?) boolean
         if (this._animating) return false;
-        else { this._duration = duration; return true; }
+        else { this._animDuration = animDuration; return true; }
     }
     endAnim() { // return true if killing previous
         if (this._animating) {
