@@ -367,16 +367,16 @@ Audio.prototype = {
             return true;
         }
     },
-    muteUnmute() {
-        muted = !muted;
-        if (muted)
+    muteOrUnmute() {
+        this.muted = !this.muted;
+        if (this.muted)
             this.refreshVolume(0);
         else
             this.refreshVolume(this._mainVolume);
     },
     refreshVolume(volume) {
         for (let sound in this._sounds)
-            this._sounds[sound].sound.volume    = volume * this._sounds[sound].volumeFactor;
+            this._sounds[sound].sound.volume = volume * this._sounds[sound].volumeFactor;
     },
     /*getDuration(name) {
         return this._sounds[name].sound.duration;
@@ -434,8 +434,8 @@ TetrisSpritesCreation.prototype = {
     _ghostShapeOpacity      : 0.15, // default 0.15
     _previewOpacity         : 0.2, // default 0.2, opacity for preview grid
     _lostShapeOpacity       : 0.5, // default 0.5, to show a ghost of shape wich makes losing
-    _shapesSpan             : 2, // span                                            : envergure = (5-1)/2
-    _colors                 : {
+    _shapesSpan             : 2, // span (means envergure) = (5-1)/2
+    _colors                 : { // name filed is added by constructor
         pink      : {light: [248, 190, 232], medium: [224, 107, 169], dark: [189,  66, 111]},
         purple    : {light: [210, 172, 241], medium: [136, 100, 208], dark: [ 90,  64, 177]},
         red       : {light: [245, 140, 140], medium: [219,  78,  78], dark: [187,  48,  48]},
@@ -557,9 +557,9 @@ TetrisSpritesCreation.prototype = {
             drawSprite_(c, x, y, a) { // context, x, y, args
                 //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
                 let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
-                c.fillStyle=(a.__onOff
-                    ?VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
-                    :VectorialSprite.rgbaTxt(col.medium, _previewOpacity)
+                c.fillStyle = (a.__onOff
+                    ? VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
+                    : VectorialSprite.rgbaTxt(col.medium, _previewOpacity)
                 );
                 c.fillRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize)    },
             fx(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
