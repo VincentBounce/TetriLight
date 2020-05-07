@@ -873,8 +873,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._gridEventsQueue     = new EventsQueue();
     this._animsStack          = [];
     this._lockedShapes        = [];
-    // this._rowsToClearArray = []; // no row to clear at the begining
-    this._rowsToClearList     = new Set();
+    this._rowsToClearSet     = new Set();
     this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
     for (let i=0;i < this._matrix.length;i++) {
         this._matrix[i] = [];
@@ -953,20 +952,13 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._anims.clearRowsAnim = new Animation({ // loading animation to use later
         animateFunc(animOutput) { // called n times recursively, this: current object AND Animation
-            // for (let r in this._rowsToClearArray) // for each row to clear
-            //     for (let i=1;i <= RULES.horizontalCellsCount;i++) // for each column
-            //         this._matrix[i][this._rowsToClearArray[r]]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
-            //for (let r in this._rowsToClearList.listTable) // for each row to clear
-            this._rowsToClearList.forEach( myRow => {
-                for (let i=1;i <= RULES.horizontalCellsCount;i++)
+            this._rowsToClearSet.forEach( myRow => { // for each row to clear
+                for (let i=1;i <= RULES.horizontalCellsCount;i++) // for each column
                     this._matrix[i][myRow]._domNode.setScale(animOutput) }); // with blocks' _domNodes, programs goes here for each block of each row to clear
         },
         endAnimFunc() { // NOT GRAPHIC PROCESS
-            // this._rowsToClearArray.forEach(function(myRow) {
-            //     this.clearFullRowAfterClearingAnim(myRow); }); // now erasing animated cleared rows datas // bad code:this._rowsToClearArray = [];
-            //for (let r in this._rowsToClearList.listTable)
-            this._rowsToClearList.forEach( myRow =>
-                this.clearFullRowAfterClearingAnim(myRow) ); // so erasing previous
+            this._rowsToClearSet.forEach( myRow =>
+                this.clearFullRowAfterClearingAnim(myRow) ); // now erasing animated cleared rows data
             this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
             this.gridAnimsStackPop();
         },
@@ -1079,8 +1071,7 @@ TetrisGrid.prototype            = {
     _animsStack                : null, // to stack anims sequences of (hardDrop > quake)0-1 > (clearRows > hardDrop > quake)0-*: riseGreyBlocks actions are stuck
     _gridEventsQueue           : null, // queue for rising rows, etc..
     _gridMessagesQueue         : null, // used only when lost $$$
-    // _rowsToClearArray       : null, // arrays to prepare rows to clear to anim when animating clearing rows
-    _rowsToClearList           : null, // arrays to prepare rows to clear to anim when animating clearing rows
+    _rowsToClearSet            : null, // set to prepare rows to clear to anim when animating clearing rows
     _vector                    : null,
     destroyGrid() {
         if (GAME._gameState !== GAME_STATES.paused)
@@ -1221,8 +1212,7 @@ TetrisGrid.prototype            = {
         // old: AUDIO.audioPlay('landFX');
         if (this._fallingShape !== null) // for recursive calls with fallingshape === null
             this._fallingShape.clearGhostBlocks();
-        // let rowsToClearCount = this._rowsToClearArray.length;
-        let rowsToClearCount = this._rowsToClearList.size;
+        let rowsToClearCount = this._rowsToClearSet.size;
         if (rowsToClearCount > 0) { // if there's rows to clear
             this._score.combosCompute();
             this._score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
@@ -1688,9 +1678,7 @@ class TetrisBlock {
         locked._lockedBlocksArrayByRow[this._jPosition].blocks[this._blockIndex] = this;
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount++; // we increment
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
-         // if (this._grid._rowsToClearArray.lastIndexOf(this._jPosition) === -1)// check, if value not found
-            this._grid._rowsToClearList.add(this._jPosition); // true to put something
-            // this._grid._rowsToClearArray.push(this._jPosition); // preparing rows to clear, not negative values
+            this._grid._rowsToClearSet.add(this._jPosition); // preparing rows to clear, not negative values
     }
     unplaceBlock() {
         this._grid._matrix[this._iPosition][this._jPosition] = null;
@@ -1700,9 +1688,7 @@ class TetrisBlock {
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount--; // we decrement
         locked._blocksCount--; // we decrement
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
-            this._grid._rowsToClearList.delete(this._jPosition);
-            // this._grid._rowsToClearArray.splice( // necessary for correct exection
-            // this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
+            this._grid._rowsToClearSet.delete(this._jPosition); // we remove position of this._jPosition in _rowsToClearArra
     }
     setBlockColor(blockColor)  {
         //this._colorTxt = colorTxt;
@@ -1818,59 +1804,6 @@ function isValued (item) { // requires declared and defined not to null
 function isDeclaredAndDefined (item) {
     return (typeof item !== 'undefined');
 }
-// LIST Class, to manage elements by index, indexed by string or number >=0 with size
-function List() { with(this) {
-    listTable = [];
-}}
-List.prototype = {
-    listTable: null, // public read only
-    listSize: 0, // public read only
-    getNthIndex_: function(n) { with(this) {
-        let orderedIndex = [];
-        for (let p in listTable)
-            orderedIndex.push(p)
-        orderedIndex.sort();
-        return orderedIndex[n];
-    }},
-    putInList: function(index, item) { with(this) {
-        listTable[index] = item;
-        listSize++;
-    }},
-    eraseItemFromList: function(index) { with(this) {
-        delete listTable[index];
-        // listTable.splice(index,1);            // don't work
-        listSize--;
-    }},
-    /*get: function(index) { with(this) {        // old: typeof undefined if not found
-        return listTable[index];
-    }},
-    getN: function(n) { with(this) {            // old: ordered get nth element [0, size-1] // n %= listSize;
-        return listTable[getNthIndex_(n)];
-    }},*/
-    unList: function() { with(this) {            // not ordered
-        /*listSize--;
-        console.log(listTable);
-        let pp = listTable.pop();
-        console.log(listTable);
-        console.log(listSize);
-        return (pp);*/
-        for (let p in listTable) {// $$$$$$$$$$
-            // console.log(p);
-            let item = listTable[p];
-            // console.log(listTable);
-            eraseItemFromList(p);
-            // console.log(listTable);
-            // console.log(listSize);
-            return item;                            // one object only
-        }    // return null;    // useless
-    }},
-    unListN: function(n) { with(this) {            // ordered
-        let index = getNthIndex_(n);
-        let item = listTable[index];                // old: get(index)
-        eraseItemFromList(index);
-        return item;
-    }}
-};
 // LIST AUTO INDEX Class, list with first and last access, auto indexed by number with size and holes
 function ListAutoIndex() { with(this) {            
     listAutoTable = [];
