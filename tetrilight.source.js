@@ -330,7 +330,7 @@ MainMenu.prototype = {
                 break; // always exit after this instruction
             default:
                 if (GAME._gameState === GAME_STATES.running) // if game is not paused
-                    GAME._gridsListAuto.forEach( myGrid => myGrid.chooseControlAction(keyboardEvent) );
+                    GAME._gridsListArray.forEach( myGrid => myGrid.chooseControlAction(keyboardEvent) );
         }
     },
 };
@@ -603,7 +603,7 @@ function TetrisGame() {
     this._matrixHeight            = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
     this._iPositionStart          = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
     this._jPositionStart          = RULES.verticalCellsCount - 1;
-    this._gridsListAuto           = []; // players grids array
+    this._gridsListArray           = []; // players grids array
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
     for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
@@ -627,16 +627,16 @@ function TetrisGame() {
     this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
-            /*this._gridsListAuto.resetNext();
+            /*this._gridsListArray.resetNext();
             let grid;
-            while (grid = this._gridsListAuto.next())*/
-            this._gridsListAuto.forEach( myGrid => myGrid._domNode.moveTemporaryRelatively(myGrid._vector[0]*animOutput, myGrid._vector[1]*animOutput) )
+            while (grid = this._gridsListArray.next())*/
+            this._gridsListArray.forEach( myGrid => myGrid._domNode.moveTemporaryRelatively(myGrid._vector[0]*animOutput, myGrid._vector[1]*animOutput) )
         },
         endAnimFunc(){
-            /*this._gridsListAuto.resetNext();
+            /*this._gridsListArray.resetNext();
             let grid;
-            while (grid = this._gridsListAuto.next()) {*/
-            this._gridsListAuto.forEach( myGrid => {
+            while (grid = this._gridsListArray.next()) {*/
+            this._gridsListArray.forEach( myGrid => {
                 myGrid._domNode.moveRelatively(myGrid._vector[0], myGrid._vector[1]);
                 myGrid._vector = [0, 0];
             } );
@@ -649,7 +649,7 @@ function TetrisGame() {
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
 TetrisGame.prototype = {
-    _gridsListAuto          : null,
+    _gridsListArray          : null,
     _matrixHeight           : null,
     _matrixBottom           : -1, // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
     _iPositionStart         : null,
@@ -704,7 +704,7 @@ TetrisGame.prototype = {
         pentominoes: {index: 11, count: 14} // range of 5 blocks shapes
     },
     destroyGame() {
-        this._gridsListAuto.forEach( myGrid => myGrid.destroyDomNode() );
+        this._gridsListArray.forEach( myGrid => myGrid.destroyDomNode() );
         this._newBlockId = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
@@ -714,7 +714,7 @@ TetrisGame.prototype = {
         AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
-        this._gridsListAuto.forEach( myGrid => myGrid.pauseOrResume() );    // all players
+        this._gridsListArray.forEach( myGrid => myGrid.pauseOrResume() );    // all players
     },
     addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
@@ -737,7 +737,7 @@ TetrisGame.prototype = {
             return null;
     },
     removeGrid(grid) {
-        this._gridsListAuto.splice(this._gridsListAuto.indexOf(grid), 1);
+        this._gridsListArray.splice(this._gridsListArray.indexOf(grid), 1);
         grid._playerKeysSet.free = true; // release if keys used
         this._freeColorsArray.push(grid._colorTxt);
         this._playersCount--;
@@ -751,18 +751,15 @@ TetrisGame.prototype = {
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
                 if (this._playersCount%2) { // from left or right
-                    this._gridsListAuto.unshift(instruction.newGrid);
+                    this._gridsListArray.unshift(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
-                    this._gridsListAuto.push(instruction.newGrid);
+                    this._gridsListArray.push(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
                 }
-            //this._gridsListAuto.resetNext();
-            //let grid;
             let count = 0;
-            //while (grid = this._gridsListAuto.next()) {
-            for (let p in this._gridsListAuto) {
-                let myGrid=this._gridsListAuto[p];
+            for (let p in this._gridsListArray) {
+                let myGrid=this._gridsListArray[p];
                 count++;
                 myGrid._domNode.redrawNode(); // we change all sizes
                 myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
@@ -775,12 +772,10 @@ TetrisGame.prototype = {
             if (instruction.newGrid)
                 instruction.newGrid.startGrid(); // enqueue?
         } else {
-            //let grid;
             let count = 0;
-            this._gridsListAuto.resetNext();
-            //while (grid = this._gridsListAuto.next()) {
-            for (let p in this._gridsListAuto) {
-                let myGrid=this._gridsListAuto[p];
+            this._gridsListArray.resetNext();
+            for (let p in this._gridsListArray) {
+                let myGrid=this._gridsListArray[p];
                 count++;
                 myGrid._domNode.redrawNode(); // we change all sizes
                 myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
@@ -791,11 +786,8 @@ TetrisGame.prototype = {
     averageBlocksByPlayingGrid() {
         let playingGridsCount = 0;
         let allGridsBlocksCount = 0;
-        //let grid;
-        //this._gridsListAuto.resetNext();
-        //while (grid = this._gridsListAuto.next())
-        for (let p in this._gridsListAuto) {
-            let myGrid=this._gridsListAuto[p];
+        for (let p in this._gridsListArray) {
+            let myGrid=this._gridsListArray[p];
             if (myGrid._gridState === GRID_STATES.playing) {
                 playingGridsCount++;
                 allGridsBlocksCount += myGrid._lockedBlocks._blocksCount;
@@ -810,8 +802,7 @@ TetrisGame.prototype = {
     },
     transferRows(from, count) { // from grid
         let toGridArray = [];
-        //for (let p in this._gridsListAuto.listAutoTable)
-        this._gridsListAuto.forEach( myGrid => {
+        this._gridsListArray.forEach( myGrid => {
             if ( (myGrid !== from) && (myGrid._gridState === GRID_STATES.playing) ) toGridArray.push(myGrid);
         } );
         if (toGridArray.length)
@@ -832,6 +823,7 @@ class PentominoesBriefMode {
             timerPeriod: 0,
             timerOwner: this
         });
+        this._gridWichTriggeredPentoMode;
     }
     /*destroyPentoMode() { with(this) { // to replace by anim timer
         _pentoModeTimer.finishTimer();
@@ -844,7 +836,7 @@ class PentominoesBriefMode {
     }
     finishPentoMode() {
         this._pentoModeTimer.finishTimer();
-        GAME._gridsListAuto.forEach( myGrid => {
+        GAME._gridsListArray.forEach( myGrid => {
             if (myGrid._gridState === GRID_STATES.playing) {
                 myGrid._playedPolyominoesType = 'tetrominoes'
                 myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
@@ -854,15 +846,16 @@ class PentominoesBriefMode {
         });
     }
     runPentoMode(gridWichTriggeredPentoMode, clearedLinesCount) {
+        this._gridWichTriggeredPentoMode = gridWichTriggeredPentoMode;
         if (this.isRunning()) this.finishPentoMode();
-        GAME._gridsListAuto.forEach( myGrid => { // here, argument is used
-                if (myGrid._gridState === GRID_STATES.playing) {
-                    myGrid._playedPolyominoesType = (myGrid !== gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
-                    myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
-                    myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
-                    myGrid._nextShapePreview.mark(myGrid._nextShape);
-                }
-            }, gridWichTriggeredPentoMode ); // this way to pass argument1 to pointed function
+        GAME._gridsListArray.forEach( myGrid => { // here, argument is used
+            if (myGrid._gridState === GRID_STATES.playing) {
+                myGrid._playedPolyominoesType = (myGrid !== this._gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
+                myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
+                myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
+                myGrid._nextShapePreview.mark(myGrid._nextShape);
+            }
+        }, this ); // this way to pass this._gridWichTriggeredPentoMode
         this._pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount); // *3 for 3 lines cleared, *4 for 4 lines cleared
         this._pentoModeTimer.restartTimer();
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
