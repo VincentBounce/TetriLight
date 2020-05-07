@@ -142,6 +142,7 @@ Alignment extension: ALT + = to align selection
 GitHub: remove a remote: git remote rm old
 GitHub: rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
 GitHub: rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
+GitHub: merge drop-timer branch into master branch: git checkout master / git merge drop-timer
 GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
 Settings Sync extension: to save VS Code configuration in GitHub
 
@@ -520,7 +521,7 @@ TetrisSpritesCreation.prototype = {
         });
         _spriteGridBackground = new VectorialSprite({
             _nocache: true,
-            _width:    '_pxFullGridWidth',
+            _width: '_pxFullGridWidth',
             _height: '_pxFullGridHeight',
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = _colors[a.col];
@@ -547,11 +548,11 @@ TetrisSpritesCreation.prototype = {
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5),    0.1, VectorialSprite.rgbaTxt([0,0,0],0),
                     0.9, VectorialSprite.rgbaTxt([0,0,0],0),    1, VectorialSprite.rgbaTxt([0,0,0],0.5));    c.fill();    },
             fx(x) {    return _pxGridBorder    },
-            fy: 'fx'
+            fy(x) {    return _pxGridBorder    }
         });
         _spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
-            _width:    '_pxPreviewBlockSize',
+            _width: '_pxPreviewBlockSize',
             _height: '_pxPreviewBlockSize',
             drawSprite_(c, x, y, a) {    // context, x, y, args
                 //console.log(this); VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
@@ -2301,10 +2302,17 @@ class VectorialSprite {
         this._height;
         this._nocache;
         for (let p in funcs)
-            if (p === '_nocache')
-                this._nocache = funcs[p];
-            else  // to reproduce same functions: drawSprite_, fy:, 'fx'
-                this[p] = this[funcs[p]] ? this[funcs[p]] : funcs[p];
+            switch (true) {
+                case (p === '_nocache'): this._nocache = funcs[p]; break
+                case (typeof funcs[p] === 'string'): this[p] = funcs[p]; break;
+                case (typeof funcs[p] === 'function'): this[p] = funcs[p]; this[p].bind(SPRITES); break;
+                default: console.log('#DEBUG funcs[p]');
+            }
+            /*if (p === '_nocache')
+                this[p] = funcs[p];
+            else
+                this[p] = funcs[p];*/
+            //console.log(funcs[p]);
     }
     getWidth() {
         return SPRITES[this._width];
