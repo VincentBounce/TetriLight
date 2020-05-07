@@ -275,19 +275,6 @@ function init() {
     GAME = new TetrisGame();
     GAME.addGrid();
     //GAME.addGrid(); // #DEBUG
-    
-    /*let t = []
-    t[5] = 55
-    t[10] = 1010
-    console.log(t[0])
-    t.shift();
-    t.shift();
-    t.shift();
-    console.log(t[0])
-    console.log(t)
-    t[0] = 'zero'
-    console.log(t)*/
-
 }
 // MENU MANAGER Class (make new to open web GAME)
 function MainMenu() { // queue or stack
@@ -603,7 +590,7 @@ function TetrisGame() {
     this._matrixHeight            = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
     this._iPositionStart          = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
     this._jPositionStart          = RULES.verticalCellsCount - 1;
-    this._gridsListArray           = []; // players grids array
+    this._gridsListArray          = []; // players grids array
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
     for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
@@ -627,15 +614,9 @@ function TetrisGame() {
     this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
-            /*this._gridsListArray.resetNext();
-            let grid;
-            while (grid = this._gridsListArray.next())*/
             this._gridsListArray.forEach( myGrid => myGrid._domNode.moveTemporaryRelatively(myGrid._vector[0]*animOutput, myGrid._vector[1]*animOutput) )
         },
         endAnimFunc(){
-            /*this._gridsListArray.resetNext();
-            let grid;
-            while (grid = this._gridsListArray.next()) {*/
             this._gridsListArray.forEach( myGrid => {
                 myGrid._domNode.moveRelatively(myGrid._vector[0], myGrid._vector[1]);
                 myGrid._vector = [0, 0];
@@ -649,7 +630,7 @@ function TetrisGame() {
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
 TetrisGame.prototype = {
-    _gridsListArray          : null,
+    _gridsListArray         : null,
     _matrixHeight           : null,
     _matrixBottom           : -1, // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
     _iPositionStart         : null,
@@ -714,7 +695,7 @@ TetrisGame.prototype = {
         AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
-        this._gridsListArray.forEach( myGrid => myGrid.pauseOrResume() );    // all players
+        this._gridsListArray.forEach( myGrid => myGrid.pauseOrResume() ); // all players
     },
     addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
@@ -736,8 +717,8 @@ TetrisGame.prototype = {
             this._gameEventsQueue.dequeue();
             return null;
     },
-    removeGrid(grid) {
-        this._gridsListArray.splice(this._gridsListArray.indexOf(grid), 1);
+    removeGrid(grid) { // require to be sure that grid exists and is removable
+        this._gridsListArray.splice(this._gridsListArray.indexOf(grid), 1); // removing grid from array
         grid._playerKeysSet.free = true; // release if keys used
         this._freeColorsArray.push(grid._colorTxt);
         this._playersCount--;
@@ -751,10 +732,10 @@ TetrisGame.prototype = {
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
                 if (this._playersCount%2) { // from left or right
-                    this._gridsListArray.unshift(instruction.newGrid);
+                    this._gridsListArray.unshift(instruction.newGrid); // added to left
                     instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
-                    this._gridsListArray.push(instruction.newGrid);
+                    this._gridsListArray.push(instruction.newGrid); // added to right
                     instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
                 }
             let count = 0;
@@ -1803,57 +1784,6 @@ function isValued (item) { // requires declared and defined not to null
 function isDeclaredAndDefined (item) {
     return (typeof item !== 'undefined');
 }
-// LIST AUTO INDEX Class, list with first and last access, auto indexed by number with size and holes
-function ListAutoIndex() { with(this) {            
-    listAutoTable = [];
-}}
-ListAutoIndex.prototype = {
-    listAutoTable     : null,    // public read only
-    _listSize         : 0,
-    _firstIndex        : 0,
-    _lastIndex        : 0,
-    _seek            : null,
-    _nextCount        : null,
-    putFirst: function(item) { with(this) {
-        _firstIndex--;
-        listAutoTable[_firstIndex] = item;
-        _listSize++;
-        return _firstIndex;
-    }},
-    putLast: function(item) { with(this) {
-        _lastIndex++;
-        listAutoTable[_lastIndex] = item;
-        _listSize++;
-        return _lastIndex;
-    }},
-    eraseItemFromListAuto: function(index) { with(this) {
-        delete listAutoTable[index];
-        _listSize--;
-    }},
-    /*get: function(index) { with(this) {    // old: typeof undefined if not found
-        return listAutoTable[index];
-    }},*/
-    runForEachListElement: function(func, arg1) { with(this) {// allow to run a function on all list items
-        resetNext();
-        let item;
-        while (item = next())
-            func(item, arg1);    // voir call, [args]
-    }},
-    resetNext: function() { with(this) {    // init seek to first
-        _seek = _firstIndex-1;
-        _nextCount = 0;
-    }},
-    next: function() { with(this) {            // let item; resetNext(); while (item = myList.next());
-        if (_nextCount < _listSize) {
-            _nextCount++;
-            _seek++;
-            while (!isDeclaredAndDefined(listAutoTable[_seek]))
-                _seek++;
-            return listAutoTable[_seek];
-        } else
-            return false;
-    }},
-};
 // TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
 class Timer {
     constructor(timerObject) { // args never used here, so removed
