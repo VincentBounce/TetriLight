@@ -1,6 +1,6 @@
 /******************************************************************
 ****************   TetriLight - Vincent BOURDEAU   ****************
-****************   2011 and 2020 - v0.1            ****************
+****************   2011 and 2020 - v0.2            ****************
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
@@ -199,7 +199,6 @@ MainMenu [1 instance]
             Score
                 _score
                 _level
-Examples of list: toProcessMap / _freeColorsArray
 Examples of listAutoIndex: _gridsListAuto
 */
 //"use strict"; // use JavaScript in strict mode to make code better and prevent errors
@@ -626,12 +625,7 @@ function TetrisGame() {
                           this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus here for clockwise
         }
     }
-    this._freeColorsArray = [] //new List();
-    for (let p in SPRITES._colors) //get keys!!!!!!!!!!!!
-        if (p !== 'grey') // grey
-            //this._freeColorsArray.putInList(p, SPRITES._colors[p]); // to know available colors
-            this._freeColorsArray.push(p); // to know available colors
-            //console.table(this._freeColorsArray.listTable);
+    this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
             this._gridsListAuto.resetNext();
@@ -734,10 +728,8 @@ TetrisGame.prototype = {
             this._gameKeysSets[p].free = false;
             let randomIndex = Math.floor(Math.random()*this._freeColorsArray.length);
             let randomColor = this._freeColorsArray[randomIndex];
-            this._freeColorsArray.splice(randomIndex, 1); // we remove 
+            this._freeColorsArray.splice(randomIndex, 1); // we remove from possible choice
             let grid = new TetrisGrid( this._gameKeysSets[p], randomColor );
-            //let grid = new TetrisGrid( this._gameKeysSets[p], this._freeColorsArray.unListN( Math.floor(Math.random()*this._freeColorsArray.listSize)) );
-            // old: grid._gridId = (this._playersCount%2)?this._gridsListAuto.putFirst(grid):this._gridsListAuto.putLast(grid);    // from left or right
             this.organizeGrids({newGrid:grid});
             return grid;
         } else
@@ -747,9 +739,7 @@ TetrisGame.prototype = {
     removeGrid(grid) {
         this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
         grid._playerKeysSet.free = true; // release if keys used
-        //this._freeColorsArray.putInList(grid._colorTxt, grid._colorTxt); // we reput color on free colors
         this._freeColorsArray.push(grid._colorTxt);
-        //this._freeColorsArray.putInList(grid._gridColor.name, grid._gridColor); // we reput color on free colors
         this._playersCount--;
         grid.destroyGrid(); // stops timers etc..
         this.organizeGrids({oldGrid:true});
