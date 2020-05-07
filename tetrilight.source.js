@@ -199,7 +199,6 @@ MainMenu [1 instance]
             Score
                 _score
                 _level
-Examples of listAutoIndex: _gridsListAuto
 */
 //"use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
@@ -601,16 +600,16 @@ TetrisSpritesCreation.prototype = {
 };
 // TETRIS GAME Class
 function TetrisGame() {
-    this._matrixHeight                = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
-    this._iPositionStart                = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
-    this._jPositionStart                = RULES.verticalCellsCount - 1;
-    this._gridsListAuto                = new ListAutoIndex(); // players' grids' lists
-    this._pentominoesBriefMode        = new PentominoesBriefMode();
-    this._gameShapesWithRotations     = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
+    this._matrixHeight            = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
+    this._iPositionStart          = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
+    this._jPositionStart          = RULES.verticalCellsCount - 1;
+    this._gridsListAuto           = new ListAutoIndex(); // players' grids' lists
+    this._pentominoesBriefMode    = new PentominoesBriefMode();
+    this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
     for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
-        shapeBlocksCount        = this._storedPolyominoes[s].blocks.length;
-        quarters                = this._storedPolyominoes[s].quarters;
-        this._gameShapesWithRotations[s]    = new Array(quarters);
+        shapeBlocksCount = this._storedPolyominoes[s].blocks.length;
+        quarters         = this._storedPolyominoes[s].quarters;
+        this._gameShapesWithRotations[s] = new Array(quarters);
         for (let pivot=0;pivot < quarters;pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
             if (pivot === 0)
