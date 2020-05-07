@@ -330,7 +330,7 @@ MainMenu.prototype = {
                 break; // always exit after this instruction
             default:
                 if (GAME._gameState === GAME_STATES.running) // if game is not paused
-                    GAME._gridsListAuto.runForEachListElement( myGrid => myGrid.chooseControlAction(keyboardEvent) );
+                    GAME._gridsListAuto.forEach( myGrid => myGrid.chooseControlAction(keyboardEvent) );
         }
     },
 };
@@ -603,7 +603,7 @@ function TetrisGame() {
     this._matrixHeight            = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
     this._iPositionStart          = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
     this._jPositionStart          = RULES.verticalCellsCount - 1;
-    this._gridsListAuto           = new ListAutoIndex(); // players' grids' lists
+    this._gridsListAuto           = []; // players grids array
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
     for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
@@ -627,18 +627,19 @@ function TetrisGame() {
     this._freeColorsArray = Object.keys(SPRITES._colors).filter( colorTxt => colorTxt !== 'grey' ); // to copy available colors, excepted grey
     this._anims.moveGridsAnim = new Animation({ // make tetris grid coming and leaving
         animateFunc(animOutput){
-            this._gridsListAuto.resetNext();
+            /*this._gridsListAuto.resetNext();
             let grid;
-            while (grid = this._gridsListAuto.next())
-                grid._domNode.moveTemporaryRelatively(grid._vector[0]*animOutput, grid._vector[1]*animOutput)
+            while (grid = this._gridsListAuto.next())*/
+            this._gridsListAuto.forEach( myGrid => myGrid._domNode.moveTemporaryRelatively(myGrid._vector[0]*animOutput, myGrid._vector[1]*animOutput) )
         },
         endAnimFunc(){
-            this._gridsListAuto.resetNext();
+            /*this._gridsListAuto.resetNext();
             let grid;
-            while (grid = this._gridsListAuto.next()) {
-                grid._domNode.moveRelatively(grid._vector[0], grid._vector[1]);
-                grid._vector = [0, 0];
-            }
+            while (grid = this._gridsListAuto.next()) {*/
+            this._gridsListAuto.forEach( myGrid => {
+                myGrid._domNode.moveRelatively(myGrid._vector[0], myGrid._vector[1]);
+                myGrid._vector = [0, 0];
+            } );
             this._gameEventsQueue.dequeue();
         },
         timingAnimFunc: x => -(x-2*Math.sqrt(x)), // arrow replace a return // canceled: -(x-2*Math.sqrt(x));
@@ -703,7 +704,7 @@ TetrisGame.prototype = {
         pentominoes: {index: 11, count: 14} // range of 5 blocks shapes
     },
     destroyGame() {
-        this._gridsListAuto.runForEachListElement( myGrid => myGrid.destroyDomNode() );
+        this._gridsListAuto.forEach( myGrid => myGrid.destroyDomNode() );
         this._newBlockId = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
@@ -713,7 +714,7 @@ TetrisGame.prototype = {
         AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
-        this._gridsListAuto.runForEachListElement( myGrid => myGrid.pauseOrResume() );    // all players
+        this._gridsListAuto.forEach( myGrid => myGrid.pauseOrResume() );    // all players
     },
     addGrid() { // return true if added
         this._gameEventsQueue.execNowOrEnqueue(this, this.addGridBody_);
@@ -736,7 +737,7 @@ TetrisGame.prototype = {
             return null;
     },
     removeGrid(grid) {
-        this._gridsListAuto.eraseItemFromListAuto(grid._gridId);
+        this._gridsListAuto.splice(this._gridsListAuto.indexOf(grid), 1);
         grid._playerKeysSet.free = true; // release if keys used
         this._freeColorsArray.push(grid._colorTxt);
         this._playersCount--;
@@ -750,21 +751,23 @@ TetrisGame.prototype = {
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
                 if (this._playersCount%2) { // from left or right
-                    instruction.newGrid._gridId = this._gridsListAuto.putFirst(instruction.newGrid);
+                    this._gridsListAuto.unshift(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
                 } else {
-                    instruction.newGrid._gridId = this._gridsListAuto.putLast(instruction.newGrid);
+                    this._gridsListAuto.push(instruction.newGrid);
                     instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
                 }
-            this._gridsListAuto.resetNext();
-            let grid;
+            //this._gridsListAuto.resetNext();
+            //let grid;
             let count = 0;
-            while (grid = this._gridsListAuto.next()) {
+            //while (grid = this._gridsListAuto.next()) {
+            for (let p in this._gridsListAuto) {
+                let myGrid=this._gridsListAuto[p];
                 count++;
-                grid._domNode.redrawNode(); // we change all sizes
-                grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
-                grid._vector = [
-                    count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - grid._domNode.getX(),
+                myGrid._domNode.redrawNode(); // we change all sizes
+                myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
+                myGrid._vector = [
+                    count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - myGrid._domNode.getX(),
                     0    ];
             }
             // old: this._gameEventsQueue.execNowOrEnqueue(this._anims.moveGridsAnim, this._anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
@@ -772,27 +775,32 @@ TetrisGame.prototype = {
             if (instruction.newGrid)
                 instruction.newGrid.startGrid(); // enqueue?
         } else {
-            let grid;
+            //let grid;
             let count = 0;
             this._gridsListAuto.resetNext();
-            while (grid = this._gridsListAuto.next()) {
+            //while (grid = this._gridsListAuto.next()) {
+            for (let p in this._gridsListAuto) {
+                let myGrid=this._gridsListAuto[p];
                 count++;
-                grid._domNode.redrawNode(); // we change all sizes
-                grid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
-                grid._domNode.moveNodeTo(count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth, null);
+                myGrid._domNode.redrawNode(); // we change all sizes
+                myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
+                myGrid._domNode.moveNodeTo(count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth, null);
             }
         }
     },
     averageBlocksByPlayingGrid() {
         let playingGridsCount = 0;
         let allGridsBlocksCount = 0;
-        let grid;
-        this._gridsListAuto.resetNext();
-        while (grid = this._gridsListAuto.next())
-            if (grid._gridState === GRID_STATES.playing) {
+        //let grid;
+        //this._gridsListAuto.resetNext();
+        //while (grid = this._gridsListAuto.next())
+        for (let p in this._gridsListAuto) {
+            let myGrid=this._gridsListAuto[p];
+            if (myGrid._gridState === GRID_STATES.playing) {
                 playingGridsCount++;
-                allGridsBlocksCount += grid._lockedBlocks._blocksCount;
+                allGridsBlocksCount += myGrid._lockedBlocks._blocksCount;
             }
+        }
         return allGridsBlocksCount/playingGridsCount;
     },
     startGame() {
@@ -802,9 +810,10 @@ TetrisGame.prototype = {
     },
     transferRows(from, count) { // from grid
         let toGridArray = [];
-        for (let p in this._gridsListAuto.listAutoTable)
-            if ( (this._gridsListAuto.listAutoTable[p] !== from) && (this._gridsListAuto.listAutoTable[p]._gridState === GRID_STATES.playing) )
-                toGridArray.push(this._gridsListAuto.listAutoTable[p]);
+        //for (let p in this._gridsListAuto.listAutoTable)
+        this._gridsListAuto.forEach( myGrid => {
+            if ( (myGrid !== from) && (myGrid._gridState === GRID_STATES.playing) ) toGridArray.push(myGrid);
+        } );
         if (toGridArray.length)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
                 // toGridArray[ (Math.floor(Math.random()*toGridArray.length)+count) % toGridArray.length ]._lockedBlocks.put1NewRisingRow(); // same call as earlier
@@ -812,9 +821,9 @@ TetrisGame.prototype = {
                 destGrid._gridEventsQueue.execNowOrEnqueue(
                     destGrid._lockedBlocks,
                     destGrid._lockedBlocks.put1NewRisingRow ); // we exec or enqueue
-            }    
+            };
     },
-};
+}
 // PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 class PentominoesBriefMode {
     constructor() {
@@ -835,20 +844,18 @@ class PentominoesBriefMode {
     }
     finishPentoMode() {
         this._pentoModeTimer.finishTimer();
-        GAME._gridsListAuto.runForEachListElement(
-            myGrid => {
-                if (myGrid._gridState === GRID_STATES.playing) {
-                    myGrid._playedPolyominoesType = 'tetrominoes'
-                    myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
-                    myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
-                    myGrid._nextShapePreview.mark(myGrid._nextShape);
-                }
-            });
+        GAME._gridsListAuto.forEach( myGrid => {
+            if (myGrid._gridState === GRID_STATES.playing) {
+                myGrid._playedPolyominoesType = 'tetrominoes'
+                myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
+                myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
+                myGrid._nextShapePreview.mark(myGrid._nextShape);
+            }
+        });
     }
     runPentoMode(gridWichTriggeredPentoMode, clearedLinesCount) {
         if (this.isRunning()) this.finishPentoMode();
-        GAME._gridsListAuto.runForEachListElement(
-            myGrid => { // here, argument is used
+        GAME._gridsListAuto.forEach( myGrid => { // here, argument is used
                 if (myGrid._gridState === GRID_STATES.playing) {
                     myGrid._playedPolyominoesType = (myGrid !== gridWichTriggeredPentoMode) ? 'pentominoes' : 'trominoes';
                     myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
