@@ -784,13 +784,13 @@ TetrisGame.prototype = {
         }
     },
     averageBlocksByPlayingGrid() {
-        let allGridsBlocksCount = 0;
         let playingGridsCount = 0;
+        let allGridsBlocksCount = 0;
         let grid;
         this._gridsListAuto.resetNext();
         while (grid = this._gridsListAuto.next())
             if (grid._gridState === GRID_STATES.playing) {
-                playingGridsCount ++;
+                playingGridsCount++;
                 allGridsBlocksCount += grid._lockedBlocks._blocksCount;
             }
         return allGridsBlocksCount/playingGridsCount;
@@ -800,15 +800,15 @@ TetrisGame.prototype = {
         AUDIO.audioStop('musicMusic');
         // AUDIO.audioPlay('musicMusic');
     },
-    transferRows(from, count) {    // from grid
-        let toGrid = [];
+    transferRows(from, count) { // from grid
+        let toGridArray = [];
         for (let p in this._gridsListAuto.listAutoTable)
             if ( (this._gridsListAuto.listAutoTable[p] !== from) && (this._gridsListAuto.listAutoTable[p]._gridState === GRID_STATES.playing) )
-                toGrid.push(this._gridsListAuto.listAutoTable[p]);
-        if (toGrid.length)
+                toGridArray.push(this._gridsListAuto.listAutoTable[p]);
+        if (toGridArray.length)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
-                // toGrid[ (Math.floor(Math.random()*toGrid.length)+count) % toGrid.length ]._lockedBlocks.put1NewRisingRow(); // same call as earlier
-                let destGrid = toGrid[ (Math.floor(Math.random()*toGrid.length)+count) % toGrid.length ];
+                // toGridArray[ (Math.floor(Math.random()*toGridArray.length)+count) % toGridArray.length ]._lockedBlocks.put1NewRisingRow(); // same call as earlier
+                let destGrid = toGridArray[ (Math.floor(Math.random()*toGridArray.length)+count) % toGridArray.length ];
                 destGrid._gridEventsQueue.execNowOrEnqueue(
                     destGrid._lockedBlocks,
                     destGrid._lockedBlocks.put1NewRisingRow ); // we exec or enqueue
