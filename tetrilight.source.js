@@ -874,7 +874,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._animsStack          = [];
     this._lockedShapes        = [];
     // this._rowsToClearArray = []; // no row to clear at the begining
-    this._rowsToClearList     = new List();
+    this._rowsToClearList     = new Set();
     this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
     for (let i=0;i < this._matrix.length;i++) {
         this._matrix[i] = [];
@@ -956,15 +956,17 @@ function TetrisGrid(playerKeysSet, gridColor){
             // for (let r in this._rowsToClearArray) // for each row to clear
             //     for (let i=1;i <= RULES.horizontalCellsCount;i++) // for each column
             //         this._matrix[i][this._rowsToClearArray[r]]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
-            for (let r in this._rowsToClearList.listTable) // for each row to clear
+            //for (let r in this._rowsToClearList.listTable) // for each row to clear
+            this._rowsToClearList.forEach( myRow => {
                 for (let i=1;i <= RULES.horizontalCellsCount;i++)
-                    this._matrix[i][r]._domNode.setScale(animOutput); // with blocks' _domNodes, programs goes here for each block of each row to clear
+                    this._matrix[i][myRow]._domNode.setScale(animOutput) }); // with blocks' _domNodes, programs goes here for each block of each row to clear
         },
         endAnimFunc() { // NOT GRAPHIC PROCESS
             // this._rowsToClearArray.forEach(function(myRow) {
             //     this.clearFullRowAfterClearingAnim(myRow); }); // now erasing animated cleared rows datas // bad code:this._rowsToClearArray = [];
-            for (let r in this._rowsToClearList.listTable)
-                this.clearFullRowAfterClearingAnim(r); // so erasing previous
+            //for (let r in this._rowsToClearList.listTable)
+            this._rowsToClearList.forEach( myRow =>
+                this.clearFullRowAfterClearingAnim(myRow) ); // so erasing previous
             this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
             this.gridAnimsStackPop();
         },
@@ -1220,7 +1222,7 @@ TetrisGrid.prototype            = {
         if (this._fallingShape !== null) // for recursive calls with fallingshape === null
             this._fallingShape.clearGhostBlocks();
         // let rowsToClearCount = this._rowsToClearArray.length;
-        let rowsToClearCount = this._rowsToClearList.listSize;
+        let rowsToClearCount = this._rowsToClearList.size;
         if (rowsToClearCount > 0) { // if there's rows to clear
             this._score.combosCompute();
             this._score.computeScoreForSweptRowsAndDisplay(rowsToClearCount);
@@ -1687,7 +1689,7 @@ class TetrisBlock {
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount++; // we increment
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount ) // if full row to clear
          // if (this._grid._rowsToClearArray.lastIndexOf(this._jPosition) === -1)// check, if value not found
-            this._grid._rowsToClearList.putInList(this._jPosition, true); // true to put something
+            this._grid._rowsToClearList.add(this._jPosition); // true to put something
             // this._grid._rowsToClearArray.push(this._jPosition); // preparing rows to clear, not negative values
     }
     unplaceBlock() {
@@ -1698,7 +1700,7 @@ class TetrisBlock {
         locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount--; // we decrement
         locked._blocksCount--; // we decrement
          if ( locked._lockedBlocksArrayByRow[this._jPosition].rowBlocksCount === RULES.horizontalCellsCount-1 ) // if we remove 1 from 10 blocks, it remains 9, so rowsToClear need to be updated
-            this._grid._rowsToClearList.eraseItemFromList(this._jPosition);
+            this._grid._rowsToClearList.delete(this._jPosition);
             // this._grid._rowsToClearArray.splice( // necessary for correct exection
             // this._grid._rowsToClearArray.lastIndexOf(this._jPosition), 1 ); // we remove position of this._jPosition in _rowsToClearArra
     }
