@@ -635,7 +635,7 @@ function TetrisGame() {
         },
         timingAnimFunc: x => -(x-2*Math.sqrt(x)), // arrow replace a return // canceled: -(x-2*Math.sqrt(x));
         animDuration: DURATIONS.movingGridsDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
@@ -928,7 +928,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => Math.sin(x*Math.PI), // arrow replace a return // or return Math.sin(x*Math.PI*2)*(1-x);
         animDuration: DURATIONS.gridQuakeDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.pentominoesModeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
@@ -939,7 +939,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5, // arrow replace a return // f(x)=-cos(3^(x*3)*pi)/2+0.5
         animDuration: 0, // need to set duration for this animation before running
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.clearRowsAnim = new Animation({ // loading animation to use later
         animateFunc(animOutput) { // called n times recursively, this: current object AND Animation
@@ -960,7 +960,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => 1 - Math.pow(x, 2), // arrow replace a return
         animDuration: DURATIONS.movingGridsDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
         animateFunc(animOutput) {
@@ -983,7 +983,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => Math.pow(x, 3), // arrow replace a return
         animDuration: DURATIONS.hardDropDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.rising1RowAnim = new Animation({
         animateFunc(animOutput) { // "this" display animation instancied object
@@ -1002,7 +1002,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => x, // arrow replace a return // linear rising of rows, not (2*Math.sqrt(x)-x);
         animDuration: DURATIONS.rising1RowDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.shapeRotateAnim = new Animation({ // loading animation to use later
         startAnimFunc() { // to animate block, we temporary apply a transform rotation
@@ -1019,7 +1019,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => -90*(x-2*Math.sqrt(x)), // arrow replace a return
         animDuration: DURATIONS.rotatingDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._anims.messageAnim = new Animation({
         startAnimFunc(textInfos) {
@@ -1036,7 +1036,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         timingAnimFunc: x => Math.pow(2*(x-0.5), 3), // arrow replace a return // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0
         animDuration: DURATIONS.centralMessagesDuration,
-        optionalAnimOwner: this // otherwise, it's animation context by default
+        animOwner: this // otherwise, it's animation context by default
     });
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
@@ -1743,7 +1743,7 @@ class Score {
             },
             timingAnimFunc: x => -(x-2*Math.sqrt(x)), // arrow replace a return
             animDuration: DURATIONS.displayingScoreDuration,
-            optionalAnimOwner: this // otherwise, it's animation context by default
+            animOwner: this // otherwise, it's animation context by default
         });
         this.writeScore_(this._displayedScore);
     }
@@ -1929,7 +1929,7 @@ class Timer {
         this.finishTimer(); // if still running
         this._running = true;
         this._beginTime = (new Date).getTime();
-        //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod);
+        //this._timeOut = setTimeout(this._funcAtTimeOut.bind(this._timerOwner), this._timerPeriod);
         this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod); // setInterval is useless here, not used
     }
     isRunning() {
@@ -2477,7 +2477,7 @@ class Animation {
         this.endAnimFunc_    = animObject.endAnimFunc; // function to set the last position after animation
         this.timingAnimFunc_ = animObject.timingAnimFunc; // f(x) defined on [0;1] to [-infinite;+infinite] give animation acceleration with animOutput, not dependant of declaring object, WARNING this fofbidden in the body
         this._duration       = animObject.animDuration; // duration of animation
-        this._animOwner      = animObject.optionalAnimOwner; // object owner of animation
+        this._animOwner      = animObject.animOwner; // object owner of animation
         this.animOutput; // public value of f(x), current animation position after timingAnimFunc_, any value possible
         this._paused;
         this._animating;
@@ -2495,7 +2495,7 @@ class Animation {
     }
     makeNextFrame_() {
         this.animateFunc_.call(this._animOwner, this.animOutput); // because score anim not declared in grid
-        // this.animateFunc_(); // draw frame on display, as defined in the instance of Animation
+        //this.animateFunc_.bind(this._animOwner); this.animateFunc_(this.animOutput); // draw frame on display, as defined in the instance of Animation
         if ( (++this._elapsedFrames) < this._plannedFrames) {
             this.animOutput = this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); // input [0;1] animOutput have any value
             this._windowNextFrameId = window.requestAnimationFrame( () => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
