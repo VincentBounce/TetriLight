@@ -594,19 +594,19 @@ function TetrisGame() {
     this._gridsListArray          = []; // players grids array
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
-    for (let s=0;s < this._storedPolyominoes.length;s++) { // creating all shapes variations: browsing shapes
+    for (let s=0; s < this._storedPolyominoes.length; s++) { // creating all shapes variations: browsing shapes
         shapeBlocksCount = this._storedPolyominoes[s].blocks.length;
         quarters         = this._storedPolyominoes[s].quarters;
         this._gameShapesWithRotations[s] = new Array(quarters);
-        for (let pivot=0;pivot < quarters;pivot++) { // creating all shapes rotations: browsing rotations
+        for (let pivot=0; pivot < quarters; pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
             if (pivot === 0)
-                for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
+                for (let b=0; b < shapeBlocksCount; b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         this._storedPolyominoes[s].blocks[b][0],
                         this._storedPolyominoes[s].blocks[b][1]    ];
             else //(pivot !== 0)
-                for (let b=0;b < shapeBlocksCount;b++) // browsing 4 blocks
+                for (let b=0; b < shapeBlocksCount; b++) // browsing 4 blocks
                     this._gameShapesWithRotations[s][pivot][b] = [
                         -this._gameShapesWithRotations[s][pivot-1][b][1], // minus 1 here (default) for unclockwise
                         +this._gameShapesWithRotations[s][pivot-1][b][0] ] // minus 1 here for clockwise
@@ -619,7 +619,7 @@ function TetrisGame() {
         },
         endAnimFunc(){
             this._gridsListArray.forEach( myGrid => {
-                myGrid._domNode.moveRelatively(myGrid._vector[0], myGrid._vector[1]);
+                myGrid._domNode.moveRelatively( myGrid._vector[0], myGrid._vector[1]);
                 myGrid._vector = [0, 0];
             } );
             this._gameEventsQueue.dequeue();
@@ -846,16 +846,13 @@ class PentominoesBriefMode {
 }
 // TETRIS GRID Class
 function TetrisGrid(playerKeysSet, gridColor){
-    //this._colorTxt            = gridColor;
-    //this._gridColor           = SPRITES._colors[gridColor];
-    //console.log(gridColor);
-    this._gridColor           = gridColor;
-    this._playerKeysSet       = playerKeysSet; // [up down left right]
-    this._lockedBlocks        = new LockedBlocks(this);
-    this._gridEventsQueue     = new EventsQueue();
-    this._animsStack          = [];
-    this._lockedShapes        = [];
-    this._rowsToClearSet     = new Set();
+    this._gridColor       = gridColor;
+    this._playerKeysSet   = playerKeysSet; // [up down left right]
+    this._lockedBlocks    = new LockedBlocks(this);
+    this._gridEventsQueue = new EventsQueue();
+    this._animsStack      = [];
+    this._lockedShapes    = [];
+    this._rowsToClearSet  = new Set();
     this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
     for (let i=0;i < this._matrix.length;i++) {
         this._matrix[i] = [];
@@ -1027,9 +1024,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
 TetrisGrid.prototype            = {
-    //_gridId                    : null,
     _gridState                 : GRID_STATES.ready,
-    //_colorTxt                  : null,
     _gridColor                 : null,
     _domNode                   : null,
     _realBlocksNode            : null,
@@ -1288,7 +1283,6 @@ class TetrisShape {
         this._shapeType;
         this._pivotsCount;
         this._pivot;
-        //this._colorTxt;
         this._shapeColor;
         this._shapeBlocks;
         this._polyominoBlocks; // READ ONLY, reference that points to current shape in GAME shapes store
@@ -1308,7 +1302,6 @@ class TetrisShape {
             + Math.floor(Math.random() * GAME._playedPolyominoesType[this._grid._playedPolyominoesType].count);
         this._pivotsCount              = GAME._gameShapesWithRotations[this._shapeType].length;
         this._pivot                    = Math.floor(Math.random() * this._pivotsCount);
-        //this._colorTxt                 = GAME._storedPolyominoes[this._shapeType].color;
         this._shapeColor               = SPRITES._colors[ GAME._storedPolyominoes[this._shapeType].color ];
         this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
@@ -1619,7 +1612,6 @@ class TetrisBlock {
         this._grid;
         this._shape;
         this._domNode;
-        //this._colorTxt;
         this._blockColor;
         this._blockIndex;
         this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', sprite: SPRITES._spriteBlock}); // creating node
@@ -1671,7 +1663,6 @@ class TetrisBlock {
             this._grid._rowsToClearSet.delete(this._jPosition); // we remove position of this._jPosition in _rowsToClearArra
     }
     setBlockColor(blockColor)  {
-        //this._colorTxt = colorTxt;
         this._blockColor = blockColor;
         this._domNode.nodeDrawSprite({col: this._blockColor.name});
     }
@@ -1977,8 +1968,6 @@ SvgObject.prototype = {
         return child;
     }}
 };
-
-
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
