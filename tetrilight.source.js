@@ -99,7 +99,8 @@ myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 queue(fifo) / gridAnimsStackPush(filo)
 shift<<, unshift>> [array] <<push, >>pop
 delete myArray[0]: just set slot to undefined
-myArray.shift(): remove the slot from the table
+myArray.shift(): remove the 1st slot from the table, decrease the length
+    WARNING shift all indexes, start is alway 0
     WARNING even an Empty slot
 for (let p in MyArray) delete myArray[p]: set to undefined / not Empty slots
 instrument = [...instrument, 'violin', 'guitar'] // same as push violin, push guitar
@@ -198,7 +199,7 @@ MainMenu [1 instance]
             Score
                 _score
                 _level
-Examples of list: toProcessList / _freeColors
+Examples of list: toProcessMap / _freeColors
 Examples of listAutoIndex: _gridsListAuto
 */
 //"use strict"; // use JavaScript in strict mode to make code better and prevent errors
@@ -276,14 +277,18 @@ function init() {
     GAME = new TetrisGame();
     GAME.addGrid();
     //GAME.addGrid(); // #DEBUG
-    let t = []
+    
+    /*let t = []
     t[5] = 55
     t[10] = 1010
+    console.log(t[0])
+    t.shift();
+    t.shift();
+    t.shift();
+    console.log(t[0])
     console.log(t)
-    t.shift();
-    t.shift();
-    t.shift();
-    console.log(t)
+    t[0] = 'zero'
+    console.log(t)*/
 
 }
 // MENU MANAGER Class (make new to open web GAME)
@@ -1532,23 +1537,22 @@ LockedBlocks.prototype = {
     chainSearchOrphan(mode) {
         if (mode === SEARCH_MODE.up)
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
-        let toProcessList = new List();
-        // console.log('bbbbb');// $$$$$$$$
-        //console.table(this._lockedBlocksArray);
-        // console.log('bb');
-        for (let p in this._lockedBlocksArray)
+        //let toProcessMap = new List();
+        let toProcessMap = new Map();
+        for (let p in this._lockedBlocksArray) // see to use filter.
             if (this._lockedBlocksArray[p] !== undefined) // _lockedBlocksArray has TetrisBlock or empty values
-                toProcessList.putInList(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
-        console.table(toProcessList.listTable);
+                toProcessMap.set(this._lockedBlocksArray[p]._blockIndex, this._lockedBlocksArray[p]);
+        //console.table(toProcessMap.listTable);
         let groups = []; // below we make isolated groups
-        while (toProcessList.listSize > 0) { // equivalent to while (toProcessList.listSize)
-            block = toProcessList.unList(); // block impossible to be null
-            // block = toProcessList.listTable.shift(); toProcessList.listSize--;$$$$$$$$$$$$$
+        //while (toProcessMap.listSize > 0) {
+        for (let blockIndex of toProcessMap.keys()) {
+            //block = toProcessMap.unList();
+            let block = toProcessMap.get(blockIndex); toProcessMap.delete(blockIndex); // block impossible to be null
             let group = {jMin: RULES.verticalCellsCount, shape: []};
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
             for (let dir=0;dir < 4;dir++)
-                this.chainSearch3Ways(block, group, toProcessList, dir); // this.chainSearch3Ways is recursive
+                this.chainSearch3Ways(block, group, toProcessMap, dir); // this.chainSearch3Ways is recursive
             if ((( mode === SEARCH_MODE.down) && (group.jMin >= 2 ))
                 || mode === SEARCH_MODE.up )
                 groups.push(group);
@@ -1597,17 +1601,19 @@ LockedBlocks.prototype = {
             }
         }
     },
-    chainSearch3Ways(blockFrom, group, toProcessList, dir) { // recursive
+    chainSearch3Ways(blockFrom, group, toProcessMap, dir) { // recursive
         let block = this._grid._matrix
             [blockFrom._iPosition + this._searchDirections[dir][0]]
             [blockFrom._jPosition + this._searchDirections[dir][1]];
-        if (block && toProcessList.listTable[block._blockIndex] // if shape blocks contact
+        //if (block && toProcessMap.listTable[block._blockIndex] // if shape blocks contact
+        if (block && toProcessMap.has(block._blockIndex)
         && (blockFrom._blockColor === block._blockColor) ) { // if same shape blocks color #DEBUG rule to check here
-            toProcessList.eraseItemFromList(block._blockIndex); // call del from list
+            //toProcessMap.eraseItemFromList(block._blockIndex); // call del from list
+            toProcessMap.delete(block._blockIndex);
             group.jMin = Math.min(group.jMin, block._jPosition);
             group.shape.push(block);
             for (let delta=-1;delta <= 1; delta++)
-                this.chainSearch3Ways(block, group, toProcessList, (dir+4+delta)%4);
+                this.chainSearch3Ways(block, group, toProcessMap, (dir+4+delta)%4);
         }
     },
     tryMoveShapesSamejEquals(jEquals) { // if shape blocks color
