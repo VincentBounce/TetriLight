@@ -465,31 +465,31 @@ TetrisSpritesCreation.prototype = {
     },
     zoom1Step(step) { // computing for zoom with pixels into web browser
         this._scaleFactor += step;
-        let oldGridWidth = this._pxFullGridWidth;
         this._pxBlockSize += step;
-        this._pxGameWidth = this._rootNode.getWidth();
-        this._pxGameHeight = this._rootNode.getHeight() - this._pxTopMenuZoneHeight;
-        this._pxHalfGameHeight = Math.round(this._pxGameHeight/2);
-        this._pxGridLineWidth = Math.max(Math.round(this._pxBlockSize/14), 1);
-        this._pxGridWidth = RULES.horizontalCellsCount*this._pxBlockSize + (RULES.horizontalCellsCount+1)*this._pxGridLineWidth;
-        this._pxGridHeight = RULES.verticalCellsCount*this._pxBlockSize + (RULES.verticalCellsCount+1)*this._pxGridLineWidth;
-        this._pxCellSize = this._pxBlockSize + this._pxGridLineWidth;
-        this._pxGridBorder = Math.ceil(this._pxCellSize/3); // bordure de grille en dégradé
-        this._pxFullGridWidth = this._pxGridWidth + 2*this._pxGridBorder; // largeur grille + bordure
-        this._pxFullGridHeight = this._pxGridHeight + this._pxGridBorder; // hauteur grille + bordure
-        this._pxGridMargin = Math.round(this._pxFullGridWidth/8);
+        let oldGridWidth         = this._pxFullGridWidth;
+        this._pxGameWidth        = this._rootNode.getWidth();
+        this._pxGameHeight       = this._rootNode.getHeight() - this._pxTopMenuZoneHeight;
+        this._pxHalfGameHeight   = Math.round(this._pxGameHeight/2);
+        this._pxGridLineWidth    = Math.max(Math.round(this._pxBlockSize/14), 1);
+        this._pxGridWidth        = RULES.horizontalCellsCount*this._pxBlockSize + (RULES.horizontalCellsCount+1)*this._pxGridLineWidth;
+        this._pxGridHeight       = RULES.verticalCellsCount*this._pxBlockSize + (RULES.verticalCellsCount+1)*this._pxGridLineWidth;
+        this._pxCellSize         = this._pxBlockSize + this._pxGridLineWidth;
+        this._pxGridBorder       = Math.ceil(this._pxCellSize/3); // bordure de grille en dégradé
+        this._pxFullGridWidth    = this._pxGridWidth + 2*this._pxGridBorder; // largeur grille + bordure
+        this._pxFullGridHeight   = this._pxGridHeight + this._pxGridBorder; // hauteur grille + bordure
+        this._pxGridMargin       = Math.round(this._pxFullGridWidth/8);
         this._pxPreviewBlockSize = Math.round(this._pxBlockSize/2.6);
         this._pxPreviewLineWidth = this._pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
-        this._pxPreviewFullSize = (this._pxPreviewBlockSize + this._pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
-        this._pxCeilHeight = this._pxPreviewFullSize + this._pxPreviewBlockSize + this._pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + _pxCellSize
-        this._pxFullGridAndCeil = this._pxFullGridHeight + this._pxCeilHeight;
-        this._XPreviewPosition = Math.round(this._pxFullGridWidth/2-this._pxPreviewFullSize/2);
-        this._YPreviewPosition = 0;
-        this._XScorePosition = this._XPreviewPosition + this._pxPreviewFullSize; // Math.round(3*_pxFullGridWidth/4);
-        this._YScorePosition = 0;
-        this._XMessagePosition = Math.round(this._pxFullGridWidth/2);
-        this._YMessagePosition = Math.round(this._pxFullGridHeight/2);
-        this._zoomRatio = !oldGridWidth ? 1 : this._pxFullGridWidth / oldGridWidth;
+        this._pxPreviewFullSize  = (this._pxPreviewBlockSize + this._pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
+        this._pxCeilHeight       = this._pxPreviewFullSize + this._pxPreviewBlockSize + this._pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + _pxCellSize
+        this._pxFullGridAndCeil  = this._pxFullGridHeight + this._pxCeilHeight;
+        this._XPreviewPosition   = Math.round(this._pxFullGridWidth/2-this._pxPreviewFullSize/2);
+        this._YPreviewPosition   = 0;
+        this._XScorePosition     = this._XPreviewPosition + this._pxPreviewFullSize; // Math.round(3*_pxFullGridWidth/4);
+        this._YScorePosition     = 0;
+        this._XMessagePosition   = Math.round(this._pxFullGridWidth/2);
+        this._YMessagePosition   = Math.round(this._pxFullGridHeight/2);
+        this._zoomRatio          = !oldGridWidth ? 1                                                                                                           : this._pxFullGridWidth / oldGridWidth;
     },
     create_()  { with(this) { // creating all graphics
         _spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
@@ -639,7 +639,7 @@ TetrisGame.prototype = {
     _playersCount           : 0,
     _gameState              : GAME_STATES.running, // others: GAME_STATES.paused, GAME_STATES.running
     _shapeIdTick            : 0,
-    _newBlockId             : 0,
+    _nextBlockIndex             : 0,
     _pentominoesBriefMode   : null,            
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
@@ -687,7 +687,7 @@ TetrisGame.prototype = {
     },
     destroyGame() {
         this._gridsListArray.forEach( myGrid => myGrid.destroyDomNode() );
-        this._newBlockId = 0;
+        this._nextBlockIndex = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
     },
@@ -755,7 +755,6 @@ TetrisGame.prototype = {
                 instruction.newGrid.startGrid(); // enqueue?
         } else {
             let count = 0;
-            this._gridsListArray.resetNext();
             for (let p in this._gridsListArray) {
                 let myGrid=this._gridsListArray[p];
                 count++;
@@ -1626,12 +1625,12 @@ class TetrisBlock {
                 this._shape = shapeOrGridOwnerOfThisBlock;
                 this._grid = this._shape._grid;
                 this.putBlockNodeIn(this._shape._domNode);
-                this._blockIndex = GAME._newBlockId++;
+                this._blockIndex = GAME._nextBlockIndex++;
                 break;
             case BLOCK_TYPES.orphan: // rising row coming from level j=0
                 this._grid = shapeOrGridOwnerOfThisBlock; // use of shape as a grid, can be optimized
                 this.putBlockInRealBlocksNode();
-                this._blockIndex = GAME._newBlockId++;
+                this._blockIndex = GAME._nextBlockIndex++;
                 this.placeBlock();
                 this.drawBlockInCell();
                 break;
@@ -1688,16 +1687,16 @@ class TetrisBlock {
 // TETRIS SCORE Class, based on riginal Nintendo scoring system
 class Score {
     constructor(grid) {
-        this._grid = grid;
-        this._combos = -1;
-        this._digitalScore = 0; // public real score
-        this._displayedScore = 0;
-        this._delta = 0;
+        this._grid              = grid;
+        this._combos            = -1;
+        this._digitalScore      = 0; // public real score
+        this._displayedScore    = 0;
+        this._delta             = 0;
         this._deltaShowed;
-        this._factors = [null, 40, 100, 300, 1200, 6600]; // a single line clear is worth 400 points at level 0, clearing 4 lines at once (known as a Tetris) is worth 1200, max 5 lines with pento mode
-        this._previousAnimDelta    = 0;
-        this._totalSweptRows = 0;
-        this._level = 0;
+        this._factors           = [null, 40, 100, 300, 1200, 6600]; // a single line clear is worth 400 points at level 0, clearing 4 lines at once (known as a Tetris) is worth 1200, max 5 lines with pento mode
+        this._previousAnimDelta = 0;
+        this._totalSweptRows    = 0;
+        this._level             = 0;
         this._grid._anims.score = new Animation({ // anim here because it's easier to access to score properties
             startAnimFunc() {
                 this._deltaShowed = this._delta;
