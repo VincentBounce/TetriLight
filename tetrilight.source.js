@@ -267,11 +267,11 @@ function MainMenu() { // queue or stack
     SPRITES.create_();
     this._domNode.setDomNode({ // menus on top of the screen
         top: {
-            type:'canvas', width:SPRITES.pxGameWidth, height:SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
+            type:'canvas', width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
         message1: {
-            width:SPRITES.pxTopMenuZoneHeight, height:SPRITES.pxTopMenuZoneHeight, vertical_align:'middle' },
+            width: () => SPRITES.pxTopMenuZoneHeight, height: () => SPRITES.pxTopMenuZoneHeight, vertical_align:'middle' },
         background: {
-            type:'canvas', y:SPRITES.pxTopMenuZoneHeight, width:SPRITES.pxGameWidth, height:SPRITES.pxGameHeight, sprite:SPRITES._spriteBackground }
+            type:'canvas', y: () => SPRITES.pxTopMenuZoneHeight, width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight, sprite:SPRITES._spriteBackground }
         });
     this._domNode._childs.background.nodeDrawSprite(); // paint black background
     this._domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
@@ -849,27 +849,27 @@ function TetrisGrid(playerKeysSet, gridColor){
         timerOwner: this
     });
     this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
-        width: SPRITES.pxFullGridWidth, height: SPRITES.pxFullGridAndCeil,
+        width: () =>  SPRITES.pxFullGridWidth, height: () =>  SPRITES.pxFullGridAndCeil,
         frameZone: {
-            x:SPRITES.pxGridBorder, y:SPRITES.pxCeilHeight,
-            width:SPRITES.pxGridWidth, height:SPRITES.pxGridHeight,
+            x: () => SPRITES.pxGridBorder, y: () => SPRITES.pxCeilHeight,
+            width: () => SPRITES.pxGridWidth, height: () => SPRITES.pxGridHeight,
             overflow:'hidden',
             back: { // tetris background, if not canvas, it's div
                 background: { type:'canvas', sprite:SPRITES._spriteGridBackground },
                 ghostBlocks:{},
                 realBlocks: {} } },
         frontZone: {
-            y:SPRITES.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: SPRITES.pxFullGridHeight },
+            y: () => SPRITES.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: () => SPRITES.pxFullGridHeight },
         controlZone: {
-            y:SPRITES.pxYPreviewPosition, width:SPRITES.pxXPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            y: () => SPRITES.pxYPreviewPosition, width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align:'middle' },
         nextShapePreview: {
-            x:SPRITES.pxXPreviewPosition, y:SPRITES.pxYPreviewPosition,
-            type:'canvas', width:SPRITES.pxPreviewFullSize, height:SPRITES.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
+            x: () => SPRITES.pxXPreviewPosition, y: () => SPRITES.pxYPreviewPosition,
+            type:'canvas', width: () => SPRITES.pxPreviewFullSize, height: () => SPRITES.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
         scoreZone: {
-            x:SPRITES.pxXScorePosition, y:SPRITES.pxYScorePosition,
-            width:SPRITES.pxXPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            x: () => SPRITES.pxXScorePosition, y: () => SPRITES.pxYScorePosition,
+            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align:'middle' },
         messageZone: {
-            y:SPRITES.pxCeilHeight, width:SPRITES.pxFullGridWidth, height:SPRITES.pxFullGridHeight, vertical_align:'middle' }
+            y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align:'middle' }
     });
     this._domNode._childs.frontZone.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
@@ -1592,7 +1592,7 @@ class TetrisBlock {
         this._domNode;
         this._blockColor;
         this._blockIndex;
-        this._domNode = new DomNode({type: 'canvas', width: SPRITES.pxBlockSize, height: SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}); // creating node
+        this._domNode = new DomNode({type: 'canvas', width: () => SPRITES.pxBlockSize, height: () => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}); // creating node
         this.setBlockColor(blockColor);
         switch (this._blockType) {
             case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
@@ -1837,114 +1837,114 @@ function SvgObject(svgDefinition) { //svgDefinition is attributes
     this._rotateText = '';
     if (svgDefinition.parent) //if parent is supplied OR is not null
         svgDefinition.parent.appendChild(this._svgElement);
-    delete svgDefinition.parent; //to avoid it in set()
-    set(svgDefinition);
+    delete svgDefinition.parent; //to avoid it in this.set()
+    this.set(svgDefinition);
 }
 SvgObject.prototype = {
     _count        : 0, //for unamed elements
     _svgElement   : null, //public, DOM SVG
     _childs       : null,
     _parent       : null, //pointer to parent
-    _parentIndex  : null, //index of child in _childs, integer or name
+    _parentIndex  : null, //index of child in this._childs, integer or name
     _translateText: null,
     _scaleText    : null,
     _rotateText   : null,
-    del() { with(this) { //optional because garbbage collector
-        for (var p in _childs)
-            _childs[p].del(); //delete _childs[p] made by child
-        _count = 0;
-        if (_parent) delete _parent._childs[_parentIndex]; //manage parent
-        delete _childs;
-        _svgElement.parentNode.removeChild(_svgElement);
-        delete _svgElement;
-    }},
-    get(svgDefinition) { with(this) {
-        return _svgElement.getAttributeNS(null, svgDefinition);
-    }},
-    set1(svgDefinition, value) { with(this) {    
-        _svgElement.setAttributeNS(null, svgDefinition, value);
-    }},
-    set(svgDefinition) { with(this) {
+    del() { //optional because garbbage collector
+        for (var p in this._childs)
+            this._childs[p].del(); //delete this._childs[p] made by child
+        this._count = 0;
+        if (this._parent) delete this._parent._childs[this._parentIndex]; //manage parent
+        delete this._childs;
+        this._svgElement.parentNode.removeChild(this._svgElement);
+        delete this._svgElement;
+    },
+    get(svgDefinition) {
+        return this._svgElement.getAttributeNS(null, svgDefinition);
+    },
+    set1(svgDefinition, value) {    
+        this._svgElement.setAttributeNS(null, svgDefinition, value);
+    },
+    set(svgDefinition) {
         for (var p in svgDefinition)
             if (!svgDefinition[p].type) //if sheet attribute without type
-                _svgElement.setAttributeNS(null, p.replace(/_/, '-'), svgDefinition[p]); // equivalent new RegExp("_","g"),
+                this._svgElement.setAttributeNS(null, p.replace(/_/, '-'), svgDefinition[p]); // equivalent new RegExp("_","g"),
             else {
-                svgDefinition[p].parent = _svgElement;
-                _childs[p] = new SvgObject(svgDefinition[p]);
-                _childs[p]._parent = this; //manage parent
-                _childs[p]._parentIndex = p; //manage parent, create an instance for chars
+                svgDefinition[p].parent = this._svgElement;
+                this._childs[p] = new SvgObject(svgDefinition[p]);
+                this._childs[p]._parent = this; //manage parent
+                this._childs[p]._parentIndex = p; //manage parent, create an instance for chars
             }
-    }},
-    getText() { with(this) { //works only if type == "text"
-        return _svgElement.textContent;
-    }},
-    setText(text, width, maxHeightMinCharCount) { with(this) { //works only if type == "text"
-        _svgElement.textContent = text;
+    },
+    getText() { //works only if type == "text"
+        return this._svgElement.textContent;
+    },
+    setText(text, width, maxHeightMinCharCount) { //works only if type == "text"
+        this._svgElement.textContent = text;
         if (width) {
             var charCount = Math.max((''+text).length, maxHeightMinCharCount);
-            set1('font-size', game._fontRatio * width/charCount); 
+            this.set1('font-size', game._fontRatio * width/charCount); 
         }
-    }},
-    setTranslate(x, y) { with(this) {
-        _translateText = `translate(${x},${y})`;
-        set({transform: _translateText});
-    }},
-    setScale(sx, sy) { with(this) { //sy optional
+    },
+    setTranslate(x, y) {
+        this._translateText = `translate(${x},${y})`;
+        this.set({transform: this._translateText});
+    },
+    setScale(sx, sy) { //sy optional
         if (!sy) sy = sx;
-        _scaleText = `scale(${sx},${sy})`;
-        set({transform: _scaleText});
-    }},
-    setRotate(r, x, y) { with(this) { //sy optional
-        _rotateText = `rotate(${r},${x},${y})`;
-        set({transform: _rotateText});
-    }},
-    cancelTransform() { with(this) {
-        _translateText = '';
-        _scaleText = '';
-        _rotateText = '';
-        set({transform:''});
-    }},
-    newChild(svgDefinition) { with(this) { //returns pointer to child
-        svgDefinition.parent = _svgElement;
-        //return _childs[svgDefinition.name?svgDefinition.name:_count++] = new SvgObject(svgDefinition);
-        _childs[_count] = new SvgObject(svgDefinition);
-        _childs[_count]._parent = this; //manage parent
-        _childs[_count]._parentIndex = _count; //manage parent
-        return _childs[_count ++];
-    }},
-    putChild(svg) { with(this) {
+        this._scaleText = `scale(${sx},${sy})`;
+        this.set({transform: this._scaleText});
+    },
+    setRotate(r, x, y) { //sy optional
+        this._rotateText = `rotate(${r},${x},${y})`;
+        this.set({transform: this._rotateText});
+    },
+    cancelTransform() {
+        this._translateText = '';
+        this._scaleText = '';
+        this._rotateText = '';
+        this.set({transform:''});
+    },
+    newChild(svgDefinition) { //returns pointer to child
+        svgDefinition.parent = this._svgElement;
+        //return this._childs[svgDefinition.name?svgDefinition.name:this._count++] = new SvgObject(svgDefinition);
+        this._childs[this._count] = new SvgObject(svgDefinition);
+        this._childs[this._count]._parent = this; //manage parent
+        this._childs[this._count]._parentIndex = this._count; //manage parent
+        return this._childs[this._count ++];
+    },
+    putChild(svg) {
         if (svg._parent) delete svg._parent._childs[svg._parentIndex]; //manage parent
         if (typeof (svg._parentIndex) == 'number')
-            svg._parentIndex = _count ++;
-        _childs[svg._parentIndex] = svg; //manage parent
+            svg._parentIndex = this._count ++;
+        this._childs[svg._parentIndex] = svg; //manage parent
         svg._parent = this; //manage parent
-        _svgElement.appendChild(svg._svgElement);
-    }},
-    delChilds() { with(this) {
-        for (var p in _childs)
-            _childs[p].del();
-        _count = 0;
-    }},
-    hide() { with(this) {
-        _svgElement.setAttributeNS(null, 'display', 'none');
-    }},
-    show() { with(this) {
+        this._svgElement.appendChild(svg._svgElement);
+    },
+    delChilds() {
+        for (var p in this._childs)
+            this._childs[p].del();
+        this._count = 0;
+    },
+    hide() {
+        this._svgElement.setAttributeNS(null, 'display', 'none');
+    },
+    show() {
         this._svgElement.setAttributeNS(null, 'display', 'inherit');
-    }},
-    addChildCloneOf(svg) { with(this) {
+    },
+    addChildCloneOf(svg) {
         var id = svg._parentIndex;
         if (typeof (svg._parentIndex) == 'number')
-            id = _count ++;
-        var child = _childs[id];
+            id = this._count ++;
+        var child = this._childs[id];
         child = new SvgObject({});
         child._parent = this;
         child._parentIndex = id;
         child._svgElement = svg._svgElement.cloneNode(false); //don't copy nodes here
-        _svgElement.appendChild(child._svgElement);
+        this._svgElement.appendChild(child._svgElement);
         for (var p in svg._childs)
             child.addChildCloneOf(svg._childs[p], true); //copying nodes here
         return child;
-    }}
+    }
 };
 // DOM NODE Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
@@ -1970,28 +1970,22 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     }
     // checking width property for DIV
     if (isValued(definitionObject.width)) {
-        this._widthVar = definitionObject.width;
-        this.getWidth = () => this._widthVar; // arrow replace a return
+        this.getWidth = definitionObject.width; // it's an arrow function
         this.setWidth(this.getWidth());
     } else
         this.getWidth = () => this._parent.getWidth(); // arrow replace a return
     // checking height property for DIV
     if (isValued(definitionObject.height)) {
-        this._heightVar = definitionObject.height;
-        this.getHeight = () => this._heightVar; // arrow replace a return
+        this.getHeight = definitionObject.height // it's an arrow function
         this.setHeight(this.getHeight());
     } else
         this.getHeight = () => this._parent.getHeight(); // arrow replace a return
     // checking x position property
-    if (isValued(definitionObject.x)) {
-        this._xVar = definitionObject.x;
-        this.getXInit = () => this._xVar; // arrow replace a return
-    }
+    if (isValued(definitionObject.x))
+        this.getXInit = definitionObject.x; // it's an arrow function
     // checking y position property
-    if (isValued(definitionObject.y)) {
-        this._yVar = definitionObject.y;
-        this.getYInit = () => this._yVar; // arrow replace a return
-    }
+    if (isValued(definitionObject.y))
+        this.getYInit = definitionObject.y; // it's an arrow function
     this.setX(this.getXInit());
     this.setY(this.getYInit());
     delete definitionObject.x;
@@ -2023,10 +2017,10 @@ DomNode.prototype = {
     _y                    : 0,
     _width                : 0,
     _height               : 0,
-    _xVar                 : null,
-    _yVar                 : null,
-    _widthVar             : null,
-    _heightVar            : null,
+    //_xVar                 : null,
+    //_yVar                 : null,
+    //_widthVar             : null,
+    //_heightVar            : null,
     _domNodeType          : null,
     _drawingContext2D     : null, // _drawingContext2D context
     _vectorialSprite      : null,
@@ -2274,7 +2268,7 @@ class VectorialSprite {
                 case (p === '_nocache'): this._nocache = funcs[p]; break
                 case (typeof funcs[p] === 'string'): this[p] = funcs[p]; break;
                 case (typeof funcs[p] === 'function'): this[p] = funcs[p]; break; //this[p].bind(SPRITES); break;
-                case (typeof funcs[p] === 'number'): this[p] = funcs[p]; break;
+                //case (typeof funcs[p] === 'number'): this[p] = funcs[p]; break;
                 default: console.log('#DEBUG funcs[p]');
             }
             /*if (p === '_nocache')
