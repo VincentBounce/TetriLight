@@ -281,7 +281,7 @@ function MainMenu() { // queue or stack
             if ((eventClick.offsetX < SPRITES.pxButtonSize) && (eventClick.offsetY < SPRITES.pxButtonSize))
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
-    window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
+    window.onresize = function() { GAME.organizeGrids({resize:true}) };
 }
 MainMenu.prototype = {
     _domNode: null,
@@ -420,20 +420,20 @@ TetrisSpritesCreation.prototype = {
         grey_blue : {light: [192, 216, 231], medium: [127, 150, 188], dark: [ 73,  85, 118]},
         grey      : {light: [207, 207, 207], medium: [134, 134, 134], dark: [ 88,  88,  88]}
     },
-    condition_(gridCount) { // gridCount = GAME._playersCount
+    condition_(gridsCount) { // gridsCount = GAME._playersCount
         //return ( ( // #DEBUG: to compact grids together
-        // (SPRITES.pxGameWidth > SPRITES.pxFullGridWidth * gridCount + SPRITES.pxGridMargin * (gridCount+1) ) && (SPRITES.pxGameHeight > SPRITES.pxFullGridHeight + 5*SPRITES.pxGridMargin)
-        return (  ( (SPRITES.pxGameWidth >= SPRITES.pxFullGridWidth * gridCount )
-                && (SPRITES.pxGameHeight >= SPRITES.pxFullGridAndCeil ) )
+        // (SPRITES.pxGameWidth > SPRITES.pxFullGridWidth * gridsCount + SPRITES.pxGridMargin * (gridsCount+1) ) && (SPRITES.pxGameHeight > SPRITES.pxFullGridHeight + 5*SPRITES.pxGridMargin)
+        return (  ( (this.pxGameWidth >= this.pxFullGridWidth * gridsCount )
+                && (this.pxGameHeight >= this.pxFullGridAndCeil ) )
                 || (!(this._scaleFactor-1))  );
     },
-    zoomToFit(gridCount) { // used for scaling if needed
-        if (this.condition_(gridCount)) {
-            while (this.condition_(gridCount))
+    zoomToFit(gridsCount) { // used for scaling if needed
+        if (this.condition_(gridsCount)) {
+            while (this.condition_(gridsCount))
                 this.zoom1Step(1);
                 this.zoom1Step(-1);
         } else
-            while (!this.condition_(gridCount))
+            while (!this.condition_(gridsCount))
                 this.zoom1Step(-1);
     },
     zoom1Step(step) { // computing for zoom with pixels into web browser
@@ -1968,19 +1968,17 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
         this._height = this._htmlElement.offsetHeight; //this.getHeight();
         return; // not proceed anymore, it's just one time
     }
-    // checking width property
+    // checking width property for DIV
     if (isValued(definitionObject.width)) {
         this._widthVar = definitionObject.width;
         this.getWidth = () => this._widthVar; // arrow replace a return
-        //this.getWidth = () => SPRITES[this._widthVar]; // arrow replace a return
         this.setWidth(this.getWidth());
     } else
         this.getWidth = () => this._parent.getWidth(); // arrow replace a return
-    // checking height property
+    // checking height property for DIV
     if (isValued(definitionObject.height)) {
         this._heightVar = definitionObject.height;
         this.getHeight = () => this._heightVar; // arrow replace a return
-        //this.getHeight = () => SPRITES[this._heightVar]; // arrow replace a return
         this.setHeight(this.getHeight());
     } else
         this.getHeight = () => this._parent.getHeight(); // arrow replace a return
@@ -1988,13 +1986,11 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     if (isValued(definitionObject.x)) {
         this._xVar = definitionObject.x;
         this.getXInit = () => this._xVar; // arrow replace a return
-        //this.getXInit = () => SPRITES[this._xVar]; // arrow replace a return
     }
-    // checking y position  property
+    // checking y position property
     if (isValued(definitionObject.y)) {
         this._yVar = definitionObject.y;
         this.getYInit = () => this._yVar; // arrow replace a return
-        //this.getYInit = () => SPRITES[this._yVar]; // arrow replace a return
     }
     this.setX(this.getXInit());
     this.setY(this.getYInit());
@@ -2002,7 +1998,7 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     delete definitionObject.y;
     delete definitionObject.width;
     delete definitionObject.height;
-    // checking y canvas  property
+    // checking canvas _width and _height properties
     if (this._domNodeType === 'canvas') {
         if (definitionObject.sprite) {
             this._vectorialSprite = definitionObject.sprite;
@@ -2143,7 +2139,7 @@ DomNode.prototype = {
                 this._htmlElement.style[p.replace(/_/,'-')] = definitionObject[p]; // if definitionObject[p] is an attribute, opacity for example
     },
     pxVal_(val) {
-        return val + 'px';
+        return `${val}px`;
     },
     setX(x) {
         this._x = Math.round(x);
@@ -2153,9 +2149,9 @@ DomNode.prototype = {
         this._y = Math.round(y);
         this._htmlElement.style.top = this.pxVal_(this._y); // comemnt to disable any Y graphical move #DEBUG
     },
-    getXCenter() {
+    /*getXCenter() {
         return this._x + Math.round(this.getWidth()/2);
-    },
+    },*/
     setWidth(w) {
         this._width = w;
         this._htmlElement.style.width = this.pxVal_(this._width);
