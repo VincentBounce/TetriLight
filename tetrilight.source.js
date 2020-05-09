@@ -182,8 +182,9 @@ pauseOrResume stops every timers, music. It let FX finish. It block controls
 
 **************** CLASS ****************
 MainMenu [1 instance]
-    DomNode [1 instance]
+    MAIN_MENU._domNode: DomNode [1 instance]
     SPRITES: TetrisSpritesCreation [1 instance]
+        SpriteObj: sprite objects
     GAME: TetrisGame [1 instance]
         _gameEventsQueue
         PentominoesBriefMode
@@ -267,16 +268,17 @@ function MainMenu() { // queue or stack
     this._domNode = new DomNode({body: true});
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
     this._domNode.setDomNode({ // menus on top of the screen
-        top: {
-            type:'canvas', width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
-        message1: {
+        topScreenSprite: { type: 'canvas',
+            width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
+        message1Div: {
             width: () => SPRITES.pxTopMenuZoneHeight, height: () => SPRITES.pxTopMenuZoneHeight, vertical_align:'middle' },
-        background: {
-            type:'canvas', y: () => SPRITES.pxTopMenuZoneHeight, width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight, sprite:SPRITES._spriteBackground }
+        playingAreaSprite: { type:'canvas',
+            width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
+            y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         });
-    this._domNode._childs.background.nodeDrawSprite(); // paint black background
-    this._domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
-    // this._domNode._childs.message1.setTex('totototo');
+    this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
+    // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
+    // this._domNode._childs.message1Div.setTex('totototo');
     this._domNode._htmlElement.addEventListener('click',
         function(eventClick) {
             if ((eventClick.offsetX < SPRITES.pxButtonSize) && (eventClick.offsetY < SPRITES.pxButtonSize))
@@ -707,7 +709,7 @@ TetrisGame.prototype = {
     },
     organizeGrids(instruction) { // horizontal organization only, zoomToFit makes the correct zoom
         SPRITES.zoomToFit();
-        MAIN_MENU._domNode._childs.background.redrawNode(); // redraw background
+        MAIN_MENU._domNode._childs.playingAreaSprite.redrawNode(); // redraw background
         let realIntervalX = (SPRITES.pxGameWidth-(SPRITES.pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
@@ -849,46 +851,48 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
         width: () =>  SPRITES.pxFullGridWidth, height: () =>  SPRITES.pxFullGridAndCeil,
-        frameZone: {
+        frameZoneDiv: {
             x: () => SPRITES.pxGridBorder, y: () => SPRITES.pxCeilHeight,
             width: () => SPRITES.pxGridWidth, height: () => SPRITES.pxGridHeight,
-            overflow:'hidden',
-            back: { // tetris background, if not canvas, it's div
-                background: { type:'canvas', sprite:SPRITES._spriteGridBackground },
-                ghostBlocks:{},
-                realBlocks: {} } },
-        frontZone: {
-            y: () => SPRITES.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: () => SPRITES.pxFullGridHeight },
-        controlZone: {
-            y: () => SPRITES.pxYPreviewPosition, width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
-        nextShapePreview: {
+            overflow: 'hidden',
+            gridZoneDiv: { // tetris background, if not canvas, it's div
+                gridSprite: { type: 'canvas', sprite:SPRITES._spriteGridBackground },
+                ghostBlocksDiv: {},
+                realBlocksDiv: {} } },
+        frontZoneSprite: { type: 'canvas',
+            y: () => SPRITES.pxCeilHeight, sprite: SPRITES._spriteGridFront, height: () => SPRITES.pxFullGridHeight },
+        controlZoneDiv: {
+            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize,
+            y: () => SPRITES.pxYPreviewPosition, vertical_align: 'middle' },
+        nextShapePreviewSprite: { type: 'canvas',
             x: () => SPRITES.pxXPreviewPosition, y: () => SPRITES.pxYPreviewPosition,
-            type:'canvas', width: () => SPRITES.pxPreviewFullSize, height: () => SPRITES.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
-        scoreZone: {
+            width: () => SPRITES.pxPreviewFullSize, height: () => SPRITES.pxPreviewFullSize,
+            sprite: SPRITES._spritePreviewBlock },
+        scoreZoneDiv: {
             x: () => SPRITES.pxXScorePosition, y: () => SPRITES.pxYScorePosition,
             width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
-        messageZone: {
+        messageZoneDiv: {
             y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
     });
-    this._domNode._childs.frontZone.nodeDrawSprite({col:this._gridColor.name});
-    this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
-    this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
-    this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._gridColor.name});
-    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
-    this._domNode._childs.controlZone.setTextIntoSizedField({
+    this._domNode._childs.frontZoneSprite.nodeDrawSprite({col:this._gridColor.name});
+    this._realBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.realBlocksDiv; // shortcut
+    this._ghostBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.ghostBlocksDiv; // shortcut
+    this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.gridSprite.nodeDrawSprite({col:this._gridColor.name});
+    this._domNode._childs.controlZoneDiv.createText(FONTS.scoreFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
+    this._domNode._childs.controlZoneDiv.setTextIntoSizedField({
         text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
-    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
+    this._domNode._childs.scoreZoneDiv.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
+    this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {}; // need to initialize before creating new score which contains anim
     this._score = new TetrisScore(this); // contains animation, 
     this._anims.quakeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
-            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES.pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
+            this._domNode._childs.frameZoneDiv._childs.gridZoneDiv.moveTemporaryRelatively(0, SPRITES.pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
         },
         endAnimFunc() {
-            this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
+            this._domNode._childs.frameZoneDiv._childs.gridZoneDiv.moveTemporaryRestore();
             this.gridAnimsStackPop(); // to have exclusive quake anim
         },
         timingAnimFunc: x => Math.sin(x*Math.PI), // arrow replace a return // or return Math.sin(x*Math.PI*2)*(1-x);
@@ -897,10 +901,10 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._anims.pentominoesModeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
-            this._domNode._childs.frontZone.setDomNode({opacity: Math.abs(animOutput)});
+            this._domNode._childs.frontZoneSprite.setDomNode({opacity: Math.abs(animOutput)});
         },
         endAnimFunc() {
-            this._domNode._childs.frontZone.setDomNode({opacity: 1}); // 1 = totalement opaque, visble
+            this._domNode._childs.frontZoneSprite.setDomNode({opacity: 1}); // 1 = totalement opaque, visble
         },
         timingAnimFunc: x => -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5, // arrow replace a return // f(x)=-cos(3^(x*3)*pi)/2+0.5
         animDuration: 0, // need to set duration for this animation before running
@@ -971,15 +975,15 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._anims.messageAnim = new Animation({
         startAnimFunc(textInfos) {
-            this._domNode._childs.messageZone.setTextIntoSizedField.call(this._domNode._childs.messageZone, textInfos);
+            this._domNode._childs.messageZoneDiv.setTextIntoSizedField.call(this._domNode._childs.messageZoneDiv, textInfos);
         },
         animateFunc(animOutput) {
-            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES.pxCellSize);// SPRITES.pxYMessagePosition);
-            this._domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
+            this._domNode._childs.messageZoneDiv.moveTemporaryRelatively(0, animOutput*3*SPRITES.pxCellSize);// SPRITES.pxYMessagePosition);
+            this._domNode._childs.messageZoneDiv.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
         },
         endAnimFunc() {
-            this._domNode._childs.messageZone.moveTemporaryRestore();
-            this._domNode._childs.messageZone.setDomNode({opacity: 0});
+            this._domNode._childs.messageZoneDiv.moveTemporaryRestore();
+            this._domNode._childs.messageZoneDiv.setDomNode({opacity: 0});
             this._gridMessagesQueue.dequeue();
         },
         timingAnimFunc: x => Math.pow(2*(x-0.5), 3), // arrow replace a return // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0
@@ -1416,7 +1420,7 @@ class TetrisShape {
 class NextShapePreview {
     constructor(grid) {
         this._grid = grid;
-        this._domNode = this._grid._domNode._childs.nextShapePreview;
+        this._domNode = this._grid._domNode._childs.nextShapePreviewSprite;
         for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
             for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
                 this._domNode.nodeDrawSprite({xSprite: i, ySprite: j, col: this._grid._gridColor.name, __onOff: false}); // off
@@ -1491,14 +1495,14 @@ LockedBlocks.prototype = {
                 this._grid.gridAnimsStackPush(this._grid, this._grid.countAndClearRows); // countAndClearRows()
                 this._grid._anims.shapeHardDropAnim.startAnim();
             } else { // mode === SEARCH_MODE.up, need to check if hitting shape, not best code
-                this._grid._fallingShape.placeShape(); // falling is back
+                this._grid._fallingShape.placeShape(); // falling shape is back
                 for (let p in this._grid._lockedShapes)
                     if (this._grid._lockedShapes[p]._jPosition === 0) { // sub first row : j = 0
                         this._grid._lockedShapes[p]._jVector = 1;
                         this._grid._lockedShapes[p].shapesHitIfMove(0, 1);
                     }
                 this._grid.unplaceAndMoveAndPlaceHardDroppingShape(this._grid._lockedShapes);
-                switch (true) { // we exclusives cases
+                switch (true) { // exclusives cases
                     case (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount > 0): 
                         this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
                         break;
@@ -1716,7 +1720,7 @@ class TetrisScore {
         }
     }
     writeScore_(scoreText) {
-        this._grid._domNode._childs.scoreZone.setTextIntoSizedField({text: scoreText}); // here all program write score, just comment for #DEBUG
+        this._grid._domNode._childs.scoreZoneDiv.setTextIntoSizedField({text: scoreText}); // here all program write score, just comment for #DEBUG
     }
 }
 // VARIOUS BASIC FUNCTIONS
@@ -1931,6 +1935,7 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     if (parent !== null) { // && (nameId !== null)
         this._parent = parent;
         this._nameId = nameId; // see if replace by this._htmlElement.id = this._nameId; in future
+        this._htmlElement.id = `${nameId}Cvs`; // used only to show Elements in Chrome debbuging #DEBUG
         this._parent._htmlElement.appendChild(this._htmlElement);
     }
     // run this code only 1 time for body MAIN dom node, then exit
