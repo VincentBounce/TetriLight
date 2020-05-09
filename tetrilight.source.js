@@ -228,33 +228,6 @@ const DURATIONS                 = { // tetris durations, periods in ms
     lostMessageDuration         : 3500, // 3500 ms, period to display score
     softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
     initialDropPeriod           : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-/*const PIXELS                    = {
-    pxTopMenuZoneHeight         : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
-    pxGameWidth                 : null,
-    pxGameHeight                : null,
-        pxHalfGameHeight        : null,
-    pxBlockSize                 : 34,
-        pxCellSize              : null,
-    pxGridBorder                : null,
-    pxGridLineWidth             : null,
-    pxGridWidth                 : null,
-        pxFullGridWidth         : null,
-            pxGridMargin        : null,
-    pxGridHeight                : null,
-        pxFullGridHeight        : null,
-    pxCeilHeight                : null,
-    pxFullGridAndCeil           : null,
-    pxPreviewFullSize           : null, // 2*36===72
-    pxPreviewBlockSize          : null,
-    pxPreviewLineWidth          : null,
-    pxButtonSize                : 50, // default 50
-    XPreviewPosition       : null,
-    YPreviewPosition       : null,
-    XScorePosition         : null,
-    YScorePosition         : null,
-    XMessagePosition       : null,
-    YMessagePosition       : null,
-}*/
 const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
 //const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
@@ -425,12 +398,13 @@ TetrisSpritesCreation.prototype = {
     pxPreviewBlockSize     : null,
     pxPreviewLineWidth     : null,
     pxButtonSize           : 50, // default 50
-    XPreviewPosition       : null,
-    YPreviewPosition       : null,
-    XScorePosition         : null,
-    YScorePosition         : null,
-    XMessagePosition       : null,
-    YMessagePosition       : null,
+    pxXPreviewPosition       : null,
+    pxYPreviewPosition       : null,
+    pxXScorePosition         : null,
+    pxYScorePosition         : null,
+    pxXMessagePosition       : null,
+    pxYMessagePosition       : null,
+    shapesSpan             : 2, // span (means envergure) = (5-1)/2
     _spriteBackground       : null,
     _spriteBlock            : null,
     _spriteGridFront        : null,
@@ -440,7 +414,6 @@ TetrisSpritesCreation.prototype = {
     _ghostShapeOpacity      : 0.15, // default 0.15
     _previewOpacity         : 0.2, // default 0.2, opacity for preview grid
     _lostShapeOpacity       : 0.5, // default 0.5, to show a ghost of shape wich makes losing
-    _shapesSpan             : 2, // span (means envergure) = (5-1)/2
     _colors                 : { // name filed is added by constructor
         pink      : {light: [248, 190, 232], medium: [224, 107, 169], dark: [189,  66, 111]},
         purple    : {light: [210, 172, 241], medium: [136, 100, 208], dark: [ 90,  64, 177]},
@@ -486,15 +459,15 @@ TetrisSpritesCreation.prototype = {
         this.pxGridMargin       = Math.round(this.pxFullGridWidth/8);
         this.pxPreviewBlockSize = Math.round(this.pxBlockSize/2.6);
         this.pxPreviewLineWidth = this.pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
-        this.pxPreviewFullSize  = (this.pxPreviewBlockSize + this.pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
+        this.pxPreviewFullSize  = (this.pxPreviewBlockSize + this.pxPreviewLineWidth) * (2*this.shapesSpan+1) ;
         this.pxCeilHeight       = this.pxPreviewFullSize + this.pxPreviewBlockSize + this.pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + this.pxCellSize
         this.pxFullGridAndCeil  = this.pxFullGridHeight + this.pxCeilHeight;
-        this.XPreviewPosition   = Math.round(this.pxFullGridWidth/2-this.pxPreviewFullSize/2);
-        this.YPreviewPosition   = 0;
-        this.XScorePosition     = this.XPreviewPosition + this.pxPreviewFullSize; // Math.round(3*this.pxFullGridWidth/4);
-        this.YScorePosition     = 0;
-        this.XMessagePosition   = Math.round(this.pxFullGridWidth/2);
-        this.YMessagePosition   = Math.round(this.pxFullGridHeight/2);
+        this.pxXPreviewPosition   = Math.round(this.pxFullGridWidth/2-this.pxPreviewFullSize/2);
+        this.pxYPreviewPosition   = 0;
+        this.pxXScorePosition     = this.pxXPreviewPosition + this.pxPreviewFullSize; // Math.round(3*this.pxFullGridWidth/4);
+        this.pxYScorePosition     = 0;
+        this.pxXMessagePosition   = Math.round(this.pxFullGridWidth/2);
+        this.pxYMessagePosition   = Math.round(this.pxFullGridHeight/2);
         this._zoomRatio         = !oldGridWidth ? 1 : this.pxFullGridWidth / oldGridWidth;
     },
     create_()  { with(this) { // creating all graphics
@@ -568,8 +541,8 @@ TetrisSpritesCreation.prototype = {
                     : VectorialSprite.rgbaTxt(col.medium, _previewOpacity)
                 );
                 c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize)    },
-            fx(x)    {    return (_shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)    },
-            fy(y)    {    return (_shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)    }
+            fx(x)    {    return (SPRITES.shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)    },
+            fy(y)    {    return (SPRITES.shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)    }
         });
         _spriteBlock = new VectorialSprite({
             _nocache: false,
@@ -888,13 +861,13 @@ function TetrisGrid(playerKeysSet, gridColor){
         frontZone: {
             y:SPRITES.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: SPRITES.pxFullGridHeight },
         controlZone: {
-            y:SPRITES.YPreviewPosition, width:SPRITES.XPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            y:SPRITES.pxYPreviewPosition, width:SPRITES.pxXPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
         nextShapePreview: {
-            x:SPRITES.XPreviewPosition, y:SPRITES.YPreviewPosition,
+            x:SPRITES.pxXPreviewPosition, y:SPRITES.pxYPreviewPosition,
             type:'canvas', width:SPRITES.pxPreviewFullSize, height:SPRITES.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
         scoreZone: {
-            x:SPRITES.XScorePosition, y:SPRITES.YScorePosition,
-            width:SPRITES.XPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            x:SPRITES.pxXScorePosition, y:SPRITES.pxYScorePosition,
+            width:SPRITES.pxXPreviewPosition, height:SPRITES.pxPreviewFullSize, vertical_align:'middle' },
         messageZone: {
             y:SPRITES.pxCeilHeight, width:SPRITES.pxFullGridWidth, height:SPRITES.pxFullGridHeight, vertical_align:'middle' }
     });
@@ -1014,7 +987,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._domNode._childs.messageZone.setTextIntoSizedField.call(this._domNode._childs.messageZone, textInfos);
         },
         animateFunc(animOutput) {
-            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES.pxCellSize);// SPRITES.YMessagePosition);
+            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES.pxCellSize);// SPRITES.pxYMessagePosition);
             this._domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
         },
         endAnimFunc() {
@@ -1466,8 +1439,8 @@ class NextShapePreview {
     constructor(grid) {
         this._grid = grid;
         this._domNode = this._grid._domNode._childs.nextShapePreview;
-        for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
-            for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
+        for (let i=-SPRITES.shapesSpan;i <= SPRITES.shapesSpan;i++)
+            for (let j=-SPRITES.shapesSpan;j <= SPRITES.shapesSpan;j++)
                 this._domNode.nodeDrawSprite({fx: i, fy: j, col: this._grid._gridColor.name, __onOff: false}); // off
     }
     mark(shape) {
@@ -1551,7 +1524,7 @@ LockedBlocks.prototype = {
                     }
                 this._grid.unplaceAndMoveAndPlaceHardDroppingShape(this._grid._lockedShapes);
                 switch (true) { // we exclusives cases
-                    case (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES._shapesSpan + 1].rowBlocksCount > 0): 
+                    case (this._lockedBlocksArrayByRow[GAME._jPositionStart + SPRITES.shapesSpan + 1].rowBlocksCount > 0): 
                         this._grid.gridAnimsStackPush(this._grid, this._grid.lose); // lose()
                         break;
                     case (this._grid._fallingShape._shapeIndex in this._grid._lockedShapes): // if falling shape hit rising rows
