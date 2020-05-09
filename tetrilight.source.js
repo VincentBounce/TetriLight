@@ -765,9 +765,8 @@ TetrisGame.prototype = {
         this._gridsListArray.forEach( myGrid => {
             if ( (myGrid !== from) && (myGrid._gridState === GRID_STATES.playing) ) toGridArray.push(myGrid);
         } );
-        if (toGridArray.length)
+        if (toGridArray.length > 0)
             while ((count--) > 0) { // decrement AFTER evaluation, equivalent to 'while (count--)'
-                // toGridArray[ (Math.floor(Math.random()*toGridArray.length)+count) % toGridArray.length ]._lockedBlocks.put1NewRisingRow(); // same call as earlier
                 let destGrid = toGridArray[ (Math.floor(Math.random()*toGridArray.length)+count) % toGridArray.length ];
                 destGrid._gridEventsQueue.execNowOrEnqueue(
                     destGrid._lockedBlocks,
@@ -816,8 +815,8 @@ class PentominoesBriefMode {
                 myGrid._nextShapePreview.mark(myGrid._nextShape);
             }
         }, this ); // this way to pass this._gridWichTriggeredPentoMode
-        this._pentoModeTimer.setPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount); // *3 for 3 lines cleared, *4 for 4 lines cleared
-        this._pentoModeTimer.restartTimer();
+        this._pentoModeTimer.setTimerPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount) // *3 for 3 lines cleared, *4 for 4 lines cleared
+            .restartTimer();
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.setDuration(DURATIONS.pentominoesModeDuration*clearedLinesCount);
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.startAnim();
     }
@@ -825,7 +824,7 @@ class PentominoesBriefMode {
 // TetrisGrid Class
 function TetrisGrid(playerKeysSet, gridColor){
     this._gridColor       = gridColor;
-    this._playerKeysSet   = playerKeysSet; // [up down left right]
+    this._playerKeysSet   = playerKeysSet;
     this._lockedBlocks    = new LockedBlocks(this);
     this._gridEventsQueue = new EventsQueue();
     this._animsStack      = [];
@@ -861,15 +860,15 @@ function TetrisGrid(playerKeysSet, gridColor){
         frontZone: {
             y: () => SPRITES.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: () => SPRITES.pxFullGridHeight },
         controlZone: {
-            y: () => SPRITES.pxYPreviewPosition, width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            y: () => SPRITES.pxYPreviewPosition, width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         nextShapePreview: {
             x: () => SPRITES.pxXPreviewPosition, y: () => SPRITES.pxYPreviewPosition,
             type:'canvas', width: () => SPRITES.pxPreviewFullSize, height: () => SPRITES.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
         scoreZone: {
             x: () => SPRITES.pxXScorePosition, y: () => SPRITES.pxYScorePosition,
-            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align:'middle' },
+            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         messageZone: {
-            y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align:'middle' }
+            y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
     });
     this._domNode._childs.frontZone.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
@@ -914,8 +913,7 @@ function TetrisGrid(playerKeysSet, gridColor){
                     this._matrix[i][myRow]._domNode.setScale(animOutput) }); // with blocks' _domNodes, programs goes here for each block of each row to clear
         },
         endAnimFunc() { // NOT GRAPHIC PROCESS
-            this._rowsToClearSet.forEach( myRow =>
-                this.clearFullRowAfterClearingAnim(myRow) ); // now erasing animated cleared rows data
+            this._rowsToClearSet.forEach( myRow => this.clearFullRowAfterClearingAnim(myRow) ); // now erasing animated cleared rows data
             this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
             this.gridAnimsStackPop();
         },
@@ -924,17 +922,11 @@ function TetrisGrid(playerKeysSet, gridColor){
         animOwner: this // otherwise, it's animation context by default
     });
     this._anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
-        animateFunc(animOutput) {
-            for (let p in this._lockedShapes) // to animate block, we move the DomNode element
-                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES.pxCellSize);
+        animateFunc(animOutput) { // to animate blocks, we move the DomNode elementjkk
+            this._lockedShapes.forEach( myShape => myShape._domNode.moveNodeTo(0, - myShape._jVector * animOutput * SPRITES.pxCellSize) )
         },
-        endAnimFunc() {
-            for (let p in this._lockedShapes) { // fetch rows to remove
-                this._lockedShapes[p]
-                    .putShapeInRealBlocksNode() // remove from moving div
-                    .drawShape()
-                    ._domNode.destroyDomNode();
-            }
+        endAnimFunc() { // fetch rows to remove, remove from moving div, draw, destroy node
+            this._lockedShapes.forEach( myShape => myShape.putShapeInRealBlocksNode().drawShape()._domNode.destroyDomNode() )
             this._lockedShapes = [];
             this.gridAnimsStackPush(this._anims.quakeAnim, this._anims.quakeAnim.startAnim); // startAnim() function stacked
             this.gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); // we stack AUDIO.audioPlay('landFX');
@@ -947,16 +939,11 @@ function TetrisGrid(playerKeysSet, gridColor){
         animOwner: this // otherwise, it's animation context by default
     });
     this._anims.rising1RowAnim = new Animation({
-        animateFunc(animOutput) { // "this" display animation instancied object
-            for (let p in this._lockedShapes) // to animate block, we move the DomNode element
-                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES.pxCellSize);
+        animateFunc(animOutput) { // to animate block, we move the DomNode element
+            this._lockedShapes.forEach( myShape => myShape._domNode.moveNodeTo(0, - myShape._jVector * animOutput * SPRITES.pxCellSize) )
         },
-        endAnimFunc() {
-            for (let p in this._lockedShapes) {
-                this._lockedShapes[p].putShapeInRealBlocksNode();
-                this._lockedShapes[p].drawShape();
-                this._lockedShapes[p]._domNode.destroyDomNode(); // _isLockedShape always true, so optimized
-            }
+        endAnimFunc() { // fetch rows to remove, remove from moving div, draw, destroy node
+            this._lockedShapes.forEach( myShape => myShape.putShapeInRealBlocksNode().drawShape()._domNode.destroyDomNode() )
             this._lockedShapes = [];
             this._ghostBlocksNode.show();
             this.gridAnimsStackPop(); // unstack all countandclearrows and this._gridEventsQueue.dequeue() in stack
@@ -1039,8 +1026,7 @@ TetrisGrid.prototype            = {
             && !this._anims.clearRowsAnim.isAnimating()
             && !this._anims.shapeHardDropAnim.isAnimating()
             && !this._anims.rising1RowAnim.isAnimating()
-            && !this._anims.quakeAnim.isAnimating() // to have exclusive quake anim
-        );
+            && !this._anims.quakeAnim.isAnimating() ); // to have exclusive quake anim
     },
     gridAnimsStackPush(o, func, param) { // o object which contains func method, this by default
         this._animsStack.push([o, func, param]);
@@ -1076,8 +1062,7 @@ TetrisGrid.prototype            = {
             this._fallingShape.moveAndPlaceShape(0, 0) // only place with call without previous removeShapeFromPlace()
                 .drawShape()
                 .findNewPositionAndDrawGhost();
-            this._dropTimer.setPeriod(this._normalDropPeriod);
-            this._dropTimer.restartTimer();
+            this._dropTimer.setTimerPeriod(this._normalDropPeriod).restartTimer();
         } else { // it's lost
             this._fallingShape.drawShape()
                 .clearGhostBlocks()
@@ -1097,8 +1082,7 @@ TetrisGrid.prototype            = {
     turnsTimerToNormalDrop_() {
         if (this._isSoftDropping) { // if soft dropping, stops soft drop fall to continue normal timer
             this._isSoftDropping = false;
-            this._dropTimer.setPeriod(this._normalDropPeriod);
-            this._dropTimer.restartTimer(); // shape can move after fall or stopped
+            this._dropTimer.setTimerPeriod(this._normalDropPeriod).restartTimer(); // shape can move after fall or stopped
         }
     },
     beginSoftDropping() { // full falling, called by keydown, call falling()
@@ -1113,8 +1097,7 @@ TetrisGrid.prototype            = {
             case (this._isSoftDropping): // case soft drop, then hard drop requested
                 this._keyPressedUpForNextShape = false;
                 this._isSoftDropping = false;
-                this._dropTimer.setPeriod(this._normalDropPeriod);
-                this._dropTimer.finishTimer();
+                this._dropTimer.setTimerPeriod(this._normalDropPeriod).finishTimer();
                 this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
                 break;
             default: // case DOWN key keep pressed down since last shape, wait for DOWN key pressed up
@@ -1123,8 +1106,7 @@ TetrisGrid.prototype            = {
     continueSoftDropping() { // full falling iterative, called by timer
         this._fallingShape.unplaceAndMoveAndPlaceAndDrawShape(0, -1);
         this._isSoftDropping = true;            
-        this._dropTimer.setPeriod(DURATIONS.softDropPeriod);
-        this._dropTimer.restartTimer();
+        this._dropTimer.setTimerPeriod(DURATIONS.softDropPeriod).restartTimer();
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
@@ -1716,7 +1698,7 @@ class TetrisScore {
             this._grid._normalDropPeriod = DURATIONS.softDropPeriod +
                 (DURATIONS.initialDropPeriod - DURATIONS.softDropPeriod)
                 * (1 - this._level/RULES.topLevel );
-            this._grid._dropTimer.setPeriod(this._grid._normalDropPeriod);
+            this._grid._dropTimer.setTimerPeriod(this._grid._normalDropPeriod);
             this._grid._anims.messageAnim.startAnim({
                 text: (this._level < RULES.topLevel) ? (`Level ${this._level}`) : (`<BR/>TOP<BR/> level ${this._level}`), // fit ES6
                 fieldCharCount: 5 }); // last arg: higher for smaller text, not to queue, each new one replace previous one
@@ -1789,8 +1771,9 @@ class Timer {
             this._running = false;
         }
     }
-    setPeriod(timerPeriod) { // period will change on next call can be changed when running
+    setTimerPeriod(timerPeriod) { // period will change on next call can be changed when running
         this._timerPeriod = timerPeriod;
+        return this; // for chained calls
     }
 }
 // EventsQueue Class
