@@ -261,9 +261,9 @@ function init() {
 }
 // MainMenu Class, menu manager, make new one to open a TetrisGame
 function MainMenu() { // queue or stack
-    window.addEventListener('keydown', this.keyCapture_, false); //for all keys, producing value or not
-    window.addEventListener('keyup', this.keyCapture_, false); //for all keys, producing value or not
-    window.oncontextmenu = function(event){ this.cancelEvent_(event); };
+    window.addEventListener('keydown', this.keyCapture_, false); // for all keys, producing value or not
+    window.addEventListener('keyup', this.keyCapture_, false); // for all keys, producing value or not
+    // window.oncontextmenu = function(event){ this.cancelEvent_(event); }; // right click
     // below creation for MAIN dom node
     this._domNode = new DomNode({body: true});
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
