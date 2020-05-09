@@ -390,7 +390,7 @@ TetrisSpritesCreation.prototype = {
         pxFullGridHeight    : null,
     pxCeilHeight            : null,
     pxFullGridAndCeil       : null,
-    pxPreviewFullSize       : null, // 2*36                                                = == 72
+    pxPreviewFullSize       : null, // 2*36===72
     pxPreviewBlockSize      : null,
     pxPreviewLineWidth      : null,
     pxButtonSize            : 50, // default 50
@@ -400,7 +400,7 @@ TetrisSpritesCreation.prototype = {
     pxYScorePosition        : null,
     pxXMessagePosition      : null,
     pxYMessagePosition      : null,
-    _shapesSpan             : 2, // span (means envergure)                                 = (5-1)/2
+    _shapesSpan             : 2, // span(means envergure)===(5-1)/2
     _spriteBackground       : null,
     _spriteBlock            : null,
     _spriteGridFront        : null,
@@ -422,20 +422,20 @@ TetrisSpritesCreation.prototype = {
         grey_blue : {light: [192, 216, 231], medium: [127, 150, 188], dark: [ 73,  85, 118]},
         grey      : {light: [207, 207, 207], medium: [134, 134, 134], dark: [ 88,  88,  88]}
     },
-    condition_(gridsCount) { // gridsCount = GAME._playersCount
+    condition_() {
         //return ( ( // #DEBUG: to compact grids together
-        // (SPRITES.pxGameWidth > SPRITES.pxFullGridWidth * gridsCount + SPRITES.pxGridMargin * (gridsCount+1) ) && (SPRITES.pxGameHeight > SPRITES.pxFullGridHeight + 5*SPRITES.pxGridMargin)
-        return (  ( (this.pxGameWidth >= this.pxFullGridWidth * gridsCount )
+        // (SPRITES.pxGameWidth > SPRITES.pxFullGridWidth * GAME._playersCount + SPRITES.pxGridMargin * (GAME._playersCount+1) ) && (SPRITES.pxGameHeight > SPRITES.pxFullGridHeight + 5*SPRITES.pxGridMargin)
+        return (  ( (this.pxGameWidth >= this.pxFullGridWidth * GAME._playersCount )
                 && (this.pxGameHeight >= this.pxFullGridAndCeil ) )
                 || (!(this._scaleFactor-1))  );
     },
-    zoomToFit(gridsCount) { // used for scaling if needed
-        if (this.condition_(gridsCount)) {
-            while (this.condition_(gridsCount))
+    zoomToFit() { // used for scaling if needed
+        if (this.condition_()) {
+            while (this.condition_())
                 this.zoom1Step(1);
-                this.zoom1Step(-1);
+            this.zoom1Step(-1);
         } else
-            while (!this.condition_(gridsCount))
+            while (!this.condition_())
                 this.zoom1Step(-1);
     },
     zoom1Step(step) { // computing for zoom with pixels into web browser
@@ -707,7 +707,7 @@ TetrisGame.prototype = {
         this.organizeGrids({oldGrid:true});
     },
     organizeGrids(instruction) { // horizontal organization only, zoomToFit makes the correct zoom
-        SPRITES.zoomToFit(this._playersCount);
+        SPRITES.zoomToFit();
         MAIN_MENU._domNode._childs.background.redrawNode(); // redraw background
         let realIntervalX = (SPRITES.pxGameWidth-(SPRITES.pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
         if (instruction.newGrid || instruction.oldGrid) {
