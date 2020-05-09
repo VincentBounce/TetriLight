@@ -93,6 +93,7 @@ myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
 => used to define a func 
     In regular functions the this keyword represented the object that called the function, which could be the window, the document, a button or whatever.
     With arrow functions the this keyword always represents the object that defined the arrow function.
+React (78% market): HTML, CSS, JS faster dev / Angular (21% market): Java, C# cleaner code, match TypeScript
 
 **************** CODE JS ARRAY ****************
 queue(fifo) / gridAnimsStackPush(filo)
@@ -135,17 +136,24 @@ merge 2 objects with different properties: myNewObject = Object.assign(firstOjec
 
 **************** VISUAL STUDIO CODE ****************
 To execute a command: CTRL + SHIFT + P
-Monokai ST3 extension: gives function blue coloration instead green in 'Monokai' standard theme
-Color Highlight extension: to colorize colors declarations into code
-Alignment extension: ALT + = to align selection
+Settings are centralized: Global User (all workspaces) or Current workspace (.vscode folder)
+GitHub: first install on PC from https://git-scm.com/download/win / then run Terminal
 GitHub: remove a remote: git remote rm old-remote
 GitHub: rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
-GitHub: rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
+GitHub: rename a remote branch: git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
 GitHub: merge drop-timer branch into master branch: git checkout master / git merge drop-timer
 GitHub: then delete branch locally: git branch -d drop-timer
 GitHub: then delete branch remotely: git push tetrilight-github --delete drop-timer
 GitHub: cleaning outdated branches (remotely deleted, but still showed in VS Code): git fetch --prune
 GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
+Monokai ST3 extension: gives function blue coloration instead green in 'Monokai' standard theme
+Color Highlight extension: to colorize colors declarations into code
+Alignment extension: ALT + = to align selection
+Live Server extension: file .vscode\launch.json: "url": "http://localhost:5500/tetrilight.source.html",
+ESLint extension: first install npm on PC from https://nodejs.org/en/
+ESLint extension: to install it: npm install -g eslint
+ESLint extension: to build package.json: npm init
+ESLint extension: to setup most popular style guide (Airbnb): npx eslint --init
 Settings Sync extension: to save VS Code configuration in GitHub
 
 **************** NAMING CONVENTION ****************
@@ -620,7 +628,7 @@ TetrisGame.prototype = {
     _playersCount           : 0,
     _gameState              : GAME_STATES.running, // others: GAME_STATES.paused, GAME_STATES.running
     _shapeIdTick            : 0,
-    _nextBlockIndex             : 0,
+    _nextBlockIndex         : 0,
     _pentominoesBriefMode   : null,            
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
@@ -906,7 +914,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         endAnimFunc() {
             this._domNode._childs.frontZoneSprite.setDomNode({opacity: 1}); // 1 = totalement opaque, visble
         },
-        timingAnimFunc: x => -Math.cos(Math.pow(3,(x*3))*Math.PI)/2+0.5, // arrow replace a return // f(x)=-cos(3^(x*3)*pi)/2+0.5
+        timingAnimFunc: x => -Math.cos( (3**(x*3)) * Math.PI) / 2 + 0.5, // arrow replace a return // f(x)=-cos(3^(x*3)*pi)/2+0.5
         animDuration: 0, // need to set duration for this animation before running
         animOwner: this // otherwise, it's animation context by default
     });
@@ -921,7 +929,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._lockedBlocks.chainSearchOrphan(SEARCH_MODE.down);
             this.gridAnimsStackPop();
         },
-        timingAnimFunc: x => 1 - Math.pow(x, 2), // arrow replace a return
+        timingAnimFunc: x => 1 - x**2, // arrow replace a return
         animDuration: DURATIONS.movingGridsDuration,
         animOwner: this // otherwise, it's animation context by default
     });
@@ -938,7 +946,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             // old: this._anims.quakeAnim.startAnim();
             // old: this.gridAnimsStackPop();
         },
-        timingAnimFunc: x => Math.pow(x, 3), // arrow replace a return
+        timingAnimFunc: x => x**3, // arrow replace a return
         animDuration: DURATIONS.hardDropDuration,
         animOwner: this // otherwise, it's animation context by default
     });
@@ -986,7 +994,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._domNode._childs.messageZoneDiv.setDomNode({opacity: 0});
             this._gridMessagesQueue.dequeue();
         },
-        timingAnimFunc: x => Math.pow(2*(x-0.5), 3), // arrow replace a return // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0
+        timingAnimFunc: x => (2*(x-0.5))**3, // arrow replace a return // bad effect: return (x<0.3)?Math.sin(x*Math.PI*8)*(0.3-x):0
         animDuration: DURATIONS.centralMessagesDuration,
         animOwner: this // otherwise, it's animation context by default
     });

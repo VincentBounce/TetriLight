@@ -1,0 +1,15 @@
+{
+  "name": "tetrilightcode",
+  "version": "1.0.0",
+  "description": "Animated Dual Players Tetris ",
+  "main": "tetrilight.source.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "tetrilight-github"
+  },
+  "author": "Vincent Bourdeau",
+  "license": "ISC"
+}
