@@ -11,8 +11,7 @@ All browsers support MP3 and WAV, excepted Edge/IE for WAV
 to clear = to sweep, cleared = swept
 a row = a line
 a cell = a slot = a box
-gfx = graphics
-sprite = designed part of 
+sprites = graphics = gfx
 pivot = orientation
 
 **************** TETRIS GAME RULES ****************
@@ -62,7 +61,7 @@ frame rate
 window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
 IE11 (standard with Windows 10) not working with:
     (`Level ${this._level}`)
-    var myFunc = function(x){return x;} --> var myFunc = (x)=>{return x;} --> x=>x
+    let myFunc = function(x){return x;} --> let myFunc = (x)=>{return x;} --> x=>x
     cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
     func(arg=null)
     myArray.fill()
@@ -78,14 +77,14 @@ JS editor: Visual Studio Code with "Monokay" theme
 Debugger: Chrome with CTRL+SHIFT+I
 delete myObject.myAttribute: not exist anymore, [undefined], then garbage collector comes
 myObject.myAttribute = null: value is [null], then garbage collector comes
-var = cond ? if_true : if_false
-var x = {}; x = null (typeof === "object") / x = undefined (typeof === "undefined")
+let = cond ? if_true : if_false
+let x = {}; x = null (typeof === "object") / x = undefined (typeof === "undefined")
 typeof: item[undefined, boolean, number, string, object[array, set], function]
 '' === "" === `` / item <> element
-console.log() to log object into console (F12 key) on Chrome;
+console.log(obj1, obj2, obj3...) to log objects into console (F12 key) on Chrome;
 console.clear() to clear before
 console.table() to have a clear table
-var result = myClassInstance.publicMethod(); <> var myMethod = myClassInstance.publicMethod;
+let result = myClassInstance.publicMethod(); <> let myMethod = myClassInstance.publicMethod;
 callee function (appelée), calling function (appelante)
 (function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
 only Object or Array variables can be assigned by references
@@ -162,11 +161,11 @@ publicMethod: public method (Lower Camel Case)
 publicVariable: public variable (Lower Camel Case)
 destroyMyClass: class destructor function
 let myVariable is local variable in the fonction
-var x, y are positions on browser, in pixels (x -> right, y -> down)
-var i, j are positions of blocks into grid (i -> right, j -> up)
-var o is generic object
-var p is variable to browse in object
-var item is generic item, object or array or string boolean number
+let x, y are positions on browser, in pixels (x -> right, y -> down)
+let i, j are positions of blocks into grid (i -> right, j -> up)
+let o is generic object
+let p is variable to browse in object
+let item is generic item, object or array or string boolean number
 forEach( (myVar)=>{ return myVar++; } );
 
 **************** ANIMATIONS SEQUENCES ****************
@@ -200,7 +199,7 @@ MainMenu [1 instance]
             _lockedShapes: [] of Shapes: Blocks: Node
             _fallingShape: Shape
             _nextShape: Shape
-            Score
+            TetrisScore
                 _score
                 _level
 */
@@ -259,7 +258,7 @@ function init() {
     GAME.addGrid();
     //GAME.addGrid(); // #DEBUG
 }
-// MENU MANAGER Class (make new to open web GAME)
+// MainMenu Class, menu manager, make new one to open a TetrisGame
 function MainMenu() { // queue or stack
     window.addEventListener('keydown', this.keyCapture_, false); //for all keys, producing value or not
     window.addEventListener('keyup', this.keyCapture_, false); //for all keys, producing value or not
@@ -304,7 +303,7 @@ MainMenu.prototype = {
         }
     },
 };
-// AUDIO Class, sounds management
+// Audio Class, sounds management
 function Audio(sounds) { // constructor
     this._sounds = {};
     for (let p in sounds)
@@ -364,7 +363,7 @@ Audio.prototype = {
         return this._sounds[name].sound.duration;
     }*/
 };
-// before TETRIS GRAPHICS Class
+// TetrisSpritesCreation Class, earlier: TetrisGraphics, GameGraphics
 function TetrisSpritesCreation(rootNode) {
     this._rootNode = rootNode;
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
@@ -466,14 +465,14 @@ TetrisSpritesCreation.prototype = {
         this.pxYMessagePosition = Math.round(this.pxFullGridHeight/2);
         this._zoomRatio         = !oldGridWidth ? 1 : this.pxFullGridWidth / oldGridWidth;
     },
-    create_() { // creating all graphics
-        this._spriteBackground = new VectorialSprite({ // define backgroung color here: black > grey
+    create_() { // creating all sprites
+        this._spriteBackground = new SpriteObj({ // define backgroung color here: black > grey
             _nocache: true,
             drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
+                c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
                 c.fillRect(x,y,w,h) }
         });
-        this._spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
+        this._spriteGridFront = new SpriteObj({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
             widthSprite: () => SPRITES.pxFullGridWidth,
             heightSprite: () => SPRITES.pxFullGridHeight,
@@ -482,25 +481,25 @@ TetrisSpritesCreation.prototype = {
                 c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
                 c.lineTo(x+SPRITES.pxGridBorder,y+SPRITES.pxGridHeight);
                 c.lineTo(x,y+SPRITES.pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,SPRITES.pxGridBorder,0,1,VectorialSprite.rgbaTxt(col.dark),0,VectorialSprite.rgbaTxt(col.light));
+                c.fillStyle=SpriteObj.linearGradient(c,0,0,SPRITES.pxGridBorder,0,1,SpriteObj.rgbaTxt(col.dark),0,SpriteObj.rgbaTxt(col.light));
                 c.fill();
                 c.beginPath();c.moveTo(x+SPRITES.pxFullGridWidth,y); // right border
                 c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y);
                 c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y+SPRITES.pxGridHeight);
                 c.lineTo(x+SPRITES.pxFullGridWidth,y+SPRITES.pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,SPRITES.pxGridWidth+SPRITES.pxGridBorder,0,SPRITES.pxGridBorder,0,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.fillStyle=SpriteObj.linearGradient(c,SPRITES.pxGridWidth+SPRITES.pxGridBorder,0,SPRITES.pxGridBorder,0,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
                 c.fill();
                 c.beginPath();c.moveTo(0,SPRITES.pxFullGridHeight); // bottom border
                 c.lineTo(SPRITES.pxGridBorder,SPRITES.pxGridHeight);
                 c.lineTo(SPRITES.pxGridBorder+SPRITES.pxGridWidth,SPRITES.pxGridHeight);
                 c.lineTo(SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,0,SPRITES.pxGridHeight,0,SPRITES.pxGridBorder,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.fillStyle=SpriteObj.linearGradient(c,0,SPRITES.pxGridHeight,0,SPRITES.pxGridBorder,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
                 c.fill();
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,SPRITES.pxCellSize*2,0, VectorialSprite.rgbaTxt([0,0,0],1),1, VectorialSprite.rgbaTxt([0,0,0],0)); // top grid shadow
+                c.fillStyle=SpriteObj.linearGradient(c,0,0,0,SPRITES.pxCellSize*2,0, SpriteObj.rgbaTxt([0,0,0],1),1, SpriteObj.rgbaTxt([0,0,0],0)); // top grid shadow
                 c.fillRect(0,0,SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight); // #DEBUG
             }
         });
-        this._spriteGridBackground = new VectorialSprite({
+        this._spriteGridBackground = new SpriteObj({
             _nocache: true,
             widthSprite: () => SPRITES.pxFullGridWidth,
             heightSprite: () => SPRITES.pxFullGridHeight,
@@ -525,13 +524,13 @@ TetrisSpritesCreation.prototype = {
                     }
                 }
                 c.rect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
-                c.fillStyle=VectorialSprite.radialGradient(c,x+SPRITES.pxGridWidth/2,y+SPRITES.pxGridHeight,0,0,0,3*SPRITES.pxGridHeight/4,
-                    0, VectorialSprite.rgbaTxt(col.medium, 0.3), 1, VectorialSprite.rgbaTxt(col.medium, 0)); c.fill();
-                c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
-                    0, VectorialSprite.rgbaTxt([0,0,0],0.5), 0.1, VectorialSprite.rgbaTxt([0,0,0],0),
-                    0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); }
+                c.fillStyle=SpriteObj.radialGradient(c,x+SPRITES.pxGridWidth/2,y+SPRITES.pxGridHeight,0,0,0,3*SPRITES.pxGridHeight/4,
+                    0, SpriteObj.rgbaTxt(col.medium, 0.3), 1, SpriteObj.rgbaTxt(col.medium, 0)); c.fill();
+                c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
+                    0, SpriteObj.rgbaTxt([0,0,0],0.5), 0.1, SpriteObj.rgbaTxt([0,0,0],0),
+                    0.9, SpriteObj.rgbaTxt([0,0,0],0), 1, SpriteObj.rgbaTxt([0,0,0],0.5)); c.fill(); }
         });
-        this._spriteBlock = new VectorialSprite({
+        this._spriteBlock = new SpriteObj({
             _nocache: false,
             widthSprite: () => SPRITES.pxBlockSize,
             heightSprite: () => SPRITES.pxBlockSize,
@@ -541,16 +540,16 @@ TetrisSpritesCreation.prototype = {
                 let half = Math.round(SPRITES.pxBlockSize/2);
                 let margin = Math.round(SPRITES.pxBlockSize/7);
                 let col = SPRITES._colors[a.col];
-                c.fillStyle=VectorialSprite.rgbaTxt(col.medium);
+                c.fillStyle=SpriteObj.rgbaTxt(col.medium);
                 c.fillRect(x,y,SPRITES.pxBlockSize,SPRITES.pxBlockSize);
                 c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+SPRITES.pxBlockSize,y);
-                c.fillStyle=VectorialSprite.rgbaTxt(col.light);c.fill();
+                c.fillStyle=SpriteObj.rgbaTxt(col.light);c.fill();
                 c.beginPath();c.moveTo(x,y+SPRITES.pxBlockSize);c.lineTo(x+half,y+half);
-                c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
-                c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=SpriteObj.rgbaTxt(col.dark);c.fill();c.beginPath();
+                c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
                 c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) }
         });
-        this._spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
+        this._spritePreviewBlock = new SpriteObj({ // args a: gradient if true, uniform if false
             _nocache: false,
             widthSprite: () => SPRITES.pxPreviewBlockSize,
             heightSprite: () => SPRITES.pxPreviewBlockSize,
@@ -559,14 +558,14 @@ TetrisSpritesCreation.prototype = {
             drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle = (a.__onOff
-                    ? VectorialSprite.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
-                    : VectorialSprite.rgbaTxt(col.medium, SPRITES._previewOpacity)
+                    ? SpriteObj.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, SpriteObj.rgbaTxt(col.dark), 1, SpriteObj.rgbaTxt(col.light))
+                    : SpriteObj.rgbaTxt(col.medium, SPRITES._previewOpacity)
                 );
                 c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) }
         });
     },
 };
-// TETRIS GAME Class
+// TetrisGame Class
 function TetrisGame() {
     this._matrixHeight            = RULES.verticalCellsCount * 2; // GAME blocks rise (massively sometimes) by unqueuing animated sequences: if lost, need to finish these sequences before noticing losing with new falling shape unable to place
     this._iPositionStart          = Math.ceil(RULES.horizontalCellsCount/2); // shape start position
@@ -776,7 +775,7 @@ TetrisGame.prototype = {
             };
     },
 }
-// PENTOMINOES TIMER Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
+// PentominoesBriefMode Class, to manage pentominoes mode, a special mode with 5 blocks shapes, which happens after a trigger
 class PentominoesBriefMode {
     constructor() {
         this._pentoModeTimer = new Timer({
@@ -823,7 +822,7 @@ class PentominoesBriefMode {
         gridWichTriggeredPentoMode._anims.pentominoesModeAnim.startAnim();
     }
 }
-// TETRIS GRID Class
+// TetrisGrid Class
 function TetrisGrid(playerKeysSet, gridColor){
     this._gridColor       = gridColor;
     this._playerKeysSet   = playerKeysSet; // [up down left right]
@@ -876,15 +875,15 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZone._childs.back._childs.ghostBlocks; // shortcut
     this._domNode._childs.frameZone._childs.back._childs.background.nodeDrawSprite({col:this._gridColor.name});
-    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', VectorialSprite.rgbaTxt(this._gridColor.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
+    this._domNode._childs.controlZone.createText(FONTS.scoreFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light)); // _textCharCountWidthMin : 1 or 7
     this._domNode._childs.controlZone.setTextIntoSizedField({
         text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
-    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', VectorialSprite.rgbaTxt(this._gridColor.light), '0 0 0.4em '+VectorialSprite.rgbaTxt(this._gridColor.light), 3);
-    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', VectorialSprite.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+VectorialSprite.rgbaTxt(this._gridColor.dark));
+    this._domNode._childs.scoreZone.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
+    this._domNode._childs.messageZone.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {}; // need to initialize before creating new score which contains anim
-    this._score = new Score(this); // contains animation, 
+    this._score = new TetrisScore(this); // contains animation, 
     this._anims.quakeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
             this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES.pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
@@ -1120,14 +1119,12 @@ TetrisGrid.prototype            = {
                 break;
             default: // case DOWN key keep pressed down since last shape, wait for DOWN key pressed up
         }
-        //return this;
     },
     continueSoftDropping() { // full falling iterative, called by timer
         this._fallingShape.unplaceAndMoveAndPlaceAndDrawShape(0, -1);
         this._isSoftDropping = true;            
         this._dropTimer.setPeriod(DURATIONS.softDropPeriod);
         this._dropTimer.restartTimer();
-        //return this;
     },
     fallingShapeTriesMove(iRight, jUp) { // return true if moved (not used), called by left/right/timer
         if (this._fallingShape.canMoveFromPlacedToPlaced(iRight, jUp)) {
@@ -1141,7 +1138,6 @@ TetrisGrid.prototype            = {
                 else
                     this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
         }
-        //return this;
     },
     unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows() { // can be called recursively, when falling shape or locked shapes in game hit floor
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
@@ -1249,11 +1245,10 @@ TetrisGrid.prototype            = {
     pauseOrResume() { // pause or resume this grid
         for (let p in this._anims) // this._anims is object, not array, contains animations of this grid
             this._anims[p].pauseOrResume();
-        //this._softDropTimer.pauseOrResume();
         this._dropTimer.pauseOrResume();
     }
 };
-// TETRIS SHAPE Class
+// TetrisShape Class
 class TetrisShape {
     constructor(grid, group=null) { // default falling shape means not group argument
         this._grid = grid;
@@ -1292,7 +1287,7 @@ class TetrisShape {
             this._shapeBlocks[b]._shape = this; // link to shape
         this.putShapeNodeIn();
     }
-    getjVectorUnderShape() { // return negative slots count from falling shape to floor where it can be placed
+    getjVectorUnderShape() { // return negative cells count from falling shape to floor where it can be placed
         let result = 0;
         while (this.canMoveFromPlacedToPlaced(0, --result)); // compute result decrement BEFORE calling function
         return (++result); // compute result increment BEFORE calling function
@@ -1364,7 +1359,7 @@ class TetrisShape {
             myBlock.placeBlock();
         });
         if ((dropType !== null) && (jUp < 0))
-            this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive slots count traveled, and dropType
+            this._grid._score.computeScoreDuringDrop(-jUp, dropType); // function receive cells count traveled, and dropType
         return this; // to use chained calls
     }
     canMoveFromPlacedToPlaced(iRight, jUp) { // can move into grid
@@ -1376,7 +1371,7 @@ class TetrisShape {
     canMoveToPlaced(iRight, jUp) {
         let result = true;
         for (let b=0;b < this._shapeBlocks.length;b++)
-            if (!this._shapeBlocks[b].isFreeSlot(this._shapeBlocks[b]._iPosition + iRight, this._shapeBlocks[b]._jPosition + jUp)) {
+            if (!this._shapeBlocks[b].isFreeCell(this._shapeBlocks[b]._iPosition + iRight, this._shapeBlocks[b]._jPosition + jUp)) {
                 result = false;
                 break; // exit loop
             }
@@ -1389,7 +1384,7 @@ class TetrisShape {
             let result = true;
             this.unplaceShape();
             for (let b=0;b < this._shapeBlocks.length;b++)
-                if ( !this._shapeBlocks[b].isFreeSlot(
+                if ( !this._shapeBlocks[b].isFreeCell(
                     this._iPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][0],
                     this._jPosition + GAME._gameShapesWithRotations[this._shapeType][(this._pivot+1) % this._pivotsCount][b][1]
                     ) ) { result = false; break; } // exit loop
@@ -1414,7 +1409,7 @@ class TetrisShape {
     shapesHitIfMove(iRight, jUp) { // if all shapes AND moving verticaly ; test only and assign getjVectorUnderShape if necessary
         this.unplaceShape();
         let shapesHit = [];
-        let blockHit; // block who was hit, === TetrisBlock or null in _matrix
+        let blockHit; // block which was hit, === TetrisBlock or null in matrix
         for (let b=0;b < this._shapeBlocks.length;b++) {
             blockHit = this._grid._matrix[this._shapeBlocks[b]._iPosition + iRight][this._shapeBlocks[b]._jPosition + jUp];
             if ( ( blockHit !== null) && (blockHit._shape._jVector !== 1) ) { // check if jvector not +1
@@ -1435,7 +1430,7 @@ class TetrisShape {
         this._shapeBlocks.forEach( myBlock => myBlock.unplaceBlock() );
     }
 }
-// TETRIS NEXT SHAPE PREVIEW Class
+// NextShapePreview Class, it's next shape view, not ghost shape
 class NextShapePreview {
     constructor(grid) {
         this._grid = grid;
@@ -1453,7 +1448,7 @@ class NextShapePreview {
             this._domNode.nodeDrawSprite({xSprite: shape._polyominoBlocks[b][0], ySprite: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: false }); // off
     }
 }
-// LOCKED BLOCKS Class, for locked blocks on the ground
+// LockedBlocks Class, for locked blocks on the ground
 function LockedBlocks(grid) {
     this._grid = grid;
     this._lockedBlocksArray = []; // empty or TetrisBlock inside
@@ -1465,11 +1460,11 @@ function LockedBlocks(grid) {
     }
 }
 LockedBlocks.prototype = {
-    _grid                      : null,
-    _lockedBlocksArray         : null,
-    _lockedBlocksArrayByRow    : null, // -20 +40 +up que les boxes visibles
-    _blocksCount             : 0,
-    _searchDirections         : [[1, 0], [0, -1], [-1, 0], [0, 1]],// right, bottom, left, up
+    _grid                  : null,
+    _lockedBlocksArray     : null,
+    _lockedBlocksArrayByRow: null, // -20 +40 +up que les boxes visibles
+    _blocksCount           : 0,
+    _searchDirections      : [[1, 0], [0, -1], [-1, 0], [0, 1]],// right, bottom, left, up
     destroyLockedBlocks() { // removes placed blocks
         for (let b=0; b < this._lockedBlocksArray.length; b++)
             if (this._lockedBlocksArray[b]) // if block exist
@@ -1479,12 +1474,9 @@ LockedBlocks.prototype = {
         if (mode === SEARCH_MODE.up)
             this._grid._fallingShape.unplaceShape(); // falling shape temporary removed, in testing mode
         let toProcessMap = new Map();
-        this._lockedBlocksArray.forEach( myBlock => toProcessMap.set(myBlock._blockIndex, myBlock) );
-        // not filtering (this._lockedBlocksArray[p] !== undefined) anymore #DEBUG
+        this._lockedBlocksArray.forEach( myBlock => toProcessMap.set(myBlock._blockIndex, myBlock) ); // filtering (this._lockedBlocksArray[p] !== undefined) seems useless, removed #DEBUG
         let groups = []; // below we make isolated groups
-        //while (toProcessMap.listSize > 0) {
         for (let blockIndex of toProcessMap.keys()) {
-            //block = toProcessMap.unList();
             let block = toProcessMap.get(blockIndex); toProcessMap.delete(blockIndex); // block impossible to be null
             let group = {jMin: RULES.verticalCellsCount, shape: []};
             group.jMin = Math.min(group.jMin, block._jPosition);
@@ -1570,19 +1562,19 @@ LockedBlocks.prototype = {
     put1NewRisingRow() { // will stack all countandclearrows callee
         this._grid._anims.shapeRotateAnim.endAnim();
         this._grid._dropTimer.finishTimer();
-        let rowFilledSlots; // prepareNewRisingRowAt_jPos0
+        let rowFilledCells; // prepareNewRisingRowAt_jPos0
         let risingRowsHolesCountMax = Math.round(RULES.risingRowsHolesCountMaxRatio * RULES.horizontalCellsCount);
-        rowFilledSlots = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 slots
+        rowFilledCells = new Array(RULES.horizontalCellsCount).fill(true); // we fill all table with any value, 10 cells
         for (let c=0 ; c < risingRowsHolesCountMax ; c++) // we delete min 1 and max 30% of 10 columns, means 1 to 3 holes max randomly
-            delete rowFilledSlots[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
-        rowFilledSlots.forEach( // we skip delete rowFilledSlots
+            delete rowFilledCells[Math.floor(Math.random()*RULES.horizontalCellsCount)]; // random() returns number between 0 (inclusive) and 1 (exclusive)
+        rowFilledCells.forEach( // we skip delete rowFilledCells
             (uselessArg, slotIndex) => new TetrisBlock(BLOCK_TYPES.orphan, this._grid, slotIndex+1, 0, SPRITES._colors['grey']) ); // iPosition=[1-10], jPosition=0 just under game
         // end of prepareNewRisingRowAt_jPos0
         this.chainSearchOrphan(SEARCH_MODE.up); // this._grid._ghostBlocksNode.hide(); hide ghost shape before rising, not necessary
         this._grid._anims.rising1RowAnim.startAnim();
     }
 };
-// TETRIS BLOCK Class
+// TetrisBlock Class
 class TetrisBlock {
     constructor(blockType, shapeOrGridOwnerOfThisBlock, i, j, blockColor) {
         this._blockType = blockType;
@@ -1607,14 +1599,14 @@ class TetrisBlock {
                 this.putBlockNodeIn(this._shape._domNode);
                 this._blockIndex = GAME._nextBlockIndex++;
                 break;
-            case BLOCK_TYPES.orphan: // rising row coming from level j=0
+            case BLOCK_TYPES.orphan: // rising row coming from level j === 0
                 this._grid = shapeOrGridOwnerOfThisBlock; // use of shape as a grid, can be optimized
                 this.putBlockInRealBlocksNode();
                 this._blockIndex = GAME._nextBlockIndex++;
                 this.placeBlock();
                 this.drawBlockInCell();
                 break;
-            default: console.log(this) // bug if this case occurs #DEBUG
+            default: console.log('#DEBUG', this) // bug if this case occurs #DEBUG
         }
     }
     destroyBlock() { // destructor, remove block anywhere
@@ -1645,14 +1637,12 @@ class TetrisBlock {
         this._blockColor = blockColor;
         this._domNode.nodeDrawSprite({col: this._blockColor.name});
     }
-    isFreeSlot(i, j)  { // can move on placed grid, put this into grid
-        return (
-            ( (j >= 1) || (j >= this._jPosition) ) // j === 0 is floor level, _jPosition useless$$$$$$$, same bug
-            //    (j >= 1) // j=0 is floor level
-            && (i >= 1) // i=0 is left wall
-            && (i <=RULES.horizontalCellsCount) // i === 11 is right wall
-            && (this._grid._matrix[i][j] === null) // _matrix[i][j] === null means free
-        );
+    isFreeCell(i, j)  { // can move on placed grid, put this into grid
+        if (j < 0) console.log('#DEBUG', j, this);
+        return (   (j >= 1) // j === 0 is bottom wall, j < 0 never happens
+                && (i >= 1) // i === 0 is left wall
+                && (i <=RULES.horizontalCellsCount) // i === 11 is right wall
+                && (this._grid._matrix[i][j] === null)   ); // matrix[i][j] === null means free
     }
     drawBlockInCell() { // here you can hide top block outside grid
         this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
@@ -1664,8 +1654,8 @@ class TetrisBlock {
         myParentNode.putChild(this._domNode);
     }
 };
-// TETRIS SCORE Class, based on riginal Nintendo scoring system
-class Score {
+// TetrisScore Class, based on riginal Nintendo scoring system
+class TetrisScore {
     constructor(grid) {
         this._grid              = grid;
         this._combos            = -1;
@@ -1754,7 +1744,7 @@ function isValued (item) { // requires declared and defined not to null
 function isDeclaredAndDefined (item) {
     return (typeof item !== 'undefined');
 }
-// TIMER Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
+// Timer Class, starts, pause and end a timer of a function to run in 'timerPeriod' ms
 class Timer {
     constructor(timerObject) { // args never used here, so removed
         this._funcAtTimeOut = timerObject.funcAtTimeOut;
@@ -1803,7 +1793,7 @@ class Timer {
         this._timerPeriod = timerPeriod;
     }
 }
-// EVENTS QUEUE Class
+// EventsQueue Class
 class EventsQueue {
     constructor() {
         this._funcsQueue;
@@ -1828,10 +1818,10 @@ class EventsQueue {
         }
     }
 }
-//SvgObject Class
+//SvgObj Class, SVG object
 //new(parent:): optional parent
 //newChild(name:): optional unique attribute name
-function SvgObject(svgDefinition) { //svgDefinition is attributes
+function SvgObj(svgDefinition) { //svgDefinition is attributes
     this._svgElement = document.createElementNS(SVG_NS, svgDefinition.type);
     this._childs = {};
     this._translateText = '';
@@ -1841,7 +1831,7 @@ function SvgObject(svgDefinition) { //svgDefinition is attributes
     delete svgDefinition.parent; //to avoid it in this.set()
     this.set(svgDefinition);
 }
-SvgObject.prototype = {
+SvgObj.prototype = {
     _count        : 0, //for unamed elements
     _svgElement   : null, //public, DOM SVG
     _childs       : null,
@@ -1851,7 +1841,7 @@ SvgObject.prototype = {
     _scaleText    : null,
     _rotateText   : null,
     del() { //optional because garbbage collector
-        for (var p in this._childs)
+        for (let p in this._childs)
             this._childs[p].del(); //delete this._childs[p] made by child
         this._count = 0;
         if (this._parent) delete this._parent._childs[this._parentIndex]; //manage parent
@@ -1866,12 +1856,12 @@ SvgObject.prototype = {
         this._svgElement.setAttributeNS(null, svgDefinition, value);
     },
     set(svgDefinition) {
-        for (var p in svgDefinition)
+        for (let p in svgDefinition)
             if (!svgDefinition[p].type) //if sheet attribute without type
                 this._svgElement.setAttributeNS(null, p.replace(/_/, '-'), svgDefinition[p]); // equivalent new RegExp("_","g"),
             else {
                 svgDefinition[p].parent = this._svgElement;
-                this._childs[p] = new SvgObject(svgDefinition[p]);
+                this._childs[p] = new SvgObj(svgDefinition[p]);
                 this._childs[p]._parent = this; //manage parent
                 this._childs[p]._parentIndex = p; //manage parent, create an instance for chars
             }
@@ -1882,7 +1872,7 @@ SvgObject.prototype = {
     setText(text, width, maxHeightMinCharCount) { //works only if type == "text"
         this._svgElement.textContent = text;
         if (width) {
-            var charCount = Math.max((''+text).length, maxHeightMinCharCount);
+            let charCount = Math.max((''+text).length, maxHeightMinCharCount);
             this.set1('font-size', game._fontRatio * width/charCount); 
         }
     },
@@ -1907,8 +1897,8 @@ SvgObject.prototype = {
     },
     newChild(svgDefinition) { //returns pointer to child
         svgDefinition.parent = this._svgElement;
-        //return this._childs[svgDefinition.name?svgDefinition.name:this._count++] = new SvgObject(svgDefinition);
-        this._childs[this._count] = new SvgObject(svgDefinition);
+        //return this._childs[svgDefinition.name?svgDefinition.name:this._count++] = new SvgObj(svgDefinition);
+        this._childs[this._count] = new SvgObj(svgDefinition);
         this._childs[this._count]._parent = this; //manage parent
         this._childs[this._count]._parentIndex = this._count; //manage parent
         return this._childs[this._count ++];
@@ -1922,7 +1912,7 @@ SvgObject.prototype = {
         this._svgElement.appendChild(svg._svgElement);
     },
     delChilds() {
-        for (var p in this._childs)
+        for (let p in this._childs)
             this._childs[p].del();
         this._count = 0;
     },
@@ -1933,21 +1923,21 @@ SvgObject.prototype = {
         this._svgElement.setAttributeNS(null, 'display', 'inherit');
     },
     addChildCloneOf(svg) {
-        var id = svg._parentIndex;
+        let id = svg._parentIndex;
         if (typeof (svg._parentIndex) == 'number')
             id = this._count ++;
-        var child = this._childs[id];
-        child = new SvgObject({});
+        let child = this._childs[id];
+        child = new SvgObj({});
         child._parent = this;
         child._parentIndex = id;
         child._svgElement = svg._svgElement.cloneNode(false); //don't copy nodes here
         this._svgElement.appendChild(child._svgElement);
-        for (var p in svg._childs)
+        for (let p in svg._childs)
             child.addChildCloneOf(svg._childs[p], true); //copying nodes here
         return child;
     }
 };
-// DOM NODE Class, manages HTML Elements, x:0 is implicit
+// DomNode Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
     this._domNodeType = isValued(definitionObject.type) ? 'canvas' : 'div'; // implicit div if type ommited
@@ -1996,7 +1986,7 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     // checking canvas widthSprite and heightSprite properties
     if (this._domNodeType === 'canvas') {
         if (definitionObject.sprite) {
-            this._vectorialSprite = definitionObject.sprite;
+            this._sprite = definitionObject.sprite;
             delete definitionObject.sprite;
         }
         this._drawingContext2D = this._htmlElement.getContext('2d');
@@ -2018,7 +2008,7 @@ DomNode.prototype = {
     _y                    : 0,
     _domNodeType          : null,
     _drawingContext2D     : null, // _drawingContext2D context
-    _vectorialSprite      : null,
+    _sprite      : null,
     widthSprite           : 0,
     heightSprite          : 0,
     _scaleZoom            : 1, // float
@@ -2054,7 +2044,7 @@ DomNode.prototype = {
         let definitionObject = (attributes !== null) ? attributes : {}; // if attributes not supplied, we make new Object
         let copyAtt = {}; // recording process to redraw
         Object.assign(copyAtt, definitionObject); // to copy object, old: for (let p in definitionObject) copyAtt[p] = definitionObject[p];
-        if (!definitionObject.sprite) definitionObject.sprite = this._vectorialSprite;
+        if (!definitionObject.sprite) definitionObject.sprite = this._sprite;
         if (!definitionObject.x) definitionObject.x = 0; // px, int
         if (!definitionObject.y) definitionObject.y = 0; // px, int
         if (isValued(definitionObject.xSprite))
@@ -2186,7 +2176,7 @@ DomNode.prototype = {
     },
     moveToGridCell(cellPosition) {  // cellPosition = {i, j}
         this._moveToGridCellStack = cellPosition; // to stack last position
-        this.moveNodeTo(this._vectorialSprite.xSprite(cellPosition.i), this._vectorialSprite.ySprite(cellPosition.j));
+        this.moveNodeTo(this._sprite.xSprite(cellPosition.i), this._sprite.ySprite(cellPosition.j));
     },
     moveCenterTo(x, y) {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
@@ -2245,11 +2235,11 @@ DomNode.prototype = {
         this._htmlElement.style.visibility = 'inherit';
     }
 };
-// VECTORIAL SPRITE Class, vectorial picture, emulates vectorial SVG graphics, generic
+// SpriteObj Class, vectorial built sprite, emulates vectorial SVG graphics, generic
 // functions reserved: widthSprite, heightSprite, xSprite, ySprite, drawSprite
 // boolean reserved: _nocache
 // use nomage: __funcToDoThis (intern) // no '_' in String value of arguments
-class VectorialSprite {
+class SpriteObj {
     constructor(spriteDefinition) {
         this._nocache = spriteDefinition._nocache; // we take _nocache properties
         delete spriteDefinition._nocache;
@@ -2296,7 +2286,7 @@ class VectorialSprite {
         return grad;
     }
 }
-// ANIMATION Class, to prepare an animation
+// Animation Class, to prepare an animation
 class Animation {
     constructor(animObject) {
         this.startAnimFunc_  = isValued(animObject.startAnimFunc) ? animObject.startAnimFunc : false; // optional function when begin animation, value = null or defined
