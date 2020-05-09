@@ -468,15 +468,15 @@ TetrisSpritesCreation.prototype = {
     create_() { // creating all graphics
         this._spriteBackground = new VectorialSprite({ // define backgroung color here: black > grey
             _nocache: true,
-            drawSprite_: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
+            drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
                 c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
                 c.fillRect(x,y,w,h) }
         });
         this._spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
-            _width: () => SPRITES.pxFullGridWidth,
-            _height: () => SPRITES.pxFullGridHeight,
-            drawSprite_(c, x, y, a) { // context, x, y, args
+            widthSprite: () => SPRITES.pxFullGridWidth,
+            heightSprite: () => SPRITES.pxFullGridHeight,
+            drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
                 c.lineTo(x+SPRITES.pxGridBorder,y+SPRITES.pxGridHeight);
@@ -501,9 +501,9 @@ TetrisSpritesCreation.prototype = {
         });
         this._spriteGridBackground = new VectorialSprite({
             _nocache: true,
-            _width: () => SPRITES.pxFullGridWidth,
-            _height: () => SPRITES.pxFullGridHeight,
-            drawSprite_(c, x, y, a) { // context, x, y, args
+            widthSprite: () => SPRITES.pxFullGridWidth,
+            heightSprite: () => SPRITES.pxFullGridHeight,
+            drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
                 let colo = ['#000','#222'];
@@ -527,14 +527,14 @@ TetrisSpritesCreation.prototype = {
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5), 0.1, VectorialSprite.rgbaTxt([0,0,0],0),
                     0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); },
-            fx: () => SPRITES.pxGridBorder,
-            fy: () => SPRITES.pxGridBorder
+            xSprite: () => SPRITES.pxGridBorder,
+            ySprite: () => SPRITES.pxGridBorder
         });
         this._spriteBlock = new VectorialSprite({
             _nocache: false,
-            _width: () => SPRITES.pxBlockSize,
-            _height: () => SPRITES.pxBlockSize,
-            drawSprite_(c, x, y, a) { // context, x, y, args
+            widthSprite: () => SPRITES.pxBlockSize,
+            heightSprite: () => SPRITES.pxBlockSize,
+            drawSprite(c, x, y, a) { // context, x, y, args
                 let half = Math.round(SPRITES.pxBlockSize/2);
                 let margin = Math.round(SPRITES.pxBlockSize/7);
                 let col = SPRITES._colors[a.col];
@@ -546,23 +546,22 @@ TetrisSpritesCreation.prototype = {
                 c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
                 c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) },
-            fx: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
-            fy: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize
+            xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
+            ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize
         });
         this._spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
-            _width: () => SPRITES.pxPreviewBlockSize,
-            _height: () => SPRITES.pxPreviewBlockSize,
-            drawSprite_(c, x, y, a) { // context, x, y, args
-                //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
+            widthSprite: () => SPRITES.pxPreviewBlockSize,
+            heightSprite: () => SPRITES.pxPreviewBlockSize,
+            drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle = (a.__onOff
                     ? VectorialSprite.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
                     : VectorialSprite.rgbaTxt(col.medium, SPRITES._previewOpacity)
                 );
                 c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) },
-            fx: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
-            fy: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)
+            xSprite: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
+            ySprite: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)
         });
     },
 };
@@ -968,7 +967,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._anims.shapeRotateAnim = new Animation({ // loading animation to use later
         startAnimFunc() { // to animate block, we temporary apply a transform rotation
-            this._fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.fx(this._fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.fy(this._fallingShape._jPosition-0.5)+"px");
+            this._fallingShape._domNode.setTransformOrigin(SPRITES._spriteBlock.xSprite(this._fallingShape._iPosition+0.5)+"px "+SPRITES._spriteBlock.ySprite(this._fallingShape._jPosition-0.5)+"px");
         },
         animateFunc(animOutput) {
             if ( (this._fallingShape._pivotsCount === 2) && (this._fallingShape._pivot === 0) )
@@ -1442,15 +1441,15 @@ class NextShapePreview {
         this._domNode = this._grid._domNode._childs.nextShapePreview;
         for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
             for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
-                this._domNode.nodeDrawSprite({fx: i, fy: j, col: this._grid._gridColor.name, __onOff: false}); // off
+                this._domNode.nodeDrawSprite({xSprite: i, ySprite: j, col: this._grid._gridColor.name, __onOff: false}); // off
     }
     mark(shape) {
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: true}); // on
+            this._domNode.nodeDrawSprite({xSprite: shape._polyominoBlocks[b][0], ySprite: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: true}); // on
     }
     unMark(shape) { // optimized to remove only current previewed shape, and not all preview
         for (let b=0;b < shape._polyominoBlocks.length;b++)
-            this._domNode.nodeDrawSprite({fx: shape._polyominoBlocks[b][0], fy: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: false }); // off
+            this._domNode.nodeDrawSprite({xSprite: shape._polyominoBlocks[b][0], ySprite: shape._polyominoBlocks[b][1], col: this._grid._gridColor.name, __onOff: false }); // off
     }
 }
 // LOCKED BLOCKS Class, for locked blocks on the ground
@@ -1964,9 +1963,9 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     if (isValued(definitionObject.body)) {
         window.document.body.appendChild(this._htmlElement)
         this._htmlElement.style.width = '100%'; // all window
-        this._width = this._htmlElement.offsetWidth; //this.getHeight();
+        this.widthSprite = this._htmlElement.offsetWidth; //this.getHeight();
         this._htmlElement.style.height = '100%'; // all window
-        this._height = this._htmlElement.offsetHeight; //this.getHeight();
+        this.heightSprite = this._htmlElement.offsetHeight; //this.getHeight();
         return; // not proceed anymore, it's just one time
     }
     // checking width property for DIV
@@ -1993,17 +1992,17 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     delete definitionObject.y;
     delete definitionObject.width;
     delete definitionObject.height;
-    // checking canvas _width and _height properties
+    // checking canvas widthSprite and heightSprite properties
     if (this._domNodeType === 'canvas') {
         if (definitionObject.sprite) {
             this._vectorialSprite = definitionObject.sprite;
             delete definitionObject.sprite;
         }
         this._drawingContext2D = this._htmlElement.getContext('2d');
-        this._htmlElement.width = this._width;
-        //this._htmlElement.style.width = this._width*ratio+'px';
-        this._htmlElement.height = this._height;
-        //this._htmlElement.style.height = this._height*ratio+'px';
+        this._htmlElement.width = this.widthSprite;
+        //this._htmlElement.style.width = this.widthSprite*ratio+'px';
+        this._htmlElement.height = this.heightSprite;
+        //this._htmlElement.style.height = this.heightSprite*ratio+'px';
         this._drawStack = {};
     }
     this.setDomNode(definitionObject); // others attributes
@@ -2016,15 +2015,11 @@ DomNode.prototype = {
     _nameId               : null, // = ID, index of child in this._childs, integer or name
     _x                    : 0,
     _y                    : 0,
-    _width                : 0,
-    _height               : 0,
-    //_xVar                 : null,
-    //_yVar                 : null,
-    //_widthVar             : null,
-    //_heightVar            : null,
     _domNodeType          : null,
     _drawingContext2D     : null, // _drawingContext2D context
     _vectorialSprite      : null,
+    widthSprite           : 0,
+    heightSprite          : 0,
     _scaleZoom            : 1, // float
     _drawStack            : null,
     _moveToGridCellStack  : null,
@@ -2061,17 +2056,17 @@ DomNode.prototype = {
         if (!definitionObject.sprite) definitionObject.sprite = this._vectorialSprite;
         if (!definitionObject.x) definitionObject.x = 0; // px, int
         if (!definitionObject.y) definitionObject.y = 0; // px, int
-        if (isValued(definitionObject.fx))
-            definitionObject.x += definitionObject.sprite.fx(definitionObject.fx);
-        if (isValued(definitionObject.fy))
-            definitionObject.y += definitionObject.sprite.fy(definitionObject.fy);
-        delete definitionObject.fx; // xy found, deleting functions
-        delete definitionObject.fy;
+        if (isValued(definitionObject.xSprite))
+            definitionObject.x += definitionObject.sprite.xSprite(definitionObject.xSprite);
+        if (isValued(definitionObject.ySprite))
+            definitionObject.y += definitionObject.sprite.ySprite(definitionObject.ySprite);
+        delete definitionObject.xSprite; // xy found, deleting functions
+        delete definitionObject.ySprite;
         this._drawStack[this.getSortedXYArgs_(definitionObject)] = copyAtt; // remember xy only for index for redrawing
         let sortedArgs = this.getSortedArgs_(definitionObject);
         if (!definitionObject.sprite.hasImageData(sortedArgs)) {
             this._drawingContext2D.beginPath();
-            definitionObject.sprite.drawSprite_(this._drawingContext2D, definitionObject.x, definitionObject.y, definitionObject, this.getWidth(), this.getHeight());
+            definitionObject.sprite.drawSprite(this._drawingContext2D, definitionObject.x, definitionObject.y, definitionObject, this.getWidth(), this.getHeight());
             this._drawingContext2D.closePath();
         }
         if (definitionObject.sprite.hasImageData(sortedArgs)) { // second test
@@ -2085,7 +2080,7 @@ DomNode.prototype = {
     getSortedArgs_(definitionObject) { // return sorted args as String
         let result = [];
         for (let p in definitionObject)
-            if (p !== 'x' && p !== 'y' && p !== 'fx' && p !== 'fy' && p !== 'sprite')
+            if (p !== 'x' && p !== 'y' && p !== 'xSprite' && p !== 'ySprite' && p !== 'sprite')
                 result.push(p + definitionObject[p]);
         return SPRITES._scaleFactor + result.sort().join(); // we can put separator char in args here
     },
@@ -2101,17 +2096,16 @@ DomNode.prototype = {
         this.setHeight(this.getHeight());
         if (recursiveCalling) { // if (recursiveCalling === true)
             this.moveNodeTo(this.getXInit(), this.getYInit()); // init x y
-            if (this._moveToGridCellStack !== null) // positionned with fx
+            if (this._moveToGridCellStack !== null) // positionned with xSprite
                 this.moveToGridCell(this._moveToGridCellStack); //before: this.moveToGridCell.apply(this, this._moveToGridCellStack); i// stacked [i, j] === this._moveToGridCellStack
         } // _moveToGridCellStack is never reset, used 1 time
-        if (this._domNodeType === 'canvas') //$canvas
-            this.redrawCanvas_(this._width, this._height);
-        else { // type === div
+        if (this._domNodeType === 'canvas')
+            this.redrawCanvas_(this.widthSprite, this.heightSprite);
+        else // type === div
             if (this._text)
                 this.resizeText_();
             for (let p in this._childs)
                 this._childs[p].redrawNode(true); //recursiveCalling === true
-        }
     },
     redrawCanvas_(newWidth, newHeight) { // redraw at new size, no moving
         this._htmlElement.width = newWidth ? newWidth : this.getWidth();
@@ -2148,12 +2142,12 @@ DomNode.prototype = {
         return this._x + Math.round(this.getWidth()/2);
     },*/
     setWidth(w) {
-        this._width = w;
-        this._htmlElement.style.width = this.pxVal_(this._width);
+        this.widthSprite = w;
+        this._htmlElement.style.width = this.pxVal_(this.widthSprite);
     },
     setHeight(h) {
-        this._height = h;
-        this._htmlElement.style.height = this.pxVal_(this._height);
+        this.heightSprite = h;
+        this._htmlElement.style.height = this.pxVal_(this.heightSprite);
     },
     getXInit() { // function by default, can be overwritten by return SPRITES value
         return 0;
@@ -2191,7 +2185,7 @@ DomNode.prototype = {
     },
     moveToGridCell(cellPosition) {  // cellPosition = {i, j}
         this._moveToGridCellStack = cellPosition; // to stack last position
-        this.moveNodeTo(this._vectorialSprite.fx(cellPosition.i), this._vectorialSprite.fy(cellPosition.j));
+        this.moveNodeTo(this._vectorialSprite.xSprite(cellPosition.i), this._vectorialSprite.ySprite(cellPosition.j));
     },
     moveCenterTo(x, y) {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
@@ -2250,39 +2244,31 @@ DomNode.prototype = {
         this._htmlElement.style.visibility = 'inherit';
     }
 };
-// VECTOR SPRITES Class, vectorial picture, emulates vectorial SVG graphics, generic
-// functions : x, y, fx, fy, sprite, _nocache, reserved; 1 input
+// VECTORIAL SPRITES (VS) Class, vectorial picture, emulates vectorial SVG graphics, generic
+// functions : x, y, xSprite, ySprite, sprite, _nocache, reserved; 1 input
 // use nomage: __funcToDoThis (intern)
 // no '_' in String value of arguments
 // for called functions: use one input parameter not object nor array (String, Number, Boolean)
 class VectorialSprite {
     constructor(funcs) {
-        this.drawSprite_; // context, x, y, args
-        this.fx;
-        this.fy;
+        this.drawSprite; // context, x, y, args
+        this.xSprite;
+        this.ySprite;
         this._imagesData = []; // to work with _imagesData
-        this._width;
-        this._height;
+        this.widthSprite;
+        this.heightSprite;
         this._nocache;
         for (let p in funcs)
-            switch (true) {
-                case (p === '_nocache'): this._nocache = funcs[p]; break
-                case (typeof funcs[p] === 'string'): this[p] = funcs[p]; break;
-                case (typeof funcs[p] === 'function'): this[p] = funcs[p]; break; //this[p].bind(SPRITES); break;
-                //case (typeof funcs[p] === 'number'): this[p] = funcs[p]; break;
-                default: console.log('#DEBUG funcs[p]');
-            }
-            /*if (p === '_nocache')
-                this[p] = funcs[p];
+            if (p === '_nocache')
+                this._nocache = funcs[p]; // boolean
             else
-                this[p] = funcs[p];*/
-            //console.log(funcs[p]);
+                this[p] = funcs[p]; // function
     }
     getWidth() {
-        return this._width();//return SPRITES[this._width];
+        return this.widthSprite();
     }
     getHeight() {
-        return this._height();//return SPRITES[this._height];
+        return this.heightSprite();
     }
     getImageData(sortedArgs) { // return {imageData, xD, yD}, no check if exist
         return this._imagesData[sortedArgs];
