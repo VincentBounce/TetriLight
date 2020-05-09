@@ -145,6 +145,7 @@ GitHub: rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit
 GitHub: merge drop-timer branch into master branch: git checkout master / git merge drop-timer
 GitHub: then delete branch locally: git branch -d drop-timer
 GitHub: then delete branch remotely: git push tetrilight-github --delete drop-timer
+GitHub: cleaning outdated branches (remotely deleted, but still showed in VS Code): git fetch --prune
 GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
 Settings Sync extension: to save VS Code configuration in GitHub
 
