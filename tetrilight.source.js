@@ -139,10 +139,12 @@ To execute a command: CTRL + SHIFT + P
 Monokai ST3 extension: gives function blue coloration instead green in 'Monokai' standard theme
 Color Highlight extension: to colorize colors declarations into code
 Alignment extension: ALT + = to align selection
-GitHub: remove a remote: git remote rm old
+GitHub: remove a remote: git remote rm old-remote
 GitHub: rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
 GitHub: rename a remote branch : git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
 GitHub: merge drop-timer branch into master branch: git checkout master / git merge drop-timer
+GitHub: then delete branch locally: git branch -d drop-timer
+GitHub: then delete branch remotely: git push tetrilight-github --delete drop-timer
 GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
 Settings Sync extension: to save VS Code configuration in GitHub
 
@@ -264,7 +266,6 @@ function MainMenu() { // queue or stack
     // below creation for MAIN dom node
     this._domNode = new DomNode({body: true});
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
-    SPRITES.create_();
     this._domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
@@ -367,7 +368,7 @@ function TetrisSpritesCreation(rootNode) {
     this._rootNode = rootNode;
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
     this.zoom1Step(0);
-    //this.create_();
+    this.create_();
 }
 TetrisSpritesCreation.prototype = {
     _rootNode               : null,
