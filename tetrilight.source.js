@@ -201,7 +201,7 @@ MainMenu [1 instance]
                 _score
                 _level
 */
-//"use strict"; // use JavaScript in strict mode to make code better and prevent errors
+"use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
 // GLOBAL CONSTANTS
@@ -574,8 +574,8 @@ function TetrisGame() {
     this._pentominoesBriefMode    = new PentominoesBriefMode();
     this._gameShapesWithRotations = new Array(this._storedPolyominoes.length); // table of all shapes with rotations
     this._storedPolyominoes.forEach( (storedPolyo, s) => { // creating all shapes variations: browsing shapes
-        shapeBlocksCount = storedPolyo.blocks.length;
-        quarters         = storedPolyo.quarters;
+        let shapeBlocksCount = storedPolyo.blocks.length;
+        let quarters = storedPolyo.quarters;
         this._gameShapesWithRotations[s] = new Array(quarters);
         for (let pivot=0; pivot < quarters; pivot++) { // creating all shapes rotations: browsing rotations
             this._gameShapesWithRotations[s][pivot] = new Array(shapeBlocksCount);
