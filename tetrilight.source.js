@@ -504,6 +504,8 @@ TetrisSpritesCreation.prototype = {
             _nocache: true,
             widthSprite: () => SPRITES.pxFullGridWidth,
             heightSprite: () => SPRITES.pxFullGridHeight,
+            xSprite: () => SPRITES.pxGridBorder,
+            ySprite: () => SPRITES.pxGridBorder,
             drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
@@ -527,14 +529,14 @@ TetrisSpritesCreation.prototype = {
                     0, VectorialSprite.rgbaTxt(col.medium, 0.3), 1, VectorialSprite.rgbaTxt(col.medium, 0)); c.fill();
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5), 0.1, VectorialSprite.rgbaTxt([0,0,0],0),
-                    0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); },
-            xSprite: () => SPRITES.pxGridBorder,
-            ySprite: () => SPRITES.pxGridBorder
+                    0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); }
         });
         this._spriteBlock = new VectorialSprite({
             _nocache: false,
             widthSprite: () => SPRITES.pxBlockSize,
             heightSprite: () => SPRITES.pxBlockSize,
+            xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
+            ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize,
             drawSprite(c, x, y, a) { // context, x, y, args
                 let half = Math.round(SPRITES.pxBlockSize/2);
                 let margin = Math.round(SPRITES.pxBlockSize/7);
@@ -546,23 +548,21 @@ TetrisSpritesCreation.prototype = {
                 c.beginPath();c.moveTo(x,y+SPRITES.pxBlockSize);c.lineTo(x+half,y+half);
                 c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
-                c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) },
-            xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
-            ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize
+                c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) }
         });
         this._spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
             widthSprite: () => SPRITES.pxPreviewBlockSize,
             heightSprite: () => SPRITES.pxPreviewBlockSize,
+            xSprite: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
+            ySprite: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
             drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle = (a.__onOff
                     ? VectorialSprite.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
                     : VectorialSprite.rgbaTxt(col.medium, SPRITES._previewOpacity)
                 );
-                c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) },
-            xSprite: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
-            ySprite: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)
+                c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) }
         });
     },
 };
@@ -2245,20 +2245,19 @@ DomNode.prototype = {
         this._htmlElement.style.visibility = 'inherit';
     }
 };
-// VECTORIAL SPRITES (VS) Class, vectorial picture, emulates vectorial SVG graphics, generic
-// functions : x, y, xSprite, ySprite, sprite, _nocache, reserved; 1 input
-// use nomage: __funcToDoThis (intern)
-// no '_' in String value of arguments
-// for called functions: use one input parameter not object nor array (String, Number, Boolean)
+// VECTORIAL SPRITE Class, vectorial picture, emulates vectorial SVG graphics, generic
+// functions reserved: widthSprite, heightSprite, xSprite, ySprite, drawSprite
+// boolean reserved: _nocache
+// use nomage: __funcToDoThis (intern) // no '_' in String value of arguments
 class VectorialSprite {
     constructor(funcs) {
-        this.drawSprite; // context, x, y, args
-        this.xSprite;
-        this.ySprite;
+        this._nocache;
         this._imagesData = []; // to work with _imagesData
         this.widthSprite;
         this.heightSprite;
-        this._nocache;
+        this.xSprite;
+        this.ySprite;
+        this.drawSprite; // context, x, y, args
         for (let p in funcs)
             if (p === '_nocache')
                 this._nocache = funcs[p]; // boolean
