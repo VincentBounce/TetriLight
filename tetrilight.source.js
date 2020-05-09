@@ -473,8 +473,8 @@ TetrisSpritesCreation.prototype = {
         });
         this._spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
-            _width: SPRITES.pxFullGridWidth,
-            _height: SPRITES.pxFullGridHeight,
+            _width: () => SPRITES.pxFullGridWidth,
+            _height: () => SPRITES.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
@@ -500,8 +500,8 @@ TetrisSpritesCreation.prototype = {
         });
         this._spriteGridBackground = new VectorialSprite({
             _nocache: true,
-            _width: SPRITES.pxFullGridWidth,
-            _height: SPRITES.pxFullGridHeight,
+            _width: () => SPRITES.pxFullGridWidth,
+            _height: () => SPRITES.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
@@ -526,13 +526,13 @@ TetrisSpritesCreation.prototype = {
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5), 0.1, VectorialSprite.rgbaTxt([0,0,0],0),
                     0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); },
-            fx(x) { return SPRITES.pxGridBorder },
-            fy(y) { return SPRITES.pxGridBorder }
+            fx: () => SPRITES.pxGridBorder,
+            fy: () => SPRITES.pxGridBorder
         });
         this._spriteBlock = new VectorialSprite({
             _nocache: false,
-            _width: SPRITES.pxBlockSize,
-            _height: SPRITES.pxBlockSize,
+            _width: () => SPRITES.pxBlockSize,
+            _height: () => SPRITES.pxBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let half = Math.round(SPRITES.pxBlockSize/2);
                 let margin = Math.round(SPRITES.pxBlockSize/7);
@@ -545,13 +545,13 @@ TetrisSpritesCreation.prototype = {
                 c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
                 c.fillStyle=VectorialSprite.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
                 c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) },
-            fx(i) { return SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize },
-            fy(j) { return SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize }
+            fx: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
+            fy: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize
         });
         this._spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
-            _width: SPRITES.pxPreviewBlockSize,
-            _height: SPRITES.pxPreviewBlockSize,
+            _width: () => SPRITES.pxPreviewBlockSize,
+            _height: () => SPRITES.pxPreviewBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
@@ -560,8 +560,8 @@ TetrisSpritesCreation.prototype = {
                     : VectorialSprite.rgbaTxt(col.medium, SPRITES._previewOpacity)
                 );
                 c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) },
-            fx(x) { return (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth) },
-            fy(y) { return (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth) }
+            fx: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
+            fy: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth)
         });
     },
 };
@@ -2284,10 +2284,10 @@ class VectorialSprite {
             //console.log(funcs[p]);
     }
     getWidth() {
-        return this._width;//return SPRITES[this._width];
+        return this._width();//return SPRITES[this._width];
     }
     getHeight() {
-        return this._height;//return SPRITES[this._height];
+        return this._height();//return SPRITES[this._height];
     }
     getImageData(sortedArgs) { // return {imageData, xD, yD}, no check if exist
         return this._imagesData[sortedArgs];
