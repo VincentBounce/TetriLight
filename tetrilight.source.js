@@ -264,6 +264,7 @@ function MainMenu() { // queue or stack
     // below creation for MAIN dom node
     this._domNode = new DomNode({body: true});
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
+    SPRITES.create_();
     this._domNode.setDomNode({ // menus on top of the screen
         top: {
             type:'canvas', width:SPRITES.pxGameWidth, height:SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
@@ -366,7 +367,7 @@ function TetrisSpritesCreation(rootNode) {
     this._rootNode = rootNode;
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
     this.zoom1Step(0);
-    this.create_();
+    //this.create_();
 }
 TetrisSpritesCreation.prototype = {
     _rootNode               : null,
@@ -472,8 +473,8 @@ TetrisSpritesCreation.prototype = {
         });
         this._spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
-            _width: this.pxFullGridWidth,
-            _height: this.pxFullGridHeight,
+            _width: SPRITES.pxFullGridWidth,
+            _height: SPRITES.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
@@ -499,8 +500,8 @@ TetrisSpritesCreation.prototype = {
         });
         this._spriteGridBackground = new VectorialSprite({
             _nocache: true,
-            _width: this.pxFullGridWidth,
-            _height: this.pxFullGridHeight,
+            _width: SPRITES.pxFullGridWidth,
+            _height: SPRITES.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col];
                 c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
@@ -526,12 +527,12 @@ TetrisSpritesCreation.prototype = {
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5), 0.1, VectorialSprite.rgbaTxt([0,0,0],0),
                     0.9, VectorialSprite.rgbaTxt([0,0,0],0), 1, VectorialSprite.rgbaTxt([0,0,0],0.5)); c.fill(); },
             fx(x) { return SPRITES.pxGridBorder },
-            fy(x) { return SPRITES.pxGridBorder }
+            fy(y) { return SPRITES.pxGridBorder }
         });
         this._spriteBlock = new VectorialSprite({
             _nocache: false,
-            _width: this.pxBlockSize,
-            _height: this.pxBlockSize,
+            _width: SPRITES.pxBlockSize,
+            _height: SPRITES.pxBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let half = Math.round(SPRITES.pxBlockSize/2);
                 let margin = Math.round(SPRITES.pxBlockSize/7);
@@ -549,8 +550,8 @@ TetrisSpritesCreation.prototype = {
         });
         this._spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
-            _width: this.pxPreviewBlockSize,
-            _height: this.pxPreviewBlockSize,
+            _width: SPRITES.pxPreviewBlockSize,
+            _height: SPRITES.pxPreviewBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
