@@ -248,6 +248,12 @@ const PIXELS                    = {
     pxPreviewBlockSize          : null,
     pxPreviewLineWidth          : null,
     pxButtonSize                : 50, // default 50
+    XPreviewPosition       : null,
+    YPreviewPosition       : null,
+    XScorePosition         : null,
+    YScorePosition         : null,
+    XMessagePosition       : null,
+    YMessagePosition       : null,
 }
 const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
 //const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
@@ -287,18 +293,18 @@ function MainMenu() { // queue or stack
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
     this._domNode.setDomNode({ // menus on top of the screen
         top: {
-            type:'canvas', width:'_pxGameWidth', height:'_pxTopMenuZoneHeight', sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
+            type:'canvas', width:PIXELS.pxGameWidth, height:PIXELS.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground },// to create an HTML top free space above the tetris game
         message1: {
-            width:'_pxTopMenuZoneHeight', height:'_pxTopMenuZoneHeight', vertical_align:'middle' },
+            width:PIXELS.pxTopMenuZoneHeight, height:PIXELS.pxTopMenuZoneHeight, vertical_align:'middle' },
         background: {
-            type:'canvas', y:'_pxTopMenuZoneHeight', width:'_pxGameWidth', height:'_pxGameHeight', sprite:SPRITES._spriteBackground }
+            type:'canvas', y:PIXELS.pxTopMenuZoneHeight, width:PIXELS.pxGameWidth, height:PIXELS.pxGameHeight, sprite:SPRITES._spriteBackground }
         });
     this._domNode._childs.background.nodeDrawSprite(); // paint black background
     this._domNode._childs.message1.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1.setTex('totototo');
     this._domNode._htmlElement.addEventListener('click',
         function(eventClick) {
-            if ((eventClick.offsetX < SPRITES._pxButtonSize) && (eventClick.offsetY < SPRITES._pxButtonSize))
+            if ((eventClick.offsetX < PIXELS.pxButtonSize) && (eventClick.offsetY < PIXELS.pxButtonSize))
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
     window.onresize = function() { GAME.organizeGrids({resize:true}) }; // on IE : load at start ; or window.onresize = organizeGrids;
@@ -399,32 +405,32 @@ function TetrisSpritesCreation(rootNode) {
 TetrisSpritesCreation.prototype = {
     _rootNode               : null,
     _zoomRatio              : 1, // default 1, float current zoom ratio
-    _scaleFactor            : 33, // default 33, int scale unit < _pxBlockSize && > = 1
-    _pxTopMenuZoneHeight    : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
-    _pxGameWidth            : null,
-    _pxGameHeight           : null,
-        _pxHalfGameHeight   : null,
-    _pxBlockSize            : 34,
-        _pxCellSize         : null,
-    _pxGridBorder           : null,
-    _pxGridLineWidth        : null,
-    _pxGridWidth            : null,
-        _pxFullGridWidth    : null,
-            _pxGridMargin   : null,
-    _pxGridHeight           : null,
-        _pxFullGridHeight   : null,
-    _XPreviewPosition       : null,
-    _YPreviewPosition       : null,
-    _XScorePosition         : null,
-    _YScorePosition         : null,
-    _XMessagePosition       : null,
-    _YMessagePosition       : null,
-    _pxCeilHeight           : null,
-    _pxFullGridAndCeil      : null,
-    _pxPreviewFullSize      : null, // 2*36===72
-    _pxPreviewBlockSize     : null,
-    _pxPreviewLineWidth     : null,
-    _pxButtonSize           : 50, // default 50
+    _scaleFactor            : 33, // default 33, int scale unit < PIXELS.pxBlockSize && > = 1
+    //PIXELS.pxTopMenuZoneHeight    : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    //PIXELS.pxGameWidth            : null,
+    //PIXELS.pxGameHeight           : null,
+    //    PIXELS.pxHalfGameHeight   : null,
+    //PIXELS.pxBlockSize            : 34,
+    //    PIXELS.pxCellSize         : null,
+    //PIXELS.pxGridBorder           : null,
+    //PIXELS.pxGridLineWidth        : null,
+    //PIXELS.pxGridWidth            : null,
+    //    PIXELS.pxFullGridWidth    : null,
+    //        PIXELS.pxGridMargin   : null,
+    //PIXELS.pxGridHeight           : null,
+    //    PIXELS.pxFullGridHeight   : null,
+    //PIXELS.pxCeilHeight           : null,
+    //PIXELS.pxFullGridAndCeil      : null,
+    //PIXELS.pxPreviewFullSize      : null, // 2*36===72
+    //PIXELS.pxPreviewBlockSize     : null,
+    //PIXELS.pxPreviewLineWidth     : null,
+    //PIXELS.pxButtonSize           : 50, // default 50
+    //PIXELS.XPreviewPosition       : null,
+    //PIXELS.YPreviewPosition       : null,
+    //PIXELS.XScorePosition         : null,
+    //PIXELS.YScorePosition         : null,
+    //PIXELS.XMessagePosition       : null,
+    //PIXELS.YMessagePosition       : null,
     _spriteBackground       : null,
     _spriteBlock            : null,
     _spriteGridFront        : null,
@@ -449,9 +455,9 @@ TetrisSpritesCreation.prototype = {
     },
     condition_(gridCount) { // gridCount = GAME._playersCount
         //return ( ( // #DEBUG: to compact grids together
-        // (_pxGameWidth > _pxFullGridWidth * gridCount + _pxGridMargin * (gridCount+1) ) && (_pxGameHeight > _pxFullGridHeight + 5*_pxGridMargin)
-        return (  ( (this._pxGameWidth >= this._pxFullGridWidth * gridCount )
-                && (this._pxGameHeight >= this._pxFullGridAndCeil ) )
+        // (PIXELS.pxGameWidth > PIXELS.pxFullGridWidth * gridCount + PIXELS.pxGridMargin * (gridCount+1) ) && (PIXELS.pxGameHeight > PIXELS.pxFullGridHeight + 5*PIXELS.pxGridMargin)
+        return (  ( (PIXELS.pxGameWidth >= PIXELS.pxFullGridWidth * gridCount )
+                && (PIXELS.pxGameHeight >= PIXELS.pxFullGridAndCeil ) )
                 || (!(this._scaleFactor-1))  );
     },
     zoomToFit(gridCount) { // used for scaling if needed
@@ -465,124 +471,124 @@ TetrisSpritesCreation.prototype = {
     },
     zoom1Step(step) { // computing for zoom with pixels into web browser
         this._scaleFactor += step;
-        this._pxBlockSize += step;
-        let oldGridWidth         = this._pxFullGridWidth;
-        this._pxGameWidth        = this._rootNode.getWidth();
-        this._pxGameHeight       = this._rootNode.getHeight() - this._pxTopMenuZoneHeight;
-        this._pxHalfGameHeight   = Math.round(this._pxGameHeight/2);
-        this._pxGridLineWidth    = Math.max(Math.round(this._pxBlockSize/14), 1);
-        this._pxGridWidth        = RULES.horizontalCellsCount*this._pxBlockSize + (RULES.horizontalCellsCount+1)*this._pxGridLineWidth;
-        this._pxGridHeight       = RULES.verticalCellsCount*this._pxBlockSize + (RULES.verticalCellsCount+1)*this._pxGridLineWidth;
-        this._pxCellSize         = this._pxBlockSize + this._pxGridLineWidth;
-        this._pxGridBorder       = Math.ceil(this._pxCellSize/3); // bordure de grille en dégradé
-        this._pxFullGridWidth    = this._pxGridWidth + 2*this._pxGridBorder; // largeur grille + bordure
-        this._pxFullGridHeight   = this._pxGridHeight + this._pxGridBorder; // hauteur grille + bordure
-        this._pxGridMargin       = Math.round(this._pxFullGridWidth/8);
-        this._pxPreviewBlockSize = Math.round(this._pxBlockSize/2.6);
-        this._pxPreviewLineWidth = this._pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
-        this._pxPreviewFullSize  = (this._pxPreviewBlockSize + this._pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
-        this._pxCeilHeight       = this._pxPreviewFullSize + this._pxPreviewBlockSize + this._pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + _pxCellSize
-        this._pxFullGridAndCeil  = this._pxFullGridHeight + this._pxCeilHeight;
-        this._XPreviewPosition   = Math.round(this._pxFullGridWidth/2-this._pxPreviewFullSize/2);
-        this._YPreviewPosition   = 0;
-        this._XScorePosition     = this._XPreviewPosition + this._pxPreviewFullSize; // Math.round(3*_pxFullGridWidth/4);
-        this._YScorePosition     = 0;
-        this._XMessagePosition   = Math.round(this._pxFullGridWidth/2);
-        this._YMessagePosition   = Math.round(this._pxFullGridHeight/2);
-        this._zoomRatio          = !oldGridWidth ? 1                                                                                                           : this._pxFullGridWidth / oldGridWidth;
+        PIXELS.pxBlockSize += step;
+        let oldGridWidth         = PIXELS.pxFullGridWidth;
+        PIXELS.pxGameWidth        = this._rootNode.getWidth();
+        PIXELS.pxGameHeight       = this._rootNode.getHeight() - PIXELS.pxTopMenuZoneHeight;
+        PIXELS.pxHalfGameHeight   = Math.round(PIXELS.pxGameHeight/2);
+        PIXELS.pxGridLineWidth    = Math.max(Math.round(PIXELS.pxBlockSize/14), 1);
+        PIXELS.pxGridWidth        = RULES.horizontalCellsCount*PIXELS.pxBlockSize + (RULES.horizontalCellsCount+1)*PIXELS.pxGridLineWidth;
+        PIXELS.pxGridHeight       = RULES.verticalCellsCount*PIXELS.pxBlockSize + (RULES.verticalCellsCount+1)*PIXELS.pxGridLineWidth;
+        PIXELS.pxCellSize         = PIXELS.pxBlockSize + PIXELS.pxGridLineWidth;
+        PIXELS.pxGridBorder       = Math.ceil(PIXELS.pxCellSize/3); // bordure de grille en dégradé
+        PIXELS.pxFullGridWidth    = PIXELS.pxGridWidth + 2*PIXELS.pxGridBorder; // largeur grille + bordure
+        PIXELS.pxFullGridHeight   = PIXELS.pxGridHeight + PIXELS.pxGridBorder; // hauteur grille + bordure
+        PIXELS.pxGridMargin       = Math.round(PIXELS.pxFullGridWidth/8);
+        PIXELS.pxPreviewBlockSize = Math.round(PIXELS.pxBlockSize/2.6);
+        PIXELS.pxPreviewLineWidth = PIXELS.pxGridLineWidth; // valeur arbitraire, aurait pu etre différente
+        PIXELS.pxPreviewFullSize  = (PIXELS.pxPreviewBlockSize + PIXELS.pxPreviewLineWidth) * (2*this._shapesSpan+1) ;
+        PIXELS.pxCeilHeight       = PIXELS.pxPreviewFullSize + PIXELS.pxPreviewBlockSize + PIXELS.pxPreviewLineWidth; // hauteur de la zone posée sur la grille old: + PIXELS.pxCellSize
+        PIXELS.pxFullGridAndCeil  = PIXELS.pxFullGridHeight + PIXELS.pxCeilHeight;
+        PIXELS.XPreviewPosition   = Math.round(PIXELS.pxFullGridWidth/2-PIXELS.pxPreviewFullSize/2);
+        PIXELS.YPreviewPosition   = 0;
+        PIXELS.XScorePosition     = PIXELS.XPreviewPosition + PIXELS.pxPreviewFullSize; // Math.round(3*PIXELS.pxFullGridWidth/4);
+        PIXELS.YScorePosition     = 0;
+        PIXELS.XMessagePosition   = Math.round(PIXELS.pxFullGridWidth/2);
+        PIXELS.YMessagePosition   = Math.round(PIXELS.pxFullGridHeight/2);
+        this._zoomRatio          = !oldGridWidth ? 1                                                                                                           : PIXELS.pxFullGridWidth / oldGridWidth;
     },
     create_()  { with(this) { // creating all graphics
         _spriteGridFront = new VectorialSprite({ // on dessine 3 trapèzes qu'on assemble
             _nocache: true,
-            _width: '_pxFullGridWidth',
-            _height: '_pxFullGridHeight',
+            _width: PIXELS.pxFullGridWidth,
+            _height: PIXELS.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = _colors[a.col];
-                c.moveTo(x,y);c.lineTo(x+_pxGridBorder,y); // left border
-                c.lineTo(x+_pxGridBorder,y+_pxGridHeight);
-                c.lineTo(x,y+_pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,_pxGridBorder,0,1,VectorialSprite.rgbaTxt(col.dark),0,VectorialSprite.rgbaTxt(col.light));
+                c.moveTo(x,y);c.lineTo(x+PIXELS.pxGridBorder,y); // left border
+                c.lineTo(x+PIXELS.pxGridBorder,y+PIXELS.pxGridHeight);
+                c.lineTo(x,y+PIXELS.pxFullGridHeight);
+                c.fillStyle=VectorialSprite.linearGradient(c,0,0,PIXELS.pxGridBorder,0,1,VectorialSprite.rgbaTxt(col.dark),0,VectorialSprite.rgbaTxt(col.light));
                 c.fill();
-                c.beginPath();c.moveTo(x+_pxFullGridWidth,y); // right border
-                c.lineTo(x+_pxGridBorder+_pxGridWidth,y);
-                c.lineTo(x+_pxGridBorder+_pxGridWidth,y+_pxGridHeight);
-                c.lineTo(x+_pxFullGridWidth,y+_pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,_pxGridWidth+_pxGridBorder,0,_pxGridBorder,0,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.beginPath();c.moveTo(x+PIXELS.pxFullGridWidth,y); // right border
+                c.lineTo(x+PIXELS.pxGridBorder+PIXELS.pxGridWidth,y);
+                c.lineTo(x+PIXELS.pxGridBorder+PIXELS.pxGridWidth,y+PIXELS.pxGridHeight);
+                c.lineTo(x+PIXELS.pxFullGridWidth,y+PIXELS.pxFullGridHeight);
+                c.fillStyle=VectorialSprite.linearGradient(c,PIXELS.pxGridWidth+PIXELS.pxGridBorder,0,PIXELS.pxGridBorder,0,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
                 c.fill();
-                c.beginPath();c.moveTo(0,_pxFullGridHeight); // bottom border
-                c.lineTo(_pxGridBorder,_pxGridHeight);
-                c.lineTo(_pxGridBorder+_pxGridWidth,_pxGridHeight);
-                c.lineTo(_pxFullGridWidth,_pxFullGridHeight);
-                c.fillStyle=VectorialSprite.linearGradient(c,0,_pxGridHeight,0,_pxGridBorder,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.beginPath();c.moveTo(0,PIXELS.pxFullGridHeight); // bottom border
+                c.lineTo(PIXELS.pxGridBorder,PIXELS.pxGridHeight);
+                c.lineTo(PIXELS.pxGridBorder+PIXELS.pxGridWidth,PIXELS.pxGridHeight);
+                c.lineTo(PIXELS.pxFullGridWidth,PIXELS.pxFullGridHeight);
+                c.fillStyle=VectorialSprite.linearGradient(c,0,PIXELS.pxGridHeight,0,PIXELS.pxGridBorder,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
                 c.fill();
-                c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,_pxCellSize*2,0, VectorialSprite.rgbaTxt([0,0,0],1),1, VectorialSprite.rgbaTxt([0,0,0],0));    // top grid shadow
-                c.fillRect(0,0,_pxFullGridWidth,_pxFullGridHeight); // #DEBUG
+                c.fillStyle=VectorialSprite.linearGradient(c,0,0,0,PIXELS.pxCellSize*2,0, VectorialSprite.rgbaTxt([0,0,0],1),1, VectorialSprite.rgbaTxt([0,0,0],0));    // top grid shadow
+                c.fillRect(0,0,PIXELS.pxFullGridWidth,PIXELS.pxFullGridHeight); // #DEBUG
             }
         });
         _spriteGridBackground = new VectorialSprite({
             _nocache: true,
-            _width: '_pxFullGridWidth',
-            _height: '_pxFullGridHeight',
+            _width: PIXELS.pxFullGridWidth,
+            _height: PIXELS.pxFullGridHeight,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 let col = _colors[a.col];
-                c.fillStyle='#111';c.fillRect(x,y,_pxGridWidth,_pxGridHeight);
+                c.fillStyle='#111';c.fillRect(x,y,PIXELS.pxGridWidth,PIXELS.pxGridHeight);
                 let colo = ['#000','#222'];
                 for (let p=colo.length-1;p>=0;p--) {
                     c.beginPath();
-                    let margin = -(p*_pxGridLineWidth)+_pxGridLineWidth/2;
+                    let margin = -(p*PIXELS.pxGridLineWidth)+PIXELS.pxGridLineWidth/2;
                     for (let i=1;i < RULES.verticalCellsCount;i++) {
-                        c.moveTo(x, y+_pxCellSize*i+margin);
-                        c.lineTo(x+_pxGridWidth, y+(_pxCellSize)*i+margin);
-                        c.lineWidth=_pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
+                        c.moveTo(x, y+PIXELS.pxCellSize*i+margin);
+                        c.lineTo(x+PIXELS.pxGridWidth, y+(PIXELS.pxCellSize)*i+margin);
+                        c.lineWidth=PIXELS.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
                     }
                     for (let i=1;i < RULES.horizontalCellsCount;i++) {
-                        c.moveTo(x+_pxCellSize*i+margin, y);
-                        c.lineTo(x+_pxCellSize*i+margin, y+_pxGridHeight);
-                        c.lineWidth=_pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
+                        c.moveTo(x+PIXELS.pxCellSize*i+margin, y);
+                        c.lineTo(x+PIXELS.pxCellSize*i+margin, y+PIXELS.pxGridHeight);
+                        c.lineWidth=PIXELS.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
                     }
                 }
-                c.rect(x,y,_pxGridWidth,_pxGridHeight);
-                c.fillStyle=VectorialSprite.radialGradient(c,x+_pxGridWidth/2,y+_pxGridHeight,0,0,0,3*_pxGridHeight/4,
+                c.rect(x,y,PIXELS.pxGridWidth,PIXELS.pxGridHeight);
+                c.fillStyle=VectorialSprite.radialGradient(c,x+PIXELS.pxGridWidth/2,y+PIXELS.pxGridHeight,0,0,0,3*PIXELS.pxGridHeight/4,
                     0, VectorialSprite.rgbaTxt(col.medium, 0.3),        1, VectorialSprite.rgbaTxt(col.medium, 0));    c.fill();
-                c.fillStyle=VectorialSprite.linearGradient(c,x,y,_pxGridWidth,0,
+                c.fillStyle=VectorialSprite.linearGradient(c,x,y,PIXELS.pxGridWidth,0,
                     0, VectorialSprite.rgbaTxt([0,0,0],0.5),    0.1, VectorialSprite.rgbaTxt([0,0,0],0),
                     0.9, VectorialSprite.rgbaTxt([0,0,0],0),    1, VectorialSprite.rgbaTxt([0,0,0],0.5));    c.fill();    },
-            fx(x) {    return _pxGridBorder    },
-            fy(x) {    return _pxGridBorder    }
+            fx(x) {    return PIXELS.pxGridBorder    },
+            fy(x) {    return PIXELS.pxGridBorder    }
         });
         _spritePreviewBlock = new VectorialSprite({ // args a: gradient if true, uniform if false
             _nocache: false,
-            _width: '_pxPreviewBlockSize',
-            _height: '_pxPreviewBlockSize',
+            _width: PIXELS.pxPreviewBlockSize,
+            _height: PIXELS.pxPreviewBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
                 //console.log(this); // VectorialSprite context here instead SPRITES, with (SPRITES) before definitionObject.sprite.drawSprite_ doesn't work
-                let col = _colors[a.col]; // c.clearRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize); // useful if we don't erase previous value
+                let col = _colors[a.col]; // c.clearRect(x,y,PIXELS.pxPreviewBlockSize,PIXELS.pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle = (a.__onOff
-                    ? VectorialSprite.linearGradient(c,x,y,_pxPreviewBlockSize,_pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
+                    ? VectorialSprite.linearGradient(c,x,y,PIXELS.pxPreviewBlockSize,PIXELS.pxPreviewBlockSize, 0, VectorialSprite.rgbaTxt(col.dark), 1, VectorialSprite.rgbaTxt(col.light))
                     : VectorialSprite.rgbaTxt(col.medium, _previewOpacity)
                 );
-                c.fillRect(x,y,_pxPreviewBlockSize,_pxPreviewBlockSize)    },
-            fx(x)    {    return (_shapesSpan+x)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    },
-            fy(y)    {    return (_shapesSpan-y)*(_pxPreviewBlockSize+_pxPreviewLineWidth)    }
+                c.fillRect(x,y,PIXELS.pxPreviewBlockSize,PIXELS.pxPreviewBlockSize)    },
+            fx(x)    {    return (_shapesSpan+x)*(PIXELS.pxPreviewBlockSize+PIXELS.pxPreviewLineWidth)    },
+            fy(y)    {    return (_shapesSpan-y)*(PIXELS.pxPreviewBlockSize+PIXELS.pxPreviewLineWidth)    }
         });
         _spriteBlock = new VectorialSprite({
             _nocache: false,
-            _width: '_pxBlockSize',
-            _height: '_pxBlockSize',
+            _width: PIXELS.pxBlockSize,
+            _height: PIXELS.pxBlockSize,
             drawSprite_(c, x, y, a) { // context, x, y, args
-                let half = Math.round(_pxBlockSize/2);
-                let margin = Math.round(_pxBlockSize/7);
+                let half = Math.round(PIXELS.pxBlockSize/2);
+                let margin = Math.round(PIXELS.pxBlockSize/7);
                 let col = _colors[a.col];
                 c.fillStyle=VectorialSprite.rgbaTxt(col.medium);
-                c.fillRect(x,y,_pxBlockSize,_pxBlockSize);
-                c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+_pxBlockSize,y);
+                c.fillRect(x,y,PIXELS.pxBlockSize,PIXELS.pxBlockSize);
+                c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+PIXELS.pxBlockSize,y);
                 c.fillStyle=VectorialSprite.rgbaTxt(col.light);c.fill();
-                c.beginPath();c.moveTo(x,y+_pxBlockSize);c.lineTo(x+half,y+half);
-                c.lineTo(x+_pxBlockSize,y+_pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
-                c.fillStyle=VectorialSprite.linearGradient(c,x,y,_pxBlockSize-2*margin,_pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
-                c.fillRect(x+margin,y+margin,_pxBlockSize-2*margin,_pxBlockSize-2*margin) },
-            fx(i) { return _pxGridLineWidth + ( i-1 ) * _pxCellSize },
-            fy(j) { return _pxGridLineWidth + ( RULES.verticalCellsCount-j ) * _pxCellSize }
+                c.beginPath();c.moveTo(x,y+PIXELS.pxBlockSize);c.lineTo(x+half,y+half);
+                c.lineTo(x+PIXELS.pxBlockSize,y+PIXELS.pxBlockSize);c.fillStyle=VectorialSprite.rgbaTxt(col.dark);c.fill();c.beginPath();
+                c.fillStyle=VectorialSprite.linearGradient(c,x,y,PIXELS.pxBlockSize-2*margin,PIXELS.pxBlockSize-2*margin,0,VectorialSprite.rgbaTxt(col.dark),1,VectorialSprite.rgbaTxt(col.light));
+                c.fillRect(x+margin,y+margin,PIXELS.pxBlockSize-2*margin,PIXELS.pxBlockSize-2*margin) },
+            fx(i) { return PIXELS.pxGridLineWidth + ( i-1 ) * PIXELS.pxCellSize },
+            fy(j) { return PIXELS.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * PIXELS.pxCellSize }
         });
     }},
 };
@@ -729,24 +735,24 @@ TetrisGame.prototype = {
     organizeGrids(instruction) { // horizontal organization only, zoomToFit makes the correct zoom
         SPRITES.zoomToFit(this._playersCount);
         MAIN_MENU._domNode._childs.background.redrawNode(); // redraw background
-        let realIntervalX = (SPRITES._pxGameWidth-(SPRITES._pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
+        let realIntervalX = (PIXELS.pxGameWidth-(PIXELS.pxFullGridWidth*this._playersCount)) / (this._playersCount+1);
         if (instruction.newGrid || instruction.oldGrid) {
             if (instruction.newGrid)
                 if (this._playersCount%2) { // from left or right
                     this._gridsListArray.unshift(instruction.newGrid); // added to left
-                    instruction.newGrid._domNode.moveCenterTo(-SPRITES._pxFullGridWidth, null);
+                    instruction.newGrid._domNode.moveCenterTo(-PIXELS.pxFullGridWidth, null);
                 } else {
                     this._gridsListArray.push(instruction.newGrid); // added to right
-                    instruction.newGrid._domNode.moveCenterTo(SPRITES._pxGameWidth+SPRITES._pxFullGridWidth, null);                
+                    instruction.newGrid._domNode.moveCenterTo(PIXELS.pxGameWidth+PIXELS.pxFullGridWidth, null);                
                 }
             let count = 0;
             for (let p in this._gridsListArray) {
                 let myGrid=this._gridsListArray[p];
                 count++;
                 myGrid._domNode.redrawNode(); // we change all sizes
-                myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
+                myGrid._domNode.moveCenterTo(null, PIXELS.pxTopMenuZoneHeight + PIXELS.pxHalfGameHeight);
                 myGrid._vector = [
-                    count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth - myGrid._domNode.getX(),
+                    count*realIntervalX + (count-1)*PIXELS.pxFullGridWidth - myGrid._domNode.getX(),
                     0    ];
             }
             // old: this._gameEventsQueue.execNowOrEnqueue(this._anims.moveGridsAnim, this._anims.moveGridsAnim.startAnim); // #DEBUG above, $alert(instruction);
@@ -759,8 +765,8 @@ TetrisGame.prototype = {
                 let myGrid=this._gridsListArray[p];
                 count++;
                 myGrid._domNode.redrawNode(); // we change all sizes
-                myGrid._domNode.moveCenterTo(null, SPRITES._pxTopMenuZoneHeight + SPRITES._pxHalfGameHeight);
-                myGrid._domNode.moveNodeTo(count*realIntervalX + (count-1)*SPRITES._pxFullGridWidth, null);
+                myGrid._domNode.moveCenterTo(null, PIXELS.pxTopMenuZoneHeight + PIXELS.pxHalfGameHeight);
+                myGrid._domNode.moveNodeTo(count*realIntervalX + (count-1)*PIXELS.pxFullGridWidth, null);
             }
         }
     },
@@ -870,27 +876,27 @@ function TetrisGrid(playerKeysSet, gridColor){
         timerOwner: this
     });
     this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
-        width: '_pxFullGridWidth', height: '_pxFullGridAndCeil',
+        width: PIXELS.pxFullGridWidth, height: PIXELS.pxFullGridAndCeil,
         frameZone: {
-            x:'_pxGridBorder', y:'_pxCeilHeight',
-            width:'_pxGridWidth', height:'_pxGridHeight',
+            x:PIXELS.pxGridBorder, y:PIXELS.pxCeilHeight,
+            width:PIXELS.pxGridWidth, height:PIXELS.pxGridHeight,
             overflow:'hidden',
             back: { // tetris background, if not canvas, it's div
                 background: { type:'canvas', sprite:SPRITES._spriteGridBackground },
                 ghostBlocks:{},
                 realBlocks: {} } },
         frontZone: {
-            y:'_pxCeilHeight', type:'canvas', sprite:SPRITES._spriteGridFront, height: '_pxFullGridHeight' },
+            y:PIXELS.pxCeilHeight, type:'canvas', sprite:SPRITES._spriteGridFront, height: PIXELS.pxFullGridHeight },
         controlZone: {
-            y:'_YPreviewPosition', width:'_XPreviewPosition', height:'_pxPreviewFullSize', vertical_align:'middle' },
+            y:PIXELS.YPreviewPosition, width:PIXELS.XPreviewPosition, height:PIXELS.pxPreviewFullSize, vertical_align:'middle' },
         nextShapePreview: {
-            x:'_XPreviewPosition', y:'_YPreviewPosition',
-            type:'canvas', width:'_pxPreviewFullSize', height:'_pxPreviewFullSize', sprite:SPRITES._spritePreviewBlock },
+            x:PIXELS.XPreviewPosition, y:PIXELS.YPreviewPosition,
+            type:'canvas', width:PIXELS.pxPreviewFullSize, height:PIXELS.pxPreviewFullSize, sprite:SPRITES._spritePreviewBlock },
         scoreZone: {
-            x:'_XScorePosition', y:'_YScorePosition',
-            width:'_XPreviewPosition', height:'_pxPreviewFullSize', vertical_align:'middle' },
+            x:PIXELS.XScorePosition, y:PIXELS.YScorePosition,
+            width:PIXELS.XPreviewPosition, height:PIXELS.pxPreviewFullSize, vertical_align:'middle' },
         messageZone: {
-            y:'_pxCeilHeight', width:'_pxFullGridWidth', height:'_pxFullGridHeight', vertical_align:'middle' }
+            y:PIXELS.pxCeilHeight, width:PIXELS.pxFullGridWidth, height:PIXELS.pxFullGridHeight, vertical_align:'middle' }
     });
     this._domNode._childs.frontZone.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZone._childs.back._childs.realBlocks; // shortcut
@@ -907,7 +913,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._score = new Score(this); // contains animation, 
     this._anims.quakeAnim = new Animation({
         animateFunc(animOutput) { // to use context of this Animation
-            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, SPRITES._pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
+            this._domNode._childs.frameZone._childs.back.moveTemporaryRelatively(0, PIXELS.pxCellSize*2/4*animOutput);    // default 2/4 or 3/4, proportionaly to deep 20 this._domNode use context of this TetrisGrid
         },
         endAnimFunc() {
             this._domNode._childs.frameZone._childs.back.moveTemporaryRestore();
@@ -947,7 +953,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._anims.shapeHardDropAnim = new Animation({ // animation for 1 shape, falling or after clearing
         animateFunc(animOutput) {
             for (let p in this._lockedShapes) // to animate block, we move the DomNode element
-                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
+                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * PIXELS.pxCellSize);
         },
         endAnimFunc() {
             for (let p in this._lockedShapes) { // fetch rows to remove
@@ -970,7 +976,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._anims.rising1RowAnim = new Animation({
         animateFunc(animOutput) { // "this" display animation instancied object
             for (let p in this._lockedShapes) // to animate block, we move the DomNode element
-                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * SPRITES._pxCellSize);
+                this._lockedShapes[p]._domNode.moveNodeTo(0, - this._lockedShapes[p]._jVector * animOutput * PIXELS.pxCellSize);
         },
         endAnimFunc() {
             for (let p in this._lockedShapes) {
@@ -1008,7 +1014,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             this._domNode._childs.messageZone.setTextIntoSizedField.call(this._domNode._childs.messageZone, textInfos);
         },
         animateFunc(animOutput) {
-            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*SPRITES._pxCellSize);// _YMessagePosition);
+            this._domNode._childs.messageZone.moveTemporaryRelatively(0, animOutput*3*PIXELS.pxCellSize);// PIXELS.YMessagePosition);
             this._domNode._childs.messageZone.setDomNode({opacity: 1-Math.abs(animOutput)});    // animOutput from -1 to +1
         },
         endAnimFunc() {
@@ -1223,7 +1229,7 @@ TetrisGrid.prototype            = {
             this._lockedBlocks._lockedBlocksArray[p].setBlockColor(SPRITES._colors['grey']);
     },
     setAnimLostVector_() {
-        this._vector = [0, -SPRITES._pxTopMenuZoneHeight -SPRITES._pxGameHeight ]; // prepare vector
+        this._vector = [0, -PIXELS.pxTopMenuZoneHeight -PIXELS.pxGameHeight ]; // prepare vector
         GAME._gameEventsQueue.dequeue();
     },
     afterLost_() {
@@ -1613,7 +1619,7 @@ class TetrisBlock {
         this._domNode;
         this._blockColor;
         this._blockIndex;
-        this._domNode = new DomNode({type: 'canvas', width: '_pxBlockSize', height: '_pxBlockSize', sprite: SPRITES._spriteBlock}); // creating node
+        this._domNode = new DomNode({type: 'canvas', width: PIXELS.pxBlockSize, height: PIXELS.pxBlockSize, sprite: SPRITES._spriteBlock}); // creating node
         this.setBlockColor(blockColor);
         switch (this._blockType) {
             case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
@@ -1992,26 +1998,30 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
     // checking width property
     if (isValued(definitionObject.width)) {
         this._widthVar = definitionObject.width;
-        this.getWidth = () => SPRITES[this._widthVar]; // arrow replace a return
+        this.getWidth = () => this._widthVar; // arrow replace a return
+        //this.getWidth = () => SPRITES[this._widthVar]; // arrow replace a return
         this.setWidth(this.getWidth());
     } else
         this.getWidth = () => this._parent.getWidth(); // arrow replace a return
     // checking height property
     if (isValued(definitionObject.height)) {
         this._heightVar = definitionObject.height;
-        this.getHeight = () => SPRITES[this._heightVar]; // arrow replace a return
+        this.getHeight = () => this._heightVar; // arrow replace a return
+        //this.getHeight = () => SPRITES[this._heightVar]; // arrow replace a return
         this.setHeight(this.getHeight());
     } else
         this.getHeight = () => this._parent.getHeight(); // arrow replace a return
-    // checkingx position property
+    // checking x position property
     if (isValued(definitionObject.x)) {
         this._xVar = definitionObject.x;
-        this.getXInit = () => SPRITES[this._xVar]; // arrow replace a return
+        this.getXInit = () => this._xVar; // arrow replace a return
+        //this.getXInit = () => SPRITES[this._xVar]; // arrow replace a return
     }
     // checking y position  property
     if (isValued(definitionObject.y)) {
         this._yVar = definitionObject.y;
-        this.getYInit = () => SPRITES[this._yVar]; // arrow replace a return
+        this.getYInit = () => this._yVar; // arrow replace a return
+        //this.getYInit = () => SPRITES[this._yVar]; // arrow replace a return
     }
     this.setX(this.getXInit());
     this.setY(this.getYInit());
@@ -2294,7 +2304,8 @@ class VectorialSprite {
             switch (true) {
                 case (p === '_nocache'): this._nocache = funcs[p]; break
                 case (typeof funcs[p] === 'string'): this[p] = funcs[p]; break;
-                case (typeof funcs[p] === 'function'): this[p] = funcs[p]; this[p].bind(SPRITES); break;
+                case (typeof funcs[p] === 'function'): this[p] = funcs[p]; break; //this[p].bind(SPRITES); break;
+                case (typeof funcs[p] === 'number'): this[p] = funcs[p]; break;
                 default: console.log('#DEBUG funcs[p]');
             }
             /*if (p === '_nocache')
@@ -2304,10 +2315,10 @@ class VectorialSprite {
             //console.log(funcs[p]);
     }
     getWidth() {
-        return SPRITES[this._width];
+        return this._width;//return SPRITES[this._width];
     }
     getHeight() {
-        return SPRITES[this._height];
+        return this._height;//return SPRITES[this._height];
     }
     getImageData(sortedArgs) { // return {imageData, xD, yD}, no check if exist
         return this._imagesData[sortedArgs];
