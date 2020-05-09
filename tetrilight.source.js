@@ -2250,19 +2250,16 @@ DomNode.prototype = {
 // boolean reserved: _nocache
 // use nomage: __funcToDoThis (intern) // no '_' in String value of arguments
 class VectorialSprite {
-    constructor(funcs) {
-        this._nocache;
+    constructor(spriteDefinition) {
+        this._nocache = spriteDefinition._nocache; // we take _nocache properties
+        delete spriteDefinition._nocache;
         this._imagesData = []; // to work with _imagesData
-        this.widthSprite;
-        this.heightSprite;
-        this.xSprite;
-        this.ySprite;
-        this.drawSprite; // context, x, y, args
-        for (let p in funcs)
-            if (p === '_nocache')
-                this._nocache = funcs[p]; // boolean
-            else
-                this[p] = funcs[p]; // function
+        this.widthSprite; // function ()
+        this.heightSprite; // function ()
+        this.xSprite; // function (x)
+        this.ySprite; // function (y)
+        this.drawSprite; // function (context, x, y, args)
+        Object.assign(this, spriteDefinition); // we take all others properties wich are functions
     }
     getWidth() {
         return this.widthSprite();
