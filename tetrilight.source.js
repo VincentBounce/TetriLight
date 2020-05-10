@@ -215,7 +215,9 @@ MainMenu [1 instance]
 */
 "use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
-let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
+var MAIN_MENU, GAME, AUDIO, SPRITES, SVG_BODY; // SPRITES: TetrisSpritesCreation
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const _backgroundColor = 'black'
 // GLOBAL CONSTANTS
 const RULES                     = { // tetris rules
     gameSpeedRatio              : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
@@ -257,6 +259,16 @@ const BLOCK_TYPES = { ghost    : 1, inShape: 2, orphan : 3};
 const SEARCH_MODE = { down     : 1, up     : 2};
 const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are useful for score: hard drop is double points
 
+const SIZES = {
+_svgGridWidth					: null,
+_svgGridHeight					: null,
+_svgBorder						: 12,
+_svgFullGridRelativeCenterX		: null,												//center position
+_svgFullGridRelativeCenterY		: null,
+_svgPreviewX					: 420, 												//next shape upper left position //$+_svgGridWidth+80;
+_svgPreviewY					: 50, 												//next shape upper left position
+}
+
 // INIT called by HTML browser
 function init() {
     for (let p in DURATIONS) DURATIONS[p] /= RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
@@ -285,6 +297,7 @@ function MainMenu() { // queue or stack
             width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxGameHeight,
             y: _ => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
+    this._domNode.setDomNode({opacity: 0.15}) // #DEBUG make opacity for all div and canvas under this div
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
@@ -295,6 +308,41 @@ function MainMenu() { // queue or stack
                     GAME.addGrid(); // top left square click capture to add another grid
         }, false);
     window.onresize = function() { GAME.organizeGrids({resize:true}) };
+
+    SVG_BODY = new SvgObj({parent: document.body, type:"svg"}); //main svg node
+    SVG_BODY._svgElement.setAttribute("xmlns", SVG_NS); //setAttributeNS IE9 KO
+    SVG_BODY.set({width: window.innerWidth+"px"}); //IE>=9 : pb resize
+    SVG_BODY.set({height: window.innerHeight+"px"}); //IE>=9 : pb resize
+
+	//SVG_BODY._svgElement.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink"); //???
+	this._svg = SVG_BODY.newChild( // SVG gradients
+		{type:"g", id:"game",
+			gradients: {type:"g", id:"gradients",
+				background_gradient: {type:"linearGradient", id:"background_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
+					offset1: {type:"stop", offset:"50%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"},
+					offset2: {type:"stop", offset:"100%", style:"stop-color:#AAAAAA;stop-opacity:1"}
+				},
+				ceil_gradient: {type:"linearGradient", id:"ceil_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
+					offset1: {type:"stop", offset:"30%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"},
+					offset2: {type:"stop", offset:"100%", style:"stop-color:"+_backgroundColor+";stop-opacity:0"}
+				},
+				horizontal_shadows: {type:"linearGradient", id:"horizontal_shadows", x1:"0%", y1:"0%", x2:"100%", y2:"0%",
+					offset1: {type:"stop",offset:"0%",style:"stop-color:black;stop-opacity:1"}, //0.7
+					offset2: {type:"stop",offset:"6%",style:"stop-color:black;stop-opacity:0"},
+					offset3: {type:"stop",offset:"94%",style:"stop-color:black;stop-opacity:0"},
+					offset4: {type:"stop",offset:"100%",style:"stop-color:black;stop-opacity:1"}
+				},
+				shelf_gradient: {type:"linearGradient", id:"shelf_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
+					offset1: {type:"stop", offset:"0%", style:"stop-color:"+_backgroundColor+";stop-opacity:0.45"},
+					offset2: {type:"stop", offset:"100%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"}
+				}
+			},
+			background: {type:"rect", x:0, y:0, width:"100%", height:"100%", fill:"url(#background_gradient)"},
+			control: {type:"rect",x:0, y:0, width:"100%", height:"5%", fill:"black",
+				onclick:"game.addGrid()"},
+			grids: {type:"g", id:"grids"}
+		}
+	);
 }
 MainMenu.prototype = {
     _domNode: null,
@@ -617,6 +665,19 @@ function TetrisGame() {
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
 TetrisGame.prototype = {
+
+	_svgBoxSize							: 36,										//svg units
+	_svgBlockSize						: null,										//svg units
+	_svgPreviewSize						: 72,
+	_svg								: null,
+	_svgGameWidth						: null,
+	_svgGameHeight						: null,
+	_svgFullGridWidth					: null,
+	_svgFullGridHeight					: null,
+	_fullGridsIntervalMinX				: 160, 										//svg units
+	_fullGridsIntervalMinY				: 100, 										//svg units
+
+
     _gridsListArray         : null,
     _matrixHeight           : null,
     _matrixBottom           : -1, // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
@@ -624,8 +685,7 @@ TetrisGame.prototype = {
     _jPositionStart         : null,
     _playersCount           : 0,
     _gameState              : GAME_STATES.running, // others: GAME_STATES.paused, GAME_STATES.running
-    _shapeIdTick            : 0,
-    _nextBlockIndex         : 0,
+    _nextPrimaryKey         : 0,
     _pentominoesBriefMode   : null,            
     _gameShapesWithRotations: null,
     _gameEventsQueue        : null,
@@ -673,7 +733,7 @@ TetrisGame.prototype = {
     },
     destroyGame() {
         this._gridsListArray.forEach( myGrid => myGrid.destroyDomNode() );
-        this._nextBlockIndex = 0;
+        this._nextPrimaryKey = 0;
         _domNode.destroyDomNode();
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
     },
@@ -830,6 +890,7 @@ class PentominoesBriefMode {
 }
 // TetrisGrid Class
 function TetrisGrid(playerKeysSet, gridColor){
+    this._gridIndex       = ++GAME._nextPrimaryKey;
     this._gridColor       = gridColor;
     this._playerKeysSet   = playerKeysSet;
     this._lockedBlocks    = new LockedBlocks(this);
@@ -837,6 +898,15 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._animsStack      = [];
     this._lockedShapes    = [];
     this._rowsToClearSet  = new Set();
+
+	SIZES._svgGridWidth					= GAME._svgBoxSize * GAME._horizontalBoxes;		//grid size 360
+	SIZES._svgGridHeight					= GAME._svgBoxSize * GAME._verticalBoxes;		//grid size 720
+	game._svgFullGridWidth			= SIZES._svgGridWidth + 2*SIZES._svgBorder;
+	game._svgFullGridHeight			= SIZES._svgGridHeight + 2*SIZES._svgBorder;
+	SIZES._svgFullGridRelativeCenterX		= GAME._svgFullGridWidth/2 - SIZES._svgBorder;
+	SIZES._svgFullGridRelativeCenterY		= GAME._svgFullGridHeight/2 - SIZES._svgBorder;		//center position //$voir ses affectations doublons organize
+
+
     this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
     for (let i=0;i < this._matrix.length;i++) {
         this._matrix[i] = [];
@@ -879,7 +949,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             width: _ => SPRITES.pxXPreviewPosition, height: _ => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         messageZoneDiv: {
             y: _ => SPRITES.pxCeilHeight, width: _ => SPRITES.pxFullGridWidth, height: _ => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
-    }, `fullGridDiv${MAIN_MENU._domNode.getNewUId_()}`, MAIN_MENU._domNode);
+    }, `fullGridDiv${this._gridIndex}`, MAIN_MENU._domNode);
     this._domNode._childs.frontZoneSprite.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.realBlocksDiv; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.ghostBlocksDiv; // shortcut
@@ -890,6 +960,75 @@ function TetrisGrid(playerKeysSet, gridColor){
         fieldCharCount: 8 }); // up down left right
     this._domNode._childs.scoreZoneDiv.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
     this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
+
+	this._svg = MAIN_MENU._svg._childs.grids.newChild({ // SVG graphic pieces
+		type:"g", id:"grid_"+this._gridIndex, //_svg is g group
+		clipping: {
+			type:"clipPath", id:"grid_"+this._gridIndex+"_clipping",
+			rectangle: {
+				type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height:SIZES._svgGridHeight
+			}
+		},
+		flame_gradient: {															//IE9 : #id must be differents
+			type: "radialGradient", id: "flame"+this._gridIndex, r: "100%", cx: "50%", cy: "100%", fx: "50%", fy: "100%",
+			offset1: {type: "stop", offset: "0%", style: "stop-color:"+rgbText(this._gridColor.medium)+";stop-opacity:0.2"},
+			offset2: {type: "stop", offset: "100%", style: "stop-color:"+rgbText(this._gridColor.medium)+";stop-opacity:0"}
+		},
+		frame: {
+			type:"g", id:"frame", clip_path:"url(#grid_"+this._gridIndex+"_clipping)",
+			main: {
+				type:"g", id:"main",
+				background:
+					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: "#111111"},
+				grid_relief_v:
+					{type:"line", x1:-3, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+					style:"fill:none;stroke:#222222;stroke-width:"+SIZES._svgGridHeight+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
+				grid_relief_h:
+					{type:"line", x1: SIZES._svgGridWidth/2, y1:-3, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+					style:"fill:none;stroke:#222222;stroke-width:"+SIZES._svgGridWidth+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
+				grid_main_v:
+					{type:"line", x1:-1, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+					style:"fill:none;stroke:#000000;stroke-width:"+SIZES._svgGridHeight+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
+				grid_main_h:
+					{type:"line", x1: SIZES._svgGridWidth/2, y1:-1, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+					style:"fill:none;stroke:#000000;stroke-width:"+SIZES._svgGridWidth+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
+				shadows_h:
+					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:"url(#horizontal_shadows)"},
+				flame:
+					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:"url(#flame"+this._gridIndex+")"}
+			}																						//flame:		//!! disable gradients
+		},
+		border_bottom: {
+			type:"path", d:"M 0 "+SIZES._svgGridHeight+" h "+SIZES._svgGridWidth+" l "+SIZES._svgBorder+" "+SIZES._svgBorder+" h -"+(SIZES._svgGridWidth + 2*SIZES._svgBorder)+" z",
+			fill:"url(#gradient_block_"+this._gridColor.name+")"
+		},
+		border_right: {
+			type:"path", d:"M 0 0 v "+SIZES._svgGridHeight+" l -"+SIZES._svgBorder+" "+SIZES._svgBorder+" v -"+(SIZES._svgGridHeight+SIZES._svgBorder)+" z",
+			fill:"url(#gradient_block_"+this._gridColor.name+")"
+		},
+		border_left: {
+			type:"path", d:"M "+SIZES._svgGridWidth+" 0 v "+SIZES._svgGridHeight+" l "+SIZES._svgBorder+" "+SIZES._svgBorder+" v -"+(SIZES._svgGridHeight+SIZES._svgBorder)+" z",
+			fill:"url(#gradient_block_"+this._gridColor.name+")"
+		},
+		preview: {
+			type:"g", id:"preview"
+		},
+		score: {
+			type:"text", font_family: FONTS.scoreFont, font_weight:"bold", text_anchor:"middle",
+			fill:"url(#gradient_block_"+this._gridColor.name+")"
+		},
+		combos: {
+			type:"text", font_family: FONTS.messageFont.font, font_size: 60, font_weight:"bold", // $$$$$$
+			stroke: game._backgroundColor, stroke_width:1.5, text_anchor:"middle", fill:"url(#gradient_block_"+this._gridColor.name+")"
+		},
+		ceil: {
+			type:"rect", x:-SIZES._svgBorder-1, y:-3-GAME._svgBoxSize, width: GAME._svgFullGridWidth+2, height: GAME._svgBoxSize*4, fill:"url(#ceil_gradient)"
+		}
+	});
+	this._mainSvg = _svg._childs.frame._childs.main;
+
+
+
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {}; // need to initialize before creating new score which contains anim
     this._score = new TetrisScore(this); // contains animation, 
@@ -998,6 +1137,10 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
 TetrisGrid.prototype            = {
+	_svg							: null,
+	_mainSvg						: null,
+
+    _gridIndex                 : null,
     _gridState                 : GRID_STATES.ready,
     _gridColor                 : null,
     _domNode                   : null,
@@ -1244,6 +1387,7 @@ TetrisGrid.prototype            = {
 class TetrisShape {
     constructor(grid, group=null) { // default falling shape means not group argument
         this._grid = grid;
+        this._shapeIndex = ++GAME._nextPrimaryKey;
         this._iPosition;
         this._jPosition;
         this._shapeType;
@@ -1254,8 +1398,7 @@ class TetrisShape {
         this._polyominoBlocks; // READ ONLY, reference that points to current shape in GAME shapes store
         this._ghostBlocks; // shadowed blocks
         this._domNode;
-        this._jVector = 0, // vector upper (+) and under (-) shape
-        this._shapeIndex = GAME._shapeIdTick++;
+        this._jVector = 0; // vector upper (+) and under (-) shape
         if (group===null)
             this.newControlledShape_();
         else
@@ -1571,6 +1714,7 @@ LockedBlocks.prototype = {
 // TetrisBlock Class
 class TetrisBlock {
     constructor(blockType, shapeOrGridOwnerOfThisBlock, i, j, blockColor) {
+        this._blockIndex = ++GAME._nextPrimaryKey; // both inShape, orphan, and ghost block are indexed with incrementing number
         this._blockType = blockType;
         this._iPosition = i;
         this._jPosition = j;
@@ -1578,7 +1722,6 @@ class TetrisBlock {
         this._shape;
         this._domNode;
         this._blockColor;
-        this._blockIndex = GAME._nextBlockIndex++; // both inShape, orphan, and ghost block are indexed with incrementing number
         this._domNode = new DomNode({type: 'canvas', width: _ => SPRITES.pxBlockSize, height: _ => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}, `blockSprite${this._blockIndex}`); // creating node
         this.setBlockColor(blockColor);
         switch (this._blockType) {
@@ -1810,6 +1953,9 @@ class EventsQueue {
             first[1].apply(first[0], first[2]);
         }
     }
+}
+function rgbText(color) {
+	return "rgb("+color[0]+","+color[1]+","+color[2]+")";
 }
 //SvgObj Class, SVG object
 //new(parent:): optional parent
