@@ -259,7 +259,7 @@ const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are useful for score
 
 // INIT called by HTML browser
 function init() {
-    for (let p in DURATIONS) DURATIONS[p]/=RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
+    for (let p in DURATIONS) DURATIONS[p] /= RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
     AUDIO = new Audio(SOUNDS);
     AUDIO.changeVolume(false);
     MAIN_MENU = new MainMenu();
@@ -285,7 +285,7 @@ function MainMenu() { // queue or stack
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
             y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
-    SPRITES.zoom1Step(0); // we set px sizes
+    SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1Div.setTex('totototo');
@@ -378,7 +378,104 @@ Audio.prototype = {
 // TetrisSpritesCreation Class, earlier: TetrisGraphics, GameGraphics
 function TetrisSpritesCreation() {
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
-    this.create_();
+    // creation of SPRITES below
+    this._spriteBackground = new SpriteObj({ // define backgroung color here: black > grey
+        _nocache: true,
+        drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
+            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
+            c.fillRect(x,y,w,h) }
+    });
+    this._spriteGridFront = new SpriteObj({ // we draw 3 trapeze that we merge
+        _nocache: true,
+        widthSprite: () => SPRITES.pxFullGridWidth,
+        heightSprite: () => SPRITES.pxFullGridHeight,
+        drawSprite(c, x, y, a) { // context, x, y, args
+            let col = SPRITES._colors[a.col];
+            c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
+            c.lineTo(x+SPRITES.pxGridBorder,y+SPRITES.pxGridHeight);
+            c.lineTo(x,y+SPRITES.pxFullGridHeight);
+            c.fillStyle=SpriteObj.linearGradient(c,0,0,SPRITES.pxGridBorder,0,1,SpriteObj.rgbaTxt(col.dark),0,SpriteObj.rgbaTxt(col.light));
+            c.fill();
+            c.beginPath();c.moveTo(x+SPRITES.pxFullGridWidth,y); // right border
+            c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y);
+            c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y+SPRITES.pxGridHeight);
+            c.lineTo(x+SPRITES.pxFullGridWidth,y+SPRITES.pxFullGridHeight);
+            c.fillStyle=SpriteObj.linearGradient(c,SPRITES.pxGridWidth+SPRITES.pxGridBorder,0,SPRITES.pxGridBorder,0,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
+            c.fill();
+            c.beginPath();c.moveTo(0,SPRITES.pxFullGridHeight); // bottom border
+            c.lineTo(SPRITES.pxGridBorder,SPRITES.pxGridHeight);
+            c.lineTo(SPRITES.pxGridBorder+SPRITES.pxGridWidth,SPRITES.pxGridHeight);
+            c.lineTo(SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight);
+            c.fillStyle=SpriteObj.linearGradient(c,0,SPRITES.pxGridHeight,0,SPRITES.pxGridBorder,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
+            c.fill();
+            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,SPRITES.pxCellSize*2,0, SpriteObj.rgbaTxt([0,0,0],1),1, SpriteObj.rgbaTxt([0,0,0],0)); // top grid shadow
+            c.fillRect(0,0,SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight); // #DEBUG
+        }
+    });
+    this._spriteGridBackground = new SpriteObj({ // we draw grid, grid shadow, back
+        _nocache: true,
+        widthSprite: () => SPRITES.pxFullGridWidth,
+        heightSprite: () => SPRITES.pxFullGridHeight,
+        xSprite: () => SPRITES.pxGridBorder,
+        ySprite: () => SPRITES.pxGridBorder,
+        drawSprite(c, x, y, a) { // context, x, y, args
+            let col = SPRITES._colors[a.col];
+            c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
+            let colo = ['#000','#222'];
+            for (let p=colo.length-1;p>=0;p--) {
+                c.beginPath();
+                let margin = -(p*SPRITES.pxGridLineWidth)+SPRITES.pxGridLineWidth/2;
+                for (let i=1;i < RULES.verticalCellsCount;i++) {
+                    c.moveTo(x, y+SPRITES.pxCellSize*i+margin);
+                    c.lineTo(x+SPRITES.pxGridWidth, y+(SPRITES.pxCellSize)*i+margin);
+                    c.lineWidth=SPRITES.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
+                }
+                for (let i=1;i < RULES.horizontalCellsCount;i++) {
+                    c.moveTo(x+SPRITES.pxCellSize*i+margin, y);
+                    c.lineTo(x+SPRITES.pxCellSize*i+margin, y+SPRITES.pxGridHeight);
+                    c.lineWidth=SPRITES.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
+                }
+            }
+            c.rect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
+            c.fillStyle=SpriteObj.radialGradient(c,x+SPRITES.pxGridWidth/2,y+SPRITES.pxGridHeight,0,0,0,3*SPRITES.pxGridHeight/4,
+                0, SpriteObj.rgbaTxt(col.medium, 0.3), 1, SpriteObj.rgbaTxt(col.medium, 0)); c.fill();
+            c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
+                0, SpriteObj.rgbaTxt([0,0,0],0.5), 0.1, SpriteObj.rgbaTxt([0,0,0],0),
+                0.9, SpriteObj.rgbaTxt([0,0,0],0), 1, SpriteObj.rgbaTxt([0,0,0],0.5)); c.fill(); }
+    });
+    this._spriteBlock = new SpriteObj({ // we draw block
+        _nocache: false,
+        widthSprite: () => SPRITES.pxBlockSize,
+        heightSprite: () => SPRITES.pxBlockSize,
+        xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
+        ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize,
+        drawSprite(c, x, y, a) { // context, x, y, args
+            let half = Math.round(SPRITES.pxBlockSize/2);
+            let margin = Math.round(SPRITES.pxBlockSize/7);
+            let col = SPRITES._colors[a.col];
+            c.fillStyle=SpriteObj.rgbaTxt(col.medium);
+            c.fillRect(x,y,SPRITES.pxBlockSize,SPRITES.pxBlockSize);
+            c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+SPRITES.pxBlockSize,y);
+            c.fillStyle=SpriteObj.rgbaTxt(col.light);c.fill();
+            c.beginPath();c.moveTo(x,y+SPRITES.pxBlockSize);c.lineTo(x+half,y+half);
+            c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=SpriteObj.rgbaTxt(col.dark);c.fill();c.beginPath();
+            c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
+            c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) }
+    });
+    this._spritePreviewBlock = new SpriteObj({
+        _nocache: false,
+        widthSprite: () => SPRITES.pxPreviewBlockSize,
+        heightSprite: () => SPRITES.pxPreviewBlockSize,
+        xSprite: x => (SPRITES._shapesSpan + x) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
+        ySprite: y => (SPRITES._shapesSpan - y) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
+        drawSprite(c, x, y, a) { // context, x, y, args (gradient if true, uniform if false)
+            let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
+            c.fillStyle = (a.__onOff
+                ? SpriteObj.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, SpriteObj.rgbaTxt(col.dark), 1, SpriteObj.rgbaTxt(col.light))
+                : SpriteObj.rgbaTxt(col.medium, SPRITES._previewOpacity)
+            );
+            c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) }
+    });
 }
 TetrisSpritesCreation.prototype = {
     _zoomRatio              : 1, // default 1, float current zoom ratio
@@ -473,105 +570,6 @@ TetrisSpritesCreation.prototype = {
         this.pxXMessagePosition = Math.round(this.pxFullGridWidth/2);
         this.pxYMessagePosition = Math.round(this.pxFullGridHeight/2);
         this._zoomRatio         = !oldGridWidth ? 1 : this.pxFullGridWidth / oldGridWidth;
-    },
-    create_() { // creating all sprites
-        this._spriteBackground = new SpriteObj({ // define backgroung color here: black > grey
-            _nocache: true,
-            drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
-                c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
-                c.fillRect(x,y,w,h) }
-        });
-        this._spriteGridFront = new SpriteObj({ // on dessine 3 trapèzes qu'on assemble
-            _nocache: true,
-            widthSprite: () => SPRITES.pxFullGridWidth,
-            heightSprite: () => SPRITES.pxFullGridHeight,
-            drawSprite(c, x, y, a) { // context, x, y, args
-                let col = SPRITES._colors[a.col];
-                c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
-                c.lineTo(x+SPRITES.pxGridBorder,y+SPRITES.pxGridHeight);
-                c.lineTo(x,y+SPRITES.pxFullGridHeight);
-                c.fillStyle=SpriteObj.linearGradient(c,0,0,SPRITES.pxGridBorder,0,1,SpriteObj.rgbaTxt(col.dark),0,SpriteObj.rgbaTxt(col.light));
-                c.fill();
-                c.beginPath();c.moveTo(x+SPRITES.pxFullGridWidth,y); // right border
-                c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y);
-                c.lineTo(x+SPRITES.pxGridBorder+SPRITES.pxGridWidth,y+SPRITES.pxGridHeight);
-                c.lineTo(x+SPRITES.pxFullGridWidth,y+SPRITES.pxFullGridHeight);
-                c.fillStyle=SpriteObj.linearGradient(c,SPRITES.pxGridWidth+SPRITES.pxGridBorder,0,SPRITES.pxGridBorder,0,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
-                c.fill();
-                c.beginPath();c.moveTo(0,SPRITES.pxFullGridHeight); // bottom border
-                c.lineTo(SPRITES.pxGridBorder,SPRITES.pxGridHeight);
-                c.lineTo(SPRITES.pxGridBorder+SPRITES.pxGridWidth,SPRITES.pxGridHeight);
-                c.lineTo(SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight);
-                c.fillStyle=SpriteObj.linearGradient(c,0,SPRITES.pxGridHeight,0,SPRITES.pxGridBorder,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
-                c.fill();
-                c.fillStyle=SpriteObj.linearGradient(c,0,0,0,SPRITES.pxCellSize*2,0, SpriteObj.rgbaTxt([0,0,0],1),1, SpriteObj.rgbaTxt([0,0,0],0)); // top grid shadow
-                c.fillRect(0,0,SPRITES.pxFullGridWidth,SPRITES.pxFullGridHeight); // #DEBUG
-            }
-        });
-        this._spriteGridBackground = new SpriteObj({
-            _nocache: true,
-            widthSprite: () => SPRITES.pxFullGridWidth,
-            heightSprite: () => SPRITES.pxFullGridHeight,
-            xSprite: () => SPRITES.pxGridBorder,
-            ySprite: () => SPRITES.pxGridBorder,
-            drawSprite(c, x, y, a) { // context, x, y, args
-                let col = SPRITES._colors[a.col];
-                c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
-                let colo = ['#000','#222'];
-                for (let p=colo.length-1;p>=0;p--) {
-                    c.beginPath();
-                    let margin = -(p*SPRITES.pxGridLineWidth)+SPRITES.pxGridLineWidth/2;
-                    for (let i=1;i < RULES.verticalCellsCount;i++) {
-                        c.moveTo(x, y+SPRITES.pxCellSize*i+margin);
-                        c.lineTo(x+SPRITES.pxGridWidth, y+(SPRITES.pxCellSize)*i+margin);
-                        c.lineWidth=SPRITES.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
-                    }
-                    for (let i=1;i < RULES.horizontalCellsCount;i++) {
-                        c.moveTo(x+SPRITES.pxCellSize*i+margin, y);
-                        c.lineTo(x+SPRITES.pxCellSize*i+margin, y+SPRITES.pxGridHeight);
-                        c.lineWidth=SPRITES.pxGridLineWidth;c.strokeStyle=colo[p];c.stroke();
-                    }
-                }
-                c.rect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
-                c.fillStyle=SpriteObj.radialGradient(c,x+SPRITES.pxGridWidth/2,y+SPRITES.pxGridHeight,0,0,0,3*SPRITES.pxGridHeight/4,
-                    0, SpriteObj.rgbaTxt(col.medium, 0.3), 1, SpriteObj.rgbaTxt(col.medium, 0)); c.fill();
-                c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxGridWidth,0,
-                    0, SpriteObj.rgbaTxt([0,0,0],0.5), 0.1, SpriteObj.rgbaTxt([0,0,0],0),
-                    0.9, SpriteObj.rgbaTxt([0,0,0],0), 1, SpriteObj.rgbaTxt([0,0,0],0.5)); c.fill(); }
-        });
-        this._spriteBlock = new SpriteObj({
-            _nocache: false,
-            widthSprite: () => SPRITES.pxBlockSize,
-            heightSprite: () => SPRITES.pxBlockSize,
-            xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
-            ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize,
-            drawSprite(c, x, y, a) { // context, x, y, args
-                let half = Math.round(SPRITES.pxBlockSize/2);
-                let margin = Math.round(SPRITES.pxBlockSize/7);
-                let col = SPRITES._colors[a.col];
-                c.fillStyle=SpriteObj.rgbaTxt(col.medium);
-                c.fillRect(x,y,SPRITES.pxBlockSize,SPRITES.pxBlockSize);
-                c.beginPath();c.moveTo(x,y);c.lineTo(x+half,y+half);c.lineTo(x+SPRITES.pxBlockSize,y);
-                c.fillStyle=SpriteObj.rgbaTxt(col.light);c.fill();
-                c.beginPath();c.moveTo(x,y+SPRITES.pxBlockSize);c.lineTo(x+half,y+half);
-                c.lineTo(x+SPRITES.pxBlockSize,y+SPRITES.pxBlockSize);c.fillStyle=SpriteObj.rgbaTxt(col.dark);c.fill();c.beginPath();
-                c.fillStyle=SpriteObj.linearGradient(c,x,y,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin,0,SpriteObj.rgbaTxt(col.dark),1,SpriteObj.rgbaTxt(col.light));
-                c.fillRect(x+margin,y+margin,SPRITES.pxBlockSize-2*margin,SPRITES.pxBlockSize-2*margin) }
-        });
-        this._spritePreviewBlock = new SpriteObj({ // args a: gradient if true, uniform if false
-            _nocache: false,
-            widthSprite: () => SPRITES.pxPreviewBlockSize,
-            heightSprite: () => SPRITES.pxPreviewBlockSize,
-            xSprite: x => (SPRITES._shapesSpan + x) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
-            ySprite: y => (SPRITES._shapesSpan - y) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
-            drawSprite(c, x, y, a) { // context, x, y, args
-                let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
-                c.fillStyle = (a.__onOff
-                    ? SpriteObj.linearGradient(c,x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize, 0, SpriteObj.rgbaTxt(col.dark), 1, SpriteObj.rgbaTxt(col.light))
-                    : SpriteObj.rgbaTxt(col.medium, SPRITES._previewOpacity)
-                );
-                c.fillRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize) }
-        });
     },
 };
 // TetrisGame Class
@@ -2089,7 +2087,7 @@ DomNode.prototype = {
         } // _moveToGridCellStack is never reset, used 1 time
         if (this._domNodeType === 'canvas')
             this.redrawCanvas_(this.widthSprite, this.heightSprite);
-        else // type === div
+        else // (this._domNodeType === 'div')
             if (this._text)
                 this.resizeText_();
             for (let p in this._childs)
@@ -2112,7 +2110,7 @@ DomNode.prototype = {
         for (let p in definitionObject) // browsing properties
             if (typeof definitionObject[p] === 'object') // if sub object
                 this._childs[p] = new DomNode(definitionObject[p], p, this); // if definitionObject[p] is parent div, create DomNode which runs setDomeNode
-            else
+            else // external calls of setDomNode concerns anly this condition
                 this._htmlElement.style[p.replace(/_/,'-')] = definitionObject[p]; // if definitionObject[p] is an attribute, opacity for example
     },
     pxVal_(val) {
