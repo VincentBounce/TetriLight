@@ -879,7 +879,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         messageZoneDiv: {
             y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
-    }, `fullGridDiv${MAIN_MENU._domNode.getNewUId_()}`, MAIN_MENU._domNode);
+    }, `fullGridDiv${MAIN_MENU._domNode.getNewUId()}`, MAIN_MENU._domNode);
     this._domNode._childs.frontZoneSprite.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.realBlocksDiv; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.ghostBlocksDiv; // shortcut
@@ -2021,7 +2021,7 @@ DomNode.prototype = {
         delete this._childs;
         this._htmlElement.parentNode.removeChild(this._htmlElement);
     },
-    getNewUId_() {
+    getNewUId() {
         return ++DomNode.prototype._idCount;
     },
     setTransformOrigin(origin) {
@@ -2182,7 +2182,7 @@ DomNode.prototype = {
         if (canvas._parent)
             delete canvas._parent._childs[canvas._nameId]; // manage parent
         if ( !canvas._nameId || (typeof canvas._nameId === 'number') )
-            canvas._nameId = this.getNewUId_();// ++ _idCount
+            canvas._nameId = this.getNewUId();// ++ _idCount
         this._childs[canvas._nameId] = canvas; // manage parent
         canvas._parent = this; // manage parent
         canvas.moveNodeTo(canvas._x, canvas._y);
