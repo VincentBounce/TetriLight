@@ -275,8 +275,8 @@ function MainMenu() { // queue or stack
     // window.oncontextmenu = function(event){ this.cancelEvent_(event); }; // right click
     // below creation for MAIN dom node
     SPRITES = new TetrisSpritesCreation(); // need dom node created to get sizes for scaling
-    this._domNode = new DomNode({body: true}, 'gameAreaDiv');
-    this._domNode.setDomNode({ // menus on top of the screen
+    this._domNode = new DomNode({ // menus on top of the screen
+        body: true,
         topScreenSprite: { type: 'canvas',
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
         message1Div: {
@@ -284,8 +284,8 @@ function MainMenu() { // queue or stack
         playingAreaSprite: { type:'canvas',
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
             y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
-        }); // one arg only for setDomNode
-    SPRITES.zoom1Step(0);
+        }, 'gameAreaDiv'); // one arg only for setDomNode
+    SPRITES.zoom1Step(0); // we set px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1Div.setTex('totototo');
@@ -377,13 +377,10 @@ Audio.prototype = {
 };
 // TetrisSpritesCreation Class, earlier: TetrisGraphics, GameGraphics
 function TetrisSpritesCreation() {
-    //this._rootNode = rootNode;
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
-    //this.zoom1Step(0);
     this.create_();
 }
 TetrisSpritesCreation.prototype = {
-    //_rootNode               : null,
     _zoomRatio              : 1, // default 1, float current zoom ratio
     _scaleFactor            : 33, // default 33, int scale unit < SPRITES.pxBlockSize && > = 1
     pxTopMenuZoneHeight     : 20, // default 0 or 20, Y top part screen of the game, to display others informations #DEBUG
@@ -959,8 +956,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         endAnimFunc() { // fetch rows to remove, remove from moving div, draw, destroy node
             this._lockedShapes.forEach( myShape => myShape.putShapeInRealBlocksNode().drawShape()._domNode.destroyDomNode() )
-            this._lockedShapes = [];
-            this._ghostBlocksNode.show();
+            this._lockedShapes = []; // this._ghostBlocksNode.show(); // show ghost shape after rising, not necessary to hide            
             this.gridAnimsStackPop(); // unstack all countandclearrows and this._gridEventsQueue.dequeue() in stack
         },
         timingAnimFunc: x => x, // arrow replace a return // linear rising of rows, not (2*Math.sqrt(x)-x);
@@ -1952,52 +1948,52 @@ function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last argu
         this._parent._htmlElement.appendChild(this._htmlElement);
     }
     // run this code only 1 time for body MAIN dom node, then exit
-    if (isValued(definitionObject.body)) {
+    if (isValued(definitionObject.body)) { // it's BODY
         window.document.body.appendChild(this._htmlElement)
         this._htmlElement.style.width = '100%'; // all window
         this._htmlElement.style.height = '100%'; // all window
         this.widthSprite = this._htmlElement.offsetWidth; //this.getHeight();
         this.heightSprite = this._htmlElement.offsetHeight; //this.getHeight();
-        return; // not proceed anymore, body is just one time
-    }
-    // checking width property for DIV
-    if (isValued(definitionObject.width)) {
-        this.getWidth = definitionObject.width; // it's an arrow function
-        this.setWidth(this.getWidth());
-    } else
-        this.getWidth = () => this._parent.getWidth(); // arrow replace a return
-    // checking height property for DIV
-    if (isValued(definitionObject.height)) {
-        this.getHeight = definitionObject.height // it's an arrow function
-        this.setHeight(this.getHeight());
-    } else
-        this.getHeight = () => this._parent.getHeight(); // arrow replace a return
-    // checking x position property
-    if (isValued(definitionObject.x))
-        this.getXInit = definitionObject.x; // it's an arrow function
-    // checking y position property
-    if (isValued(definitionObject.y))
-        this.getYInit = definitionObject.y; // it's an arrow function
-    this.setX(this.getXInit());
-    this.setY(this.getYInit());
-    delete definitionObject.x;
-    delete definitionObject.y;
-    delete definitionObject.width;
-    delete definitionObject.height;
-    // checking canvas widthSprite and heightSprite properties
-    if (this._domNodeType === 'canvas') {
-        if (definitionObject.sprite) {
-            this._sprite = definitionObject.sprite;
-            delete definitionObject.sprite;
+    } else { // it's NOT BODY
+        // checking width property for DIV
+        if (isValued(definitionObject.width)) {
+            this.getWidth = definitionObject.width; // it's an arrow function
+            this.setWidth(this.getWidth());
+        } else
+            this.getWidth = () => this._parent.getWidth(); // arrow replace a return
+        // checking height property for DIV
+        if (isValued(definitionObject.height)) {
+            this.getHeight = definitionObject.height // it's an arrow function
+            this.setHeight(this.getHeight());
+        } else
+            this.getHeight = () => this._parent.getHeight(); // arrow replace a return
+        // checking x position property
+        if (isValued(definitionObject.x))
+            this.getXInit = definitionObject.x; // it's an arrow function
+        // checking y position property
+        if (isValued(definitionObject.y))
+            this.getYInit = definitionObject.y; // it's an arrow function
+        this.setX(this.getXInit());
+        this.setY(this.getYInit());
+        delete definitionObject.x;
+        delete definitionObject.y;
+        delete definitionObject.width;
+        delete definitionObject.height;
+        // checking canvas widthSprite and heightSprite properties
+        if (this._domNodeType === 'canvas') {
+            if (definitionObject.sprite) {
+                this._sprite = definitionObject.sprite;
+                delete definitionObject.sprite;
+            }
+            this._drawingContext2D = this._htmlElement.getContext('2d');
+            this._htmlElement.width = this.widthSprite;
+            //this._htmlElement.style.width = this.widthSprite*ratio+'px';
+            this._htmlElement.height = this.heightSprite;
+            //this._htmlElement.style.height = this.heightSprite*ratio+'px';
+            this._drawStack = {};
         }
-        this._drawingContext2D = this._htmlElement.getContext('2d');
-        this._htmlElement.width = this.widthSprite;
-        //this._htmlElement.style.width = this.widthSprite*ratio+'px';
-        this._htmlElement.height = this.heightSprite;
-        //this._htmlElement.style.height = this.heightSprite*ratio+'px';
-        this._drawStack = {};
     }
-    this.setDomNode(definitionObject); // others attributes
+    this.setDomNode(definitionObject); // check all others properties and childs
 }
 DomNode.prototype = {
     _idCount              : 0, // for unamed elements
@@ -2224,28 +2220,27 @@ DomNode.prototype = {
             this.getWidth()/Math.max(this._textCharCountWidth, this._textCharCountWidthMin)
         );
     },
-    hide() {
+    /*hide() {
         this._htmlElement.style.visibility = 'hidden'; // or this.setDomNode({opacity: 0});
     },
     show() {
         this._htmlElement.style.visibility = 'inherit';
-    }
+    }*/
 };
 // SpriteObj Class, vectorial built sprite, emulates vectorial SVG graphics, generic
-// functions reserved: widthSprite, heightSprite, xSprite, ySprite, drawSprite
 // boolean reserved: _nocache
+// functions reserved: widthSprite, heightSprite, xSprite, ySprite, drawSprite
 // use nomage: __funcToDoThis (intern) // no '_' in String value of arguments
 class SpriteObj {
     constructor(spriteDefinition) {
-        this._nocache = spriteDefinition._nocache; // we take _nocache properties
-        delete spriteDefinition._nocache;
         this._imagesData = []; // to work with _imagesData
+        this._nocache; // boolean
         this.widthSprite; // function ()
         this.heightSprite; // function ()
         this.xSprite; // function (x)
         this.ySprite; // function (y)
         this.drawSprite; // function (context, x, y, args)
-        Object.assign(this, spriteDefinition); // we take all others properties wich are functions
+        Object.assign(this, spriteDefinition); // we take all properties boolean and functions
     }
     getWidth() {
         return this.widthSprite();
