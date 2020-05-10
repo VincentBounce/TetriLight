@@ -938,9 +938,9 @@ function TetrisGrid(playerKeysSet, gridColor){
         endAnimFunc() { // fetch rows to remove, remove from moving div, draw, destroy node
             this._lockedShapes.forEach( myShape => myShape.putShapeInRealBlocksNode().drawShape()._domNode.destroyDomNode() )
             this._lockedShapes = [];
-            this.gridAnimsStackPush(this._anims.quakeAnim, this._anims.quakeAnim.startAnim); // startAnim() function stacked
-            this.gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); // we stack AUDIO.audioPlay('landFX');
-            this.gridAnimsStackPop();
+            //this.gridAnimsStackPush(this._anims.quakeAnim, this._anims.quakeAnim.startAnim); // startAnim() function stacked
+            //this.gridAnimsStackPush(AUDIO, AUDIO.audioPlay, 'landFX'); // we stack AUDIO.audioPlay('landFX');
+            //this.gridAnimsStackPop();
             // old: this._anims.quakeAnim.startAnim();
             // old: this.gridAnimsStackPop();
         },
@@ -1130,7 +1130,7 @@ TetrisGrid.prototype            = {
                     this.unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows();
         }
     },
-    unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows() { // can be called recursively, when falling shape or locked shapes in game hit floor
+    async unplaceAndMoveAndPlaceHardDroppingShapeThenCountAndClearRows() { // can be called recursively, when falling shape or locked shapes in game hit floor
         this.gridAnimsStackPush(this, this.newFallingShape); // this.newFallingShape()
         this._lockedShapes = []; // release for garbage collector
         this._lockedShapes[this._fallingShape._shapeIndex] = this._fallingShape;
@@ -1140,10 +1140,19 @@ TetrisGrid.prototype            = {
             this._fallingShape.putShapeInRealBlocksNode()
                 ._domNode.destroyDomNode();
             // AUDIO.audioPlay('landFX');
-            this._gridEventsQueue.execNowOrEnqueue(this, this.countAndClearRows); // exec this.countAndClearRows immediately
+            //this._gridEventsQueue.execNowOrEnqueue(this, this.countAndClearRows); // exec this.countAndClearRows immediately
+            await this.countAndClearRows();
         } else { // if locked shapes to drop, have to make animation before next counting
-            this.gridAnimsStackPush(this, this.countAndClearRows); // firstly stack this.countAndClearRows() for later
-            this._gridEventsQueue.execNowOrEnqueue(this._anims.shapeHardDropAnim, this._anims.shapeHardDropAnim.startAnim); // secondly exec hard drop startAnim() immediately
+            //this.gridAnimsStackPush(this, this.countAndClearRows); // firstly stack this.countAndClearRows() for later
+            //this._gridEventsQueue.execNowOrEnqueue(this._anims.shapeHardDropAnim, this._anims.shapeHardDropAnim.startAnim); // secondly exec hard drop startAnim() immediately
+            await this._anims.shapeHardDropAnim.startAnim();
+            console.log(this._anims.shapeHardDropAnim._promise);
+            //await this._anims.shapeHardDropAnim._promise;
+            console.log('after');
+            this._anims.quakeAnim.startAnim();
+            await this._anims.quakeAnim._promise;
+            await this.countAndClearRows();
+            console.log('tttt');
             // sound played before after hardDrop and before Quake
         }
     },
@@ -1151,7 +1160,7 @@ TetrisGrid.prototype            = {
         myShapes.forEach( myShape => myShape.unplaceShape() ) // move to a tested place
         myShapes.forEach( myShape => myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard) ) // move to placed on grid
     },
-    countAndClearRows() { // locks block and computes rows to transfer and _scores
+    async countAndClearRows() { // locks block and computes rows to transfer and _scores
         // old: AUDIO.audioPlay('landFX');
         if (this._fallingShape !== null) // for recursive calls with fallingshape === null
             this._fallingShape.clearGhostBlocks();
@@ -1168,7 +1177,7 @@ TetrisGrid.prototype            = {
                 AUDIO.audioPlay('clearFX');
             this._dropTimer.finishTimer() // need to finish timer before voiding _fallingShape, otherwise 'canMoveFromPlacedToPlaced of null' error
             this._fallingShape = null; // to avoid combo reset scores
-            this._anims.clearRowsAnim.startAnim();
+            await this._anims.clearRowsAnim.startAnim();
         } else {
             this._score.animAndDisplaysScore(); // to refresh score
             if (this._fallingShape !== null)
@@ -2276,6 +2285,7 @@ class SpriteObj {
         return grad;
     }
 }
+var RESOL=function(){};
 // Animation Class, to prepare an animation
 class Animation {
     constructor(animObject) {
@@ -2293,6 +2303,7 @@ class Animation {
         this._beginTime;
         this._pauseTime;
         this._windowNextFrameId;
+        this._promise;
         this.reset_();
     }
     reset_() {
@@ -2308,12 +2319,13 @@ class Animation {
             this._windowNextFrameId = window.requestAnimationFrame( () => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
             //this._windowNextFrameId = window.requestAnimationFrame(this.makeNextFrame_); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
         } else
-            this.endAnim();
+            return this.endAnim();
     }
     isAnimating() {
         return this._animating;
     }
     startAnim() { // start animation, optional arguments are stocked in the 'arguments' array, return true if kill previous same anim
+        //this._promise = new Promise(RESOL=>{});
         this.endAnim();    // return true if killing previous
         this._animating = true;
         // if (this.startAnimFunc_) this.startAnimFunc_.apply(arguments); // launch optional startAnimFunc_ function, arguments is array
@@ -2321,7 +2333,8 @@ class Animation {
         this._beginTime = performance.now();
         this._plannedFrames = RULES.fps * this._animDuration;
         this.animOutput = this.timingAnimFunc_( (++this._elapsedFrames) / this._plannedFrames ); // input [0;1] animOutput have any value
-        this.makeNextFrame_();
+        this.makeNextFrame_()
+        return new Promise(resolve => setTimeout(() => resolve('resolved'), this._animDuration + 100));
     }
     pauseOrResume() { // bug rare when often pause/resume
         if (this._animating) { // if animating running
@@ -2347,6 +2360,15 @@ class Animation {
             this.reset_(); // _animating needs to be set to false to consider grid not busy
             // this.endAnimFunc_();
             this.endAnimFunc_.apply(this._animOwner, arguments); // because score anim not declared in grid
+            //this._promise.resolve('resolved');
+            //return (this._promise);
+            
+            //this._promise = Promise.resolve('ok');
+            //this._promise = new Promise(reject=>reject('ok'));
+            //this._promise = new Promise(reject=>reject('ok'));
+            //return Promise.resolve(1)
+            //this._promise
+            //this._promise.RESOL();
         }
     }
 }
