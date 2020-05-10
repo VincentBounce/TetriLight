@@ -274,8 +274,8 @@ function MainMenu() { // queue or stack
     window.addEventListener('keyup', this.keyCapture_, false); // for all keys, producing value or not
     // window.oncontextmenu = function(event){ this.cancelEvent_(event); }; // right click
     // below creation for MAIN dom node
+    SPRITES = new TetrisSpritesCreation(); // need dom node created to get sizes for scaling
     this._domNode = new DomNode({body: true}, 'gameAreaDiv');
-    SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
     this._domNode.setDomNode({ // menus on top of the screen
         topScreenSprite: { type: 'canvas',
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
@@ -285,6 +285,7 @@ function MainMenu() { // queue or stack
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
             y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }); // one arg only for setDomNode
+    SPRITES.zoom1Step(0);
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1Div.setTex('totototo');
@@ -375,14 +376,14 @@ Audio.prototype = {
     }*/
 };
 // TetrisSpritesCreation Class, earlier: TetrisGraphics, GameGraphics
-function TetrisSpritesCreation(rootNode) {
-    this._rootNode = rootNode;
+function TetrisSpritesCreation() {
+    //this._rootNode = rootNode;
     for (let color in this._colors) this._colors[color].name = color; // adding a name field to SPRITES._colors
-    this.zoom1Step(0);
+    //this.zoom1Step(0);
     this.create_();
 }
 TetrisSpritesCreation.prototype = {
-    _rootNode               : null,
+    //_rootNode               : null,
     _zoomRatio              : 1, // default 1, float current zoom ratio
     _scaleFactor            : 33, // default 33, int scale unit < SPRITES.pxBlockSize && > = 1
     pxTopMenuZoneHeight     : 20, // default 0 or 20, Y top part screen of the game, to display others informations #DEBUG
@@ -452,8 +453,8 @@ TetrisSpritesCreation.prototype = {
         this._scaleFactor += step;
         this.pxBlockSize += step;
         let oldGridWidth        = this.pxFullGridWidth;
-        this.pxGameWidth        = this._rootNode.getWidth();
-        this.pxGameHeight       = this._rootNode.getHeight() - this.pxTopMenuZoneHeight;
+        this.pxGameWidth        = window.innerWidth;
+        this.pxGameHeight       = window.innerHeight - this.pxTopMenuZoneHeight;
         this.pxHalfGameHeight   = Math.round(this.pxGameHeight/2);
         this.pxGridLineWidth    = Math.max(Math.round(this.pxBlockSize/14), 1);
         this.pxGridWidth        = RULES.horizontalCellsCount*this.pxBlockSize + (RULES.horizontalCellsCount+1)*this.pxGridLineWidth;
