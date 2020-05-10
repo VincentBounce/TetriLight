@@ -217,7 +217,6 @@ MainMenu [1 instance]
 // GLOBAL VARIABLES, each one handle one class instance only
 var MAIN_MENU, GAME, AUDIO, SPRITES, SVG_BODY; // SPRITES: TetrisSpritesCreation
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const _backgroundColor = 'black'
 // GLOBAL CONSTANTS
 const RULES                     = { // tetris rules
     gameSpeedRatio              : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
@@ -260,13 +259,23 @@ const SEARCH_MODE = { down     : 1, up     : 2};
 const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are useful for score: hard drop is double points
 
 const SIZES = {
-_svgGridWidth					: null,
-_svgGridHeight					: null,
-_svgBorder						: 12,
-_svgFullGridRelativeCenterX		: null,												//center position
-_svgFullGridRelativeCenterY		: null,
-_svgPreviewX					: 420, 												//next shape upper left position //$+_svgGridWidth+80;
-_svgPreviewY					: 50, 												//next shape upper left position
+    _svgBoxSize                : 36, //svg units
+    _svgBlockSize              : null, //svg units
+    _svgPreviewSize            : 72,
+    _svgGameWidth              : null,
+    _svgGameHeight             : null,
+    _svgFullGridWidth          : null,
+    _svgFullGridHeight         : null,
+    _fullGridsIntervalMinX     : 160, //svg units
+    _fullGridsIntervalMinY     : 100, //svg units
+    _backgroundColor           : 'black',
+    _svgGridWidth              : null,
+    _svgGridHeight             : null,
+    _svgBorder                 : 12,
+    _svgFullGridRelativeCenterX: null, //center position
+    _svgFullGridRelativeCenterY: null,
+    _svgPreviewX               : 420, //next shape upper left position //$+_svgGridWidth+80;
+    _svgPreviewY               : 50, //next shape upper left position
 }
 
 // INIT called by HTML browser
@@ -297,7 +306,7 @@ function MainMenu() { // queue or stack
             width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxGameHeight,
             y: _ => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
-    this._domNode.setDomNode({opacity: 0.15}) // #DEBUG make opacity for all div and canvas under this div
+    this._domNode.setDomNode({opacity: 0.05}) // #DEBUG for SVG make opacity for all div and canvas under this div
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
@@ -309,40 +318,39 @@ function MainMenu() { // queue or stack
         }, false);
     window.onresize = function() { GAME.organizeGrids({resize:true}) };
 
-    SVG_BODY = new SvgObj({parent: document.body, type:"svg"}); //main svg node
-    SVG_BODY._svgElement.setAttribute("xmlns", SVG_NS); //setAttributeNS IE9 KO
-    SVG_BODY.set({width: window.innerWidth+"px"}); //IE>=9 : pb resize
-    SVG_BODY.set({height: window.innerHeight+"px"}); //IE>=9 : pb resize
-
-	//SVG_BODY._svgElement.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink"); //???
-	this._svg = SVG_BODY.newChild( // SVG gradients
-		{type:"g", id:"game",
-			gradients: {type:"g", id:"gradients",
-				background_gradient: {type:"linearGradient", id:"background_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
-					offset1: {type:"stop", offset:"50%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"},
-					offset2: {type:"stop", offset:"100%", style:"stop-color:#AAAAAA;stop-opacity:1"}
-				},
-				ceil_gradient: {type:"linearGradient", id:"ceil_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
-					offset1: {type:"stop", offset:"30%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"},
-					offset2: {type:"stop", offset:"100%", style:"stop-color:"+_backgroundColor+";stop-opacity:0"}
-				},
-				horizontal_shadows: {type:"linearGradient", id:"horizontal_shadows", x1:"0%", y1:"0%", x2:"100%", y2:"0%",
-					offset1: {type:"stop",offset:"0%",style:"stop-color:black;stop-opacity:1"}, //0.7
-					offset2: {type:"stop",offset:"6%",style:"stop-color:black;stop-opacity:0"},
-					offset3: {type:"stop",offset:"94%",style:"stop-color:black;stop-opacity:0"},
-					offset4: {type:"stop",offset:"100%",style:"stop-color:black;stop-opacity:1"}
-				},
-				shelf_gradient: {type:"linearGradient", id:"shelf_gradient", x1:"0%", y1:"0%", x2:"0%", y2:"100%",
-					offset1: {type:"stop", offset:"0%", style:"stop-color:"+_backgroundColor+";stop-opacity:0.45"},
-					offset2: {type:"stop", offset:"100%", style:"stop-color:"+_backgroundColor+";stop-opacity:1"}
-				}
-			},
-			background: {type:"rect", x:0, y:0, width:"100%", height:"100%", fill:"url(#background_gradient)"},
-			control: {type:"rect",x:0, y:0, width:"100%", height:"5%", fill:"black",
-				onclick:"game.addGrid()"},
-			grids: {type:"g", id:"grids"}
-		}
-	);
+    SVG_BODY = new SvgObj({parent: document.body, type:'svg'}); //main svg node
+    SVG_BODY._svgElement.setAttribute('xmlns', SVG_NS); //setAttributeNS IE9 KO
+    SVG_BODY.set({width: window.innerWidth+'px'}); //IE>=9 : pb resize
+    SVG_BODY.set({height: window.innerHeight+'px'}); //IE>=9 : pb resize
+    this._svg = SVG_BODY.newChild( // SVG gradients
+        {type:'g', id:'game',
+            gradients: {type:'g', id:'gradients',
+                background_gradient: {type:'linearGradient', id:'background_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
+                    offset1: {type:'stop', offset:'50%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:1'},
+                    offset2: {type:'stop', offset:'100%', style:'stop-color:#AAAAAA;stop-opacity:1'}
+                },
+                ceil_gradient: {type:'linearGradient', id:'ceil_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
+                    offset1: {type:'stop', offset:'30%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:1'},
+                    offset2: {type:'stop', offset:'100%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:0'}
+                },
+                horizontal_shadows: {type:'linearGradient', id:'horizontal_shadows', x1:'0%', y1:'0%', x2:'100%', y2:'0%',
+                    offset1: {type:'stop',offset:'0%',style:'stop-color:black;stop-opacity:1'}, //0.7
+                    offset2: {type:'stop',offset:'6%',style:'stop-color:black;stop-opacity:0'},
+                    offset3: {type:'stop',offset:'94%',style:'stop-color:black;stop-opacity:0'},
+                    offset4: {type:'stop',offset:'100%',style:'stop-color:black;stop-opacity:1'}
+                }
+            },
+            background: {type:'rect', x:0, y:0, width:'100%', height:'100%', fill:'url(#background_gradient)'},
+            control: {type:'rect',x:0, y:0, width:'100%', height:'5%', fill:'black',
+                onclick:'GAME.addGrid()'},
+            grids: {type:'g', id:'grids'}
+        }
+    );
+    for (var p in SPRITES._colors)
+        this._svg._childs.gradients.newChild({
+            type: 'linearGradient', id: 'gradient_block_'+p, x1:'0%', y1:'0%', x2:'100%', y2:'100%',
+                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[p].dark)+';stop-opacity:1'},
+                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[p].light)+';stop-opacity:1'} });
 }
 MainMenu.prototype = {
     _domNode: null,
@@ -665,19 +673,6 @@ function TetrisGame() {
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
 }
 TetrisGame.prototype = {
-
-	_svgBoxSize							: 36,										//svg units
-	_svgBlockSize						: null,										//svg units
-	_svgPreviewSize						: 72,
-	_svg								: null,
-	_svgGameWidth						: null,
-	_svgGameHeight						: null,
-	_svgFullGridWidth					: null,
-	_svgFullGridHeight					: null,
-	_fullGridsIntervalMinX				: 160, 										//svg units
-	_fullGridsIntervalMinY				: 100, 										//svg units
-
-
     _gridsListArray         : null,
     _matrixHeight           : null,
     _matrixBottom           : -1, // 1 rising row by 1 and queued, to avoid unchained blocks levitating 
@@ -809,6 +804,36 @@ TetrisGame.prototype = {
                 myGrid._domNode.moveNodeTo(count*realIntervalX + (count-1)*SPRITES.pxFullGridWidth, null);
             }
         }
+
+
+        let playersCount = this._gridsListArray.length;
+        let gameSvgWidthMin = (playersCount+1)*SIZES._fullGridsIntervalMinX + (playersCount*SIZES._svgFullGridWidth);
+        let gameSvgHeightMin = 2*SIZES._fullGridsIntervalMinY + SIZES._svgFullGridHeight;
+        if ((gameSvgWidthMin/gameSvgHeightMin) < (window.innerWidth/window.innerHeight)) {                
+            SIZES._svgGameWidth  = gameSvgHeightMin*window.innerWidth/window.innerHeight; //grid take all height
+            SIZES._svgGameHeight = gameSvgHeightMin;
+        } else {
+            SIZES._svgGameWidth  = gameSvgWidthMin;
+            SIZES._svgGameHeight = gameSvgWidthMin*window.innerHeight/window.innerWidth; //grids take all width
+        }
+        SVG_BODY.set({width:   window.innerWidth+'px'});                                //IE>=9 : pb resize
+        SVG_BODY.set({height:  window.innerHeight+'px'});                            //IE>=9 : pb resize
+        SVG_BODY.set({viewBox: '0 0 '+SIZES._svgGameWidth+' '+SIZES._svgGameHeight});            //svg units
+        MAIN_MENU._svg._childs.background.set({x:0});                                            //Chrome>=9 : refresh issue, put x or y
+        MAIN_MENU._svg._childs.control.set({x:0});                                            //Chrome>=9 : refresh issue, put x or y
+        let fullGridsIntervalX = (SIZES._svgGameWidth-(playersCount * SIZES._svgFullGridWidth)) / (playersCount+1);
+        var count = 0;
+        for(var p in this._gridsListArray) {                                            //new grids center positions
+            this._gridsListArray[p].moveSvg(
+                //p*(fullGridsIntervalX+_svgFullGridWidth) + fullGridsIntervalX + _svgFullGridWidth/2,
+                (count+1)*fullGridsIntervalX + (count+0.5)*SIZES._svgFullGridWidth,
+                SIZES._svgGameHeight/2
+            );
+            count++;
+        }
+        //let fullGridsIntervalY = (SIZES._svgGameHeight-SIZES._svgFullGridHeight)/2;
+
+
     },
     averageBlocksByPlayingGrid() {
         let playingGridsCount = 0;
@@ -899,12 +924,12 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._lockedShapes    = [];
     this._rowsToClearSet  = new Set();
 
-	SIZES._svgGridWidth					= GAME._svgBoxSize * GAME._horizontalBoxes;		//grid size 360
-	SIZES._svgGridHeight					= GAME._svgBoxSize * GAME._verticalBoxes;		//grid size 720
-	game._svgFullGridWidth			= SIZES._svgGridWidth + 2*SIZES._svgBorder;
-	game._svgFullGridHeight			= SIZES._svgGridHeight + 2*SIZES._svgBorder;
-	SIZES._svgFullGridRelativeCenterX		= GAME._svgFullGridWidth/2 - SIZES._svgBorder;
-	SIZES._svgFullGridRelativeCenterY		= GAME._svgFullGridHeight/2 - SIZES._svgBorder;		//center position //$voir ses affectations doublons organize
+    SIZES._svgGridWidth = SIZES._svgBoxSize * RULES.horizontalCellsCount; //grid size 360
+    SIZES._svgGridHeight = SIZES._svgBoxSize * RULES.verticalCellsCount; //grid size 720
+    SIZES._svgFullGridWidth = SIZES._svgGridWidth + 2*SIZES._svgBorder;
+    SIZES._svgFullGridHeight = SIZES._svgGridHeight + 2*SIZES._svgBorder;
+    SIZES._svgFullGridRelativeCenterX = SIZES._svgFullGridWidth/2 - SIZES._svgBorder;
+    SIZES._svgFullGridRelativeCenterY = SIZES._svgFullGridHeight/2 - SIZES._svgBorder;        //center position //$voir ses affectations doublons organize
 
 
     this._matrix = new Array(RULES.horizontalCellsCount + 2); // 12 columns, left and right boxes as margins columns, program fail if removed
@@ -961,72 +986,72 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._domNode._childs.scoreZoneDiv.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
     this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
 
-	this._svg = MAIN_MENU._svg._childs.grids.newChild({ // SVG graphic pieces
-		type:"g", id:"grid_"+this._gridIndex, //_svg is g group
-		clipping: {
-			type:"clipPath", id:"grid_"+this._gridIndex+"_clipping",
-			rectangle: {
-				type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height:SIZES._svgGridHeight
-			}
-		},
-		flame_gradient: {															//IE9 : #id must be differents
-			type: "radialGradient", id: "flame"+this._gridIndex, r: "100%", cx: "50%", cy: "100%", fx: "50%", fy: "100%",
-			offset1: {type: "stop", offset: "0%", style: "stop-color:"+rgbText(this._gridColor.medium)+";stop-opacity:0.2"},
-			offset2: {type: "stop", offset: "100%", style: "stop-color:"+rgbText(this._gridColor.medium)+";stop-opacity:0"}
-		},
-		frame: {
-			type:"g", id:"frame", clip_path:"url(#grid_"+this._gridIndex+"_clipping)",
-			main: {
-				type:"g", id:"main",
-				background:
-					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: "#111111"},
-				grid_relief_v:
-					{type:"line", x1:-3, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
-					style:"fill:none;stroke:#222222;stroke-width:"+SIZES._svgGridHeight+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
-				grid_relief_h:
-					{type:"line", x1: SIZES._svgGridWidth/2, y1:-3, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
-					style:"fill:none;stroke:#222222;stroke-width:"+SIZES._svgGridWidth+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
-				grid_main_v:
-					{type:"line", x1:-1, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
-					style:"fill:none;stroke:#000000;stroke-width:"+SIZES._svgGridHeight+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
-				grid_main_h:
-					{type:"line", x1: SIZES._svgGridWidth/2, y1:-1, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
-					style:"fill:none;stroke:#000000;stroke-width:"+SIZES._svgGridWidth+";stroke-dasharray:2,"+GAME._svgBlockSize+";"},
-				shadows_h:
-					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:"url(#horizontal_shadows)"},
-				flame:
-					{type:"rect", x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:"url(#flame"+this._gridIndex+")"}
-			}																						//flame:		//!! disable gradients
-		},
-		border_bottom: {
-			type:"path", d:"M 0 "+SIZES._svgGridHeight+" h "+SIZES._svgGridWidth+" l "+SIZES._svgBorder+" "+SIZES._svgBorder+" h -"+(SIZES._svgGridWidth + 2*SIZES._svgBorder)+" z",
-			fill:"url(#gradient_block_"+this._gridColor.name+")"
-		},
-		border_right: {
-			type:"path", d:"M 0 0 v "+SIZES._svgGridHeight+" l -"+SIZES._svgBorder+" "+SIZES._svgBorder+" v -"+(SIZES._svgGridHeight+SIZES._svgBorder)+" z",
-			fill:"url(#gradient_block_"+this._gridColor.name+")"
-		},
-		border_left: {
-			type:"path", d:"M "+SIZES._svgGridWidth+" 0 v "+SIZES._svgGridHeight+" l "+SIZES._svgBorder+" "+SIZES._svgBorder+" v -"+(SIZES._svgGridHeight+SIZES._svgBorder)+" z",
-			fill:"url(#gradient_block_"+this._gridColor.name+")"
-		},
-		preview: {
-			type:"g", id:"preview"
-		},
-		score: {
-			type:"text", font_family: FONTS.scoreFont, font_weight:"bold", text_anchor:"middle",
-			fill:"url(#gradient_block_"+this._gridColor.name+")"
-		},
-		combos: {
-			type:"text", font_family: FONTS.messageFont.font, font_size: 60, font_weight:"bold", // $$$$$$
-			stroke: game._backgroundColor, stroke_width:1.5, text_anchor:"middle", fill:"url(#gradient_block_"+this._gridColor.name+")"
-		},
-		ceil: {
-			type:"rect", x:-SIZES._svgBorder-1, y:-3-GAME._svgBoxSize, width: GAME._svgFullGridWidth+2, height: GAME._svgBoxSize*4, fill:"url(#ceil_gradient)"
-		}
-	});
-	this._mainSvg = _svg._childs.frame._childs.main;
-
+    this._svg = MAIN_MENU._svg._childs.grids.newChild({ // SVG graphic pieces
+        type:'g', id:'grid_'+this._gridIndex, //_svg is g group
+        clipping: {
+            type:'clipPath', id:'grid_'+this._gridIndex+'_clipping',
+            rectangle: {
+                type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height:SIZES._svgGridHeight
+            }
+        },
+        flame_gradient: {                                                            //IE9 : #id must be differents
+            type: 'radialGradient', id: 'flame'+this._gridIndex, r: '100%', cx: '50%', cy: '100%', fx: '50%', fy: '100%',
+            offset1: {type: 'stop', offset: '0%', style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0.2'},
+            offset2: {type: 'stop', offset: '100%', style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0'}
+        },
+        frame: {
+            type:'g', id:'frame', clip_path:'url(#grid_'+this._gridIndex+'_clipping)',
+            main: {
+                type:'g', id:'main',
+                background:
+                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: '#111'},
+                grid_relief_v:
+                    {type:'line', x1:-3, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+                    style:'fill:none;stroke:#222222;stroke-width:'+SIZES._svgGridHeight+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                grid_relief_h:
+                    {type:'line', x1: SIZES._svgGridWidth/2, y1:-3, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+                    style:'fill:none;stroke:#222222;stroke-width:'+SIZES._svgGridWidth+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                grid_main_v:
+                    {type:'line', x1:-1, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+                    style:'fill:none;stroke:#000;stroke-width:'+SIZES._svgGridHeight+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                grid_main_h:
+                    {type:'line', x1: SIZES._svgGridWidth/2, y1:-1, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+                    style:'fill:none;stroke:#000;stroke-width:'+SIZES._svgGridWidth+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                shadows_h:
+                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:'url(#horizontal_shadows)'},
+                flame:
+                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:'url(#flame'+this._gridIndex+')'}
+            }
+        },
+        border_bottom: {
+            type:'path', d:'M 0 '+SIZES._svgGridHeight+' h '+SIZES._svgGridWidth+' l '+SIZES._svgBorder+' '+SIZES._svgBorder+' h -'+(SIZES._svgGridWidth + 2*SIZES._svgBorder)+' z',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
+        border_right: {
+            type:'path', d:'M 0 0 v '+SIZES._svgGridHeight+' l -'+SIZES._svgBorder+' '+SIZES._svgBorder+' v -'+(SIZES._svgGridHeight+SIZES._svgBorder)+' z',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
+        border_left: {
+            type:'path', d:'M '+SIZES._svgGridWidth+' 0 v '+SIZES._svgGridHeight+' l '+SIZES._svgBorder+' '+SIZES._svgBorder+' v -'+(SIZES._svgGridHeight+SIZES._svgBorder)+' z',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
+        preview: {
+            type:'g', id:'preview'
+        },
+        score: {
+            type:'text', font_family: FONTS.scoreFont, font_weight:'bold', text_anchor:'middle',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
+        ceil: {
+            type:'rect', x:-SIZES._svgBorder-1, y:-3-SIZES._svgBoxSize, width: SIZES._svgFullGridWidth+2, height: SIZES._svgBoxSize*4, fill:'url(#ceil_gradient)'
+        },/*
+        combos: {
+            type:'text', font_family: FONTS.messageFont.font, font_size: 60, font_weight:'bold', // $$$$$$
+            stroke: SIZES._backgroundColor, stroke_width:1.5, text_anchor:'middle', fill:'url(#gradient_block_'+this._gridColor.name+')'
+        }*/
+    });
+    this._mainSvg = this._svg._childs.frame._childs.main;
+    
 
 
     this._nextShapePreview = new NextShapePreview(this);
@@ -1137,8 +1162,8 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._gridMessagesQueue = new EventsQueue(); // used only when lost
 };
 TetrisGrid.prototype            = {
-	_svg							: null,
-	_mainSvg						: null,
+    _svg                            : null,
+    _mainSvg                        : null,
 
     _gridIndex                 : null,
     _gridState                 : GRID_STATES.ready,
@@ -1167,6 +1192,17 @@ TetrisGrid.prototype            = {
     _gridMessagesQueue         : null, // used only when lost $$$
     _rowsToClearSet            : null, // set to prepare rows to clear to anim when animating clearing rows
     _vector                    : null,
+
+
+    moveSvg: function(svgCenterX, svgCenterY) {
+        this._svg.setTranslate(                                                                 //grid upper left position
+            svgCenterX - SIZES._svgFullGridRelativeCenterX,
+            svgCenterY - SIZES._svgFullGridRelativeCenterY
+        );
+    },
+
+
+
     destroyGrid() {
         if (GAME._gameState !== GAME_STATES.paused)
             this.pauseOrResume(); // to stop all timers, all anims
@@ -1955,7 +1991,7 @@ class EventsQueue {
     }
 }
 function rgbText(color) {
-	return "rgb("+color[0]+","+color[1]+","+color[2]+")";
+    return "rgb("+color[0]+","+color[1]+","+color[2]+")";
 }
 //SvgObj Class, SVG object
 //new(parent:): optional parent
@@ -2005,14 +2041,14 @@ SvgObj.prototype = {
                 this._childs[p]._parentIndex = p; //manage parent, create an instance for chars
             }
     },
-    getText() { //works only if type == "text"
+    getText() { //works only if type === "text"
         return this._svgElement.textContent;
     },
     setText(text, width, maxHeightMinCharCount) { //works only if type == "text"
         this._svgElement.textContent = text;
         if (width) {
             let charCount = Math.max((''+text).length, maxHeightMinCharCount);
-            this.set1('font-size', game._fontRatio * width/charCount); 
+            this.set1('font-size', GAME._fontRatio * width/charCount); 
         }
     },
     setTranslate(x, y) {
@@ -2076,6 +2112,124 @@ SvgObj.prototype = {
         return child;
     }
 };
+/*
+function SvgObj(att) { with(this) {                                                        //att is attributes
+    _svgElement = document.createElementNS(SVG_NS, att.type);
+    _childs             = {};
+    _translateText      = "";
+    _rotateText         = "";
+    if (att.parent)                                                                     //if parent is supplied OR is not null
+        att.parent.appendChild(_svgElement);
+    delete att.parent;                                                                  //to avoid it in set()
+    set(att);
+}}
+SvgObj.prototype = {
+    _count                          : 0,                                                //for unamed elements
+    _svgElement                           : null,                                             //public, DOM SVG
+    _childs                         : null,
+    _parent                         : null,                                             //pointer to parent
+    _parentIndex                    : null,                                             //index of child in _childs, integer or name
+    _translateText                  : null,
+    _scaleText                      : null,
+    _rotateText                     : null,
+    del: function() { with(this) {                                                      //optional because garbbage collector
+        for (var p in _childs)
+            _childs[p].del();                                                           //delete _childs[p] made by child
+        _count = 0;
+        if (_parent) delete _parent._childs[_parentIndex];                              //manage parent
+        delete _childs;
+        _svgElement.parentNode.removeChild(_svgElement);
+        delete _svgElement;
+    }},
+    get: function(att) { with(this) {
+        return _svgElement.getAttributeNS(null, att);
+    }},
+    set1: function(att, value) { with(this) {   
+        _svgElement.setAttributeNS(null, att, value);
+    }},
+    set: function(att) { with(this) {
+        for (var p in att)
+            if (!att[p].type)                                                           //if sheet attribute without type
+                _svgElement.setAttributeNS(null, p.replace(/_/, "-"), att[p]);                //<=> new RegExp("_","g"),
+            else {
+                att[p].parent = _svgElement;
+                _childs[p] = new SvgObj(att[p]);
+                _childs[p]._parent = this;                                              //manage parent
+                _childs[p]._parentIndex = p;                                            //manage parent, create an instance for chars
+            }
+    }},
+    getText: function() { with(this) {                                                  //works only if type == "text"
+        return _svgElement.textContent;
+    }},
+    setText: function(text, width, maxHeightMinCharCount) { with(this) {                //works only if type == "text"
+        _svgElement.textContent = text;
+        if (width) {
+            var charCount = Math.max((""+text).length, maxHeightMinCharCount);
+            set1("font-size", game._fontRatio*width/charCount); 
+        }
+    }},
+    setTranslate: function(x, y) { with(this) {
+        _translateText = "translate("+x+","+y+")";
+        set({transform: _translateText});
+    }},
+    setScale: function(sx, sy) { with(this) {                                           //sy optional
+        if (!sy) sy = sx;
+        _scaleText = "scale("+sx+","+sy+")";
+        set({transform: _scaleText});
+    }},
+    setRotate: function(r, x, y) { with(this) {                                         //sy optional
+        _rotateText = "rotate("+r+","+x+","+y+")";
+        set({transform: _rotateText});
+    }},
+    cancelTransform: function() { with(this) {
+        _translateText      = "";
+        _scaleText          = "";
+        _rotateText         = "";
+        set({transform:""});
+    }},
+    newChild: function(att) { with(this) {                                              //returns pointer to child
+        att.parent = _svgElement;
+        //return _childs[att.name?att.name:_count++] = new SvgObj(att);
+        _childs[_count] = new SvgObj(att);
+        _childs[_count]._parent = this;                                                 //manage parent
+        _childs[_count]._parentIndex = _count;                                          //manage parent
+        return _childs[_count ++];
+    }},
+    putChild: function(svg) { with(this) {
+        if (svg._parent) delete svg._parent._childs[svg._parentIndex];                  //manage parent
+        if (typeof (svg._parentIndex) == "number")
+            svg._parentIndex = _count ++;
+        _childs[svg._parentIndex] = svg;                                                //manage parent
+        svg._parent = this;                                                             //manage parent
+        _svgElement.appendChild(svg._svgElement);
+    }},
+    delChilds: function() { with(this) {
+        for (var p in _childs)
+            _childs[p].del();
+        _count = 0;
+    }},
+    hide: function() { with(this) {
+        _svgElement.setAttributeNS(null, "display", "none");
+    }},
+    show: function() { with(this) {
+        this._svgElement.setAttributeNS(null, "display", "inherit");
+    }},
+    addChildCloneOf: function(svg) { with(this) {
+        var id = svg._parentIndex;
+        if (typeof (svg._parentIndex) == "number")
+            id = _count ++;
+        var child = _childs[id];
+        child = new SvgObj({});
+        child._parent = this;
+        child._parentIndex = id;
+        child._svgElement = svg._svgElement.cloneNode(false);                                       //don't copy nodes here
+        _svgElement.appendChild(child._svgElement);
+        for (var p in svg._childs)
+            child.addChildCloneOf(svg._childs[p], true);                                //copying nodes here
+        return child;
+    }}
+};*/
+
 // DomNode Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
