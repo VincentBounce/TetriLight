@@ -278,12 +278,12 @@ function MainMenu() { // queue or stack
     this._domNode = new DomNode({ // menus on top of the screen
         body: true,
         topScreenSprite: { type: 'canvas',
-            width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
+            width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
         message1Div: {
-            width: () => SPRITES.pxTopMenuZoneHeight, height: () => SPRITES.pxTopMenuZoneHeight, vertical_align:'middle' },
+            width: _ => SPRITES.pxTopMenuZoneHeight, height: _ => SPRITES.pxTopMenuZoneHeight, vertical_align:'middle' },
         playingAreaSprite: { type:'canvas',
-            width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
-            y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
+            width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxGameHeight,
+            y: _ => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
@@ -387,8 +387,8 @@ function TetrisSpritesCreation() {
     });
     this._spriteGridFront = new SpriteObj({ // we draw 3 trapeze that we merge
         _nocache: true,
-        widthSprite: () => SPRITES.pxFullGridWidth,
-        heightSprite: () => SPRITES.pxFullGridHeight,
+        widthSprite: _ => SPRITES.pxFullGridWidth,
+        heightSprite: _ => SPRITES.pxFullGridHeight,
         drawSprite(c, x, y, a) { // context, x, y, args
             let col = SPRITES._colors[a.col];
             c.moveTo(x,y);c.lineTo(x+SPRITES.pxGridBorder,y); // left border
@@ -414,10 +414,10 @@ function TetrisSpritesCreation() {
     });
     this._spriteGridBackground = new SpriteObj({ // we draw grid, grid shadow, back
         _nocache: true,
-        widthSprite: () => SPRITES.pxFullGridWidth,
-        heightSprite: () => SPRITES.pxFullGridHeight,
-        xSprite: () => SPRITES.pxGridBorder,
-        ySprite: () => SPRITES.pxGridBorder,
+        widthSprite: _ => SPRITES.pxFullGridWidth,
+        heightSprite: _ => SPRITES.pxFullGridHeight,
+        xSprite: _ => SPRITES.pxGridBorder,
+        ySprite: _ => SPRITES.pxGridBorder,
         drawSprite(c, x, y, a) { // context, x, y, args
             let col = SPRITES._colors[a.col];
             c.fillStyle='#111';c.fillRect(x,y,SPRITES.pxGridWidth,SPRITES.pxGridHeight);
@@ -445,8 +445,8 @@ function TetrisSpritesCreation() {
     });
     this._spriteBlock = new SpriteObj({ // we draw block
         _nocache: false,
-        widthSprite: () => SPRITES.pxBlockSize,
-        heightSprite: () => SPRITES.pxBlockSize,
+        widthSprite: _ => SPRITES.pxBlockSize,
+        heightSprite: _ => SPRITES.pxBlockSize,
         xSprite: i => SPRITES.pxGridLineWidth + ( i-1 ) * SPRITES.pxCellSize,
         ySprite: j => SPRITES.pxGridLineWidth + ( RULES.verticalCellsCount-j ) * SPRITES.pxCellSize,
         drawSprite(c, x, y, a) { // context, x, y, args
@@ -464,8 +464,8 @@ function TetrisSpritesCreation() {
     });
     this._spritePreviewBlock = new SpriteObj({
         _nocache: false,
-        widthSprite: () => SPRITES.pxPreviewBlockSize,
-        heightSprite: () => SPRITES.pxPreviewBlockSize,
+        widthSprite: _ => SPRITES.pxPreviewBlockSize,
+        heightSprite: _ => SPRITES.pxPreviewBlockSize,
         xSprite: x => (SPRITES._shapesSpan + x) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
         ySprite: y => (SPRITES._shapesSpan - y) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
         drawSprite(c, x, y, a) { // context, x, y, args (gradient if true, uniform if false)
@@ -785,7 +785,7 @@ TetrisGame.prototype = {
 class PentominoesBriefMode {
     constructor() {
         this._pentoModeTimer = new Timer({
-            funcAtTimeOut: () => this.finishPentoMode(),
+            funcAtTimeOut: _ => this.finishPentoMode(),
             timerPeriod: 0,
             timerOwner: this
         });
@@ -856,29 +856,29 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     //this._domNode = MAIN_MENU._domNode.
     this._domNode = new DomNode({ // creating tetris DOM zone and sub elements
-        width: () =>  SPRITES.pxFullGridWidth, height: () =>  SPRITES.pxFullGridAndCeil,
+        width: _ =>  SPRITES.pxFullGridWidth, height: _ =>  SPRITES.pxFullGridAndCeil,
         frameZoneDiv: {
-            x: () => SPRITES.pxGridBorder, y: () => SPRITES.pxCeilHeight,
-            width: () => SPRITES.pxGridWidth, height: () => SPRITES.pxGridHeight,
+            x: _ => SPRITES.pxGridBorder, y: _ => SPRITES.pxCeilHeight,
+            width: _ => SPRITES.pxGridWidth, height: _ => SPRITES.pxGridHeight,
             overflow: 'hidden',
             gridZoneDiv: { // tetris background, if not canvas, it's div
                 gridSprite: { type: 'canvas', sprite:SPRITES._spriteGridBackground },
                 ghostBlocksDiv: {},
                 realBlocksDiv: {} } },
         frontZoneSprite: { type: 'canvas',
-            y: () => SPRITES.pxCeilHeight, sprite: SPRITES._spriteGridFront, height: () => SPRITES.pxFullGridHeight },
+            y: _ => SPRITES.pxCeilHeight, sprite: SPRITES._spriteGridFront, height: _ => SPRITES.pxFullGridHeight },
         controlZoneDiv: {
-            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize,
-            y: () => SPRITES.pxYPreviewPosition, vertical_align: 'middle' },
+            width: _ => SPRITES.pxXPreviewPosition, height: _ => SPRITES.pxPreviewFullSize,
+            y: _ => SPRITES.pxYPreviewPosition, vertical_align: 'middle' },
         nextShapePreviewSprite: { type: 'canvas',
-            x: () => SPRITES.pxXPreviewPosition, y: () => SPRITES.pxYPreviewPosition,
-            width: () => SPRITES.pxPreviewFullSize, height: () => SPRITES.pxPreviewFullSize,
+            x: _ => SPRITES.pxXPreviewPosition, y: _ => SPRITES.pxYPreviewPosition,
+            width: _ => SPRITES.pxPreviewFullSize, height: _ => SPRITES.pxPreviewFullSize,
             sprite: SPRITES._spritePreviewBlock },
         scoreZoneDiv: {
-            x: () => SPRITES.pxXScorePosition, y: () => SPRITES.pxYScorePosition,
-            width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
+            x: _ => SPRITES.pxXScorePosition, y: _ => SPRITES.pxYScorePosition,
+            width: _ => SPRITES.pxXPreviewPosition, height: _ => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         messageZoneDiv: {
-            y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
+            y: _ => SPRITES.pxCeilHeight, width: _ => SPRITES.pxFullGridWidth, height: _ => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
     }, `fullGridDiv${MAIN_MENU._domNode.getNewUId_()}`, MAIN_MENU._domNode);
     this._domNode._childs.frontZoneSprite.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.realBlocksDiv; // shortcut
@@ -1579,7 +1579,7 @@ class TetrisBlock {
         this._domNode;
         this._blockColor;
         this._blockIndex = GAME._nextBlockIndex++; // both inShape, orphan, and ghost block are indexed with incrementing number
-        this._domNode = new DomNode({type: 'canvas', width: () => SPRITES.pxBlockSize, height: () => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}, `blockSprite${this._blockIndex}`); // creating node
+        this._domNode = new DomNode({type: 'canvas', width: _ => SPRITES.pxBlockSize, height: _ => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}, `blockSprite${this._blockIndex}`); // creating node
         this.setBlockColor(blockColor);
         switch (this._blockType) {
             case BLOCK_TYPES.inShape: // falling ghape
@@ -1757,7 +1757,7 @@ class Timer {
         this._beginTime = (new Date).getTime();
         //this._timeOut = setTimeout(this._funcAtTimeOut, this._timerPeriod);
         //this._timeOut = setTimeout(this._funcAtTimeOut.bind(this._timerOwner), this._timerPeriod);
-        this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod); // setInterval is useless here, not used
+        this._timeOut = setTimeout( _ => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod); // setInterval is useless here, not used
     }
     isRunning() {
         return this._running; // useless for drop timer, not working!!!
@@ -1766,7 +1766,7 @@ class Timer {
         if (this._running) { // if paused, resume and return false
             if (this._paused) { // if not paused, pause and return true
                 this._paused = false;
-                this._timeOut = setTimeout( () => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod-(this._pauseTime-this._beginTime));
+                this._timeOut = setTimeout( _ => this._funcAtTimeOut.call(null, this._timerOwner), this._timerPeriod-(this._pauseTime-this._beginTime));
             } else {
                 clearTimeout(this._timeOut);
                 this._paused = true;
@@ -1958,13 +1958,13 @@ function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last argu
             this.getWidth = definitionObject.width; // it's an arrow function
             this.setWidth(this.getWidth());
         } else
-            this.getWidth = () => this._parent.getWidth(); // arrow replace a return
+            this.getWidth = _ => this._parent.getWidth(); // arrow replace a return
         // checking height property for DIV
         if (isValued(definitionObject.height)) {
             this.getHeight = definitionObject.height // it's an arrow function
             this.setHeight(this.getHeight());
         } else
-            this.getHeight = () => this._parent.getHeight(); // arrow replace a return
+            this.getHeight = _ => this._parent.getHeight(); // arrow replace a return
         // checking x position property
         if (isValued(definitionObject.x))
             this.getXInit = definitionObject.x; // it's an arrow function
@@ -2304,7 +2304,7 @@ class Animation {
         //this.animateFunc_.bind(this._animOwner); this.animateFunc_(this.animOutput); // draw frame on display, as defined in the instance of Animation, not working
         if ( (++this._elapsedFrames) < this._plannedFrames) {
             this.animOutput = this.timingAnimFunc_( this._elapsedFrames / this._plannedFrames ); // input [0;1] animOutput have any value
-            this._windowNextFrameId = window.requestAnimationFrame( () => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
+            this._windowNextFrameId = window.requestAnimationFrame( _ => this.makeNextFrame_() ); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) alone doesn't work, object context is Window instead Animation
             //this._windowNextFrameId = window.requestAnimationFrame(this.makeNextFrame_); // new 2015 feature, fast on Firefox, 60fps (this.makeNextFrame_) doesn't work, object context is not passed
         } else
             this.endAnim();
