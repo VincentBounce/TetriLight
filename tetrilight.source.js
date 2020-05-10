@@ -283,7 +283,7 @@ function MainMenu() { // queue or stack
         playingAreaSprite: { type:'canvas',
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
             y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
-        }, 'gameAreaDiv02');
+        }); // one arg only for setDomNode
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1Div.setTex('totototo');
@@ -384,7 +384,7 @@ TetrisSpritesCreation.prototype = {
     _rootNode               : null,
     _zoomRatio              : 1, // default 1, float current zoom ratio
     _scaleFactor            : 33, // default 33, int scale unit < SPRITES.pxBlockSize && > = 1
-    pxTopMenuZoneHeight     : 20, // default 0 or 20, Y top part screen of the game, to displays others informations #DEBUG
+    pxTopMenuZoneHeight     : 20, // default 0 or 20, Y top part screen of the game, to display others informations #DEBUG
     pxGameWidth             : null,
     pxGameHeight            : null,
         pxHalfGameHeight    : null,
@@ -1174,22 +1174,23 @@ TetrisGrid.prototype            = {
             this._fallingShape = null; // to avoid combo reset scores
             this._anims.clearRowsAnim.startAnim();
         } else {
-            this._score.displays(); // to refresh score
+            this._score.animAndDisplaysScore(); // to refresh score
             if (this._fallingShape !== null)
                 this._score.combosReset();
             this.gridAnimsStackPop();
         }
     },
     lose() { // lives during this._score duration
-        this._score.displays();
-        this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // empty queues necessary?
-        this._gridMessagesQueue.execNowOrEnqueue(
+        this._gridState = GRID_STATES.lost; // avoid any other players interact with this grid
+        this._dropTimer.finishTimer(); // otherwise, new shape is tried
+        this._score.animAndDisplaysScore(); // update score if necessary
+        this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // slow down message animation
+        this._gridMessagesQueue.execNowOrEnqueue( // empty queues necessary?
             this._anims.messageAnim,
             this._anims.messageAnim.startAnim,
             [{text: 'You<BR/>lose', fieldCharCount: 4}]);
         this._gridMessagesQueue.execNowOrEnqueue(this, this.afterLost_);
         // AUDIO.audioStop('musicMusic');
-        this._gridState = GRID_STATES.lost;
         for (let p in this._lockedBlocks._lockedBlocksArray)
             this._lockedBlocks._lockedBlocksArray[p].setBlockColor(SPRITES._colors['grey']);
     },
@@ -1275,9 +1276,10 @@ class TetrisShape {
         this._polyominoBlocks          = GAME._gameShapesWithRotations[this._shapeType][this._pivot]; // refers to current shape in stored in GAME, it's a shortcut
     }
     newShapeForExistingLockedBlocks_(group) { // shape prepared to fall after clearing rows, need to be called from down to upper
-        this._domNode                  = this._grid._realBlocksNode.newChild({});
-        this._shapeBlocks              = group.shape;
-        this._jPosition                = group.jMin;
+        //this._domNode                  = this._grid._realBlocksNode.newChild({});
+        this._domNode = new DomNode({}, `greyShapeSprite${this._shapeIndex}`, this._grid._realBlocksNode)
+        this._shapeBlocks = group.shape;
+        this._jPosition = group.jMin;
         for (let b=0;b < this._shapeBlocks.length;b++)
             this._shapeBlocks[b]._shape = this; // link to shape
         this.putShapeNodeIn();
@@ -1290,7 +1292,8 @@ class TetrisShape {
     putShapeInGame() {
         this._shapeBlocks = new Array(this._polyominoBlocks.length);
         this._ghostBlocks = new Array(this._shapeBlocks.length); // without putPositions
-        this._domNode = this._grid._realBlocksNode.newChild({});
+        //this._domNode = this._grid._realBlocksNode.newChild({});
+        this._domNode = new DomNode({}, `fallingShapeSprite${this._shapeIndex}`, this._grid._realBlocksNode)
         for (let b=0 ; b < this._shapeBlocks.length ; b++) {
             this._shapeBlocks[b] = new TetrisBlock(
                 BLOCK_TYPES.inShape, this,
@@ -1677,12 +1680,23 @@ class TetrisScore {
         });
         this.writeScore_(this._displayedScore);
     }
-    displays() {
+    animAndDisplaysScore() {
         if (this._delta !== 0) { // if delta changed !== 0
             this._grid._anims.score.endAnim(); // need to end before setting variables
             this._displayedScore = this._digitalScore;
             this._digitalScore += this._delta;
             this._grid._anims.score.startAnim();
+        }
+    }
+    combosReset() {
+        this._combos = -1;
+    }
+    combosCompute() {
+        this._combos++;
+        if (this._combos >= 1) {
+            this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; // 50% of lines cleared together
+            this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
+            // $$$sound of coins
         }
     }
     computeScoreDuringDrop(cellsTraveledCount, dropType) {
@@ -1691,7 +1705,7 @@ class TetrisScore {
     computeScoreForSweptRowsAndDisplay(sweptRowsCount) {
         this._delta += this._factors[sweptRowsCount] * (this._level+1);
         this.computePerfectClear_(sweptRowsCount);
-        this.displays();
+        this.animAndDisplaysScore();
         this.computeLevel_(sweptRowsCount);
     }
     computePerfectClear_(sweptRowsCount) {
@@ -1713,17 +1727,6 @@ class TetrisScore {
             this._grid._anims.messageAnim.startAnim({
                 text: (this._level < RULES.topLevel) ? (`Level ${this._level}`) : (`<BR/>TOP<BR/> level ${this._level}`), // fit ES6
                 fieldCharCount: 5 }); // last arg: higher for smaller text, not to queue, each new one replace previous one
-        }
-    }
-    combosReset() {
-        this._combos = -1;
-    }
-    combosCompute() {
-        this._combos++;
-        if (this._combos >= 1) {
-            this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; // 50% of lines cleared together
-            this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
-            // $$$sound of coins
         }
     }
     writeScore_(scoreText) {
@@ -1943,6 +1946,7 @@ function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last argu
     this._htmlElement.id = `${nodeNameId}CVS`; // used only to show Elements in Chrome debbuging #DEBUG
     if (nodeParent !== null) { // have a parent?
         this._parent = nodeParent;
+        this._parent._childs[this._nameId] = this; // to have double way connexion
         this._parent._htmlElement.appendChild(this._htmlElement);
     }
     // run this code only 1 time for body MAIN dom node, then exit
@@ -2177,10 +2181,10 @@ DomNode.prototype = {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
         if (y) this.setY(Math.round(y-this.getHeight()/2));
     },
-    newChild(definitionObject) { // returns pointer to child
+/*    newChild(definitionObject) { // returns pointer to child
         let id = this.getNewUId_();
         return (this._childs[id] = new DomNode(definitionObject, id, this));
-    },
+    },*/
     putChild(canvas) {
         if (canvas._parent)
             delete canvas._parent._childs[canvas._nameId]; // manage parent
