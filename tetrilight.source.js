@@ -154,6 +154,7 @@ ESLint extension: first install npm on PC from https://nodejs.org/en/
 ESLint extension: to install it: npm install -g eslint
 ESLint extension: to build package.json: npm init
 ESLint extension: to setup most popular style guide (Airbnb): npx eslint --init
+...
 Settings Sync extension: to save VS Code configuration in GitHub
 
 **************** NAMING CONVENTION ****************
@@ -351,7 +352,7 @@ Audio.prototype = {
     changeVolume(up) { // -1 or +1, return false if not changed
         let volume = this._mainVolume + up*0.1;
         if ((volume < 0) || (volume > 1))
-            return false; // we can't change
+            return false; // can't change out of [0-1] range
         else {
             this._mainVolume = volume;
             this.refreshVolume(this._mainVolume);
@@ -2181,10 +2182,6 @@ DomNode.prototype = {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
         if (y) this.setY(Math.round(y-this.getHeight()/2));
     },
-/*    newChild(definitionObject) { // returns pointer to child
-        let id = this.getNewUId_();
-        return (this._childs[id] = new DomNode(definitionObject, id, this));
-    },*/
     putChild(canvas) {
         if (canvas._parent)
             delete canvas._parent._childs[canvas._nameId]; // manage parent
