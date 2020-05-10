@@ -1179,6 +1179,7 @@ TetrisGrid.prototype            = {
     lose() { // lives during this._score duration
         this._gridState = GRID_STATES.lost; // avoid any other players interact with this grid
         this._dropTimer.finishTimer(); // otherwise, new shape is tried
+        // stop game pento mode for this grid #DEBUG
         this._score.animAndDisplaysScore(); // update score if necessary
         this._anims.messageAnim.setDuration(DURATIONS.lostMessageDuration); // slow down message animation
         this._gridMessagesQueue.execNowOrEnqueue( // empty queues necessary?
