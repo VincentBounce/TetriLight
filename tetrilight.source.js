@@ -273,7 +273,7 @@ function MainMenu() { // queue or stack
     window.addEventListener('keyup', this.keyCapture_, false); // for all keys, producing value or not
     // window.oncontextmenu = function(event){ this.cancelEvent_(event); }; // right click
     // below creation for MAIN dom node
-    this._domNode = new DomNode({body: true});
+    this._domNode = new DomNode({body: true}, 'gameAreaDiv');
     SPRITES = new TetrisSpritesCreation(this._domNode); // need dom node created to get sizes for scaling
     this._domNode.setDomNode({ // menus on top of the screen
         topScreenSprite: { type: 'canvas',
@@ -283,7 +283,7 @@ function MainMenu() { // queue or stack
         playingAreaSprite: { type:'canvas',
             width: () => SPRITES.pxGameWidth, height: () => SPRITES.pxGameHeight,
             y: () => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
-        });
+        }, 'gameAreaDiv02');
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
     // this._domNode._childs.message1Div.setTex('totototo');
@@ -563,8 +563,8 @@ TetrisSpritesCreation.prototype = {
             _nocache: false,
             widthSprite: () => SPRITES.pxPreviewBlockSize,
             heightSprite: () => SPRITES.pxPreviewBlockSize,
-            xSprite: x => (SPRITES._shapesSpan+x)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
-            ySprite: y => (SPRITES._shapesSpan-y)*(SPRITES.pxPreviewBlockSize+SPRITES.pxPreviewLineWidth),
+            xSprite: x => (SPRITES._shapesSpan + x) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
+            ySprite: y => (SPRITES._shapesSpan - y) * (SPRITES.pxPreviewBlockSize + SPRITES.pxPreviewLineWidth),
             drawSprite(c, x, y, a) { // context, x, y, args
                 let col = SPRITES._colors[a.col]; // c.clearRect(x,y,SPRITES.pxPreviewBlockSize,SPRITES.pxPreviewBlockSize); // useful if we don't erase previous value
                 c.fillStyle = (a.__onOff
@@ -857,7 +857,8 @@ function TetrisGrid(playerKeysSet, gridColor){
         timerPeriod: 30,
         timerOwner: this
     });
-    this._domNode = MAIN_MENU._domNode.newChild({ // creating tetris DOM zone and sub elements
+    //this._domNode = MAIN_MENU._domNode.
+    this._domNode = new DomNode({ // creating tetris DOM zone and sub elements
         width: () =>  SPRITES.pxFullGridWidth, height: () =>  SPRITES.pxFullGridAndCeil,
         frameZoneDiv: {
             x: () => SPRITES.pxGridBorder, y: () => SPRITES.pxCeilHeight,
@@ -881,7 +882,7 @@ function TetrisGrid(playerKeysSet, gridColor){
             width: () => SPRITES.pxXPreviewPosition, height: () => SPRITES.pxPreviewFullSize, vertical_align: 'middle' },
         messageZoneDiv: {
             y: () => SPRITES.pxCeilHeight, width: () => SPRITES.pxFullGridWidth, height: () => SPRITES.pxFullGridHeight, vertical_align: 'middle' }
-    });
+    }, `fullGridDiv${MAIN_MENU._domNode.getNewUId_()}`, MAIN_MENU._domNode);
     this._domNode._childs.frontZoneSprite.nodeDrawSprite({col:this._gridColor.name});
     this._realBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.realBlocksDiv; // shortcut
     this._ghostBlocksNode = this._domNode._childs.frameZoneDiv._childs.gridZoneDiv._childs.ghostBlocksDiv; // shortcut
@@ -1578,27 +1579,25 @@ class TetrisBlock {
         this._shape;
         this._domNode;
         this._blockColor;
-        this._blockIndex;
-        this._domNode = new DomNode({type: 'canvas', width: () => SPRITES.pxBlockSize, height: () => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}); // creating node
+        this._blockIndex = GAME._nextBlockIndex++; // both inShape, orphan, and ghost block are indexed with incrementing number
+        this._domNode = new DomNode({type: 'canvas', width: () => SPRITES.pxBlockSize, height: () => SPRITES.pxBlockSize, sprite: SPRITES._spriteBlock}, `blockSprite${this._blockIndex}`); // creating node
         this.setBlockColor(blockColor);
         switch (this._blockType) {
-            case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
-                this._grid = shapeOrGridOwnerOfThisBlock;
-                this.putBlockNodeIn(this._grid._ghostBlocksNode);
-                this._domNode.setDomNode({opacity: SPRITES._ghostShapeOpacity});
-                break;
             case BLOCK_TYPES.inShape: // falling ghape
                 this._shape = shapeOrGridOwnerOfThisBlock;
                 this._grid = this._shape._grid;
                 this.putBlockNodeIn(this._shape._domNode);
-                this._blockIndex = GAME._nextBlockIndex++;
                 break;
             case BLOCK_TYPES.orphan: // rising row coming from level j === 0
                 this._grid = shapeOrGridOwnerOfThisBlock; // use of shape as a grid, can be optimized
                 this.putBlockInRealBlocksNode();
-                this._blockIndex = GAME._nextBlockIndex++;
                 this.placeBlock();
                 this.drawBlockInCell();
+                break;
+            case BLOCK_TYPES.ghost: // ghost shape for display only, no block index
+                this._grid = shapeOrGridOwnerOfThisBlock;
+                this.putBlockNodeIn(this._grid._ghostBlocksNode);
+                this._domNode.setDomNode({opacity: SPRITES._ghostShapeOpacity});
                 break;
             default: console.log('#DEBUG', this) // bug if this case occurs #DEBUG
         }
@@ -1815,7 +1814,7 @@ class EventsQueue {
 }
 //SvgObj Class, SVG object
 //new(parent:): optional parent
-//newChild(name:): optional unique attribute name
+//newChil(name:): optional unique attribute name
 function SvgObj(svgDefinition) { //svgDefinition is attributes
     this._svgElement = document.createElementNS(SVG_NS, svgDefinition.type);
     this._childs = {};
@@ -1933,27 +1932,27 @@ SvgObj.prototype = {
     }
 };
 // DomNode Class, manages HTML Elements, x:0 is implicit
-function DomNode(definitionObject, parent=null, nameId=null) { // 2 last arguments for recursive calls and PutChild
+function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
     this._domNodeType = isValued(definitionObject.type) ? 'canvas' : 'div'; // implicit div if type ommited
     // creating element into page window.document
     this._htmlElement = window.document.createElement(this._domNodeType); // create canvas or div
     this._htmlElement.style.position = 'absolute';
-    // have a parent ?
-    if (parent !== null) { // && (nameId !== null)
-        this._parent = parent;
-        this._nameId = nameId; // see if replace by this._htmlElement.id = this._nameId; in future
-        this._htmlElement.id = `${nameId}Cvs`; // used only to show Elements in Chrome debbuging #DEBUG
+    // name id of element
+    this._nameId = nodeNameId; // see if replace by this._htmlElement.id = this._nameId; in future
+    this._htmlElement.id = `${nodeNameId}CVS`; // used only to show Elements in Chrome debbuging #DEBUG
+    if (nodeParent !== null) { // have a parent?
+        this._parent = nodeParent;
         this._parent._htmlElement.appendChild(this._htmlElement);
     }
     // run this code only 1 time for body MAIN dom node, then exit
     if (isValued(definitionObject.body)) {
         window.document.body.appendChild(this._htmlElement)
         this._htmlElement.style.width = '100%'; // all window
-        this.widthSprite = this._htmlElement.offsetWidth; //this.getHeight();
         this._htmlElement.style.height = '100%'; // all window
+        this.widthSprite = this._htmlElement.offsetWidth; //this.getHeight();
         this.heightSprite = this._htmlElement.offsetHeight; //this.getHeight();
-        return; // not proceed anymore, it's just one time
+        return; // not proceed anymore, body is just one time
     }
     // checking width property for DIV
     if (isValued(definitionObject.width)) {
@@ -1997,14 +1996,14 @@ function DomNode(definitionObject, parent=null, nameId=null) { // 2 last argumen
 DomNode.prototype = {
     _idCount              : 0, // for unamed elements
     _htmlElement          : null, // public, DOM DomNode or Div
-    _childs               : null,
+    _childs               : null, // object containing childs
     _parent               : null, // pointer to parent
     _nameId               : null, // = ID, index of child in this._childs, integer or name
     _x                    : 0,
     _y                    : 0,
     _domNodeType          : null,
     _drawingContext2D     : null, // _drawingContext2D context
-    _sprite      : null,
+    _sprite               : null,
     widthSprite           : 0,
     heightSprite          : 0,
     _scaleZoom            : 1, // float
@@ -2108,9 +2107,9 @@ DomNode.prototype = {
         return this._htmlElement.getAttribute(definitionObject);
     },*/
     setDomNode(definitionObject) { // to run all attributes
-        for (let p in definitionObject) //
-            if (typeof definitionObject[p] === 'object')
-                this._childs[p] = new DomNode(definitionObject[p], this, p); // if definitionObject[p] is div parent, create DomNode which runs setDomeNode
+        for (let p in definitionObject) // browsing properties
+            if (typeof definitionObject[p] === 'object') // if sub object
+                this._childs[p] = new DomNode(definitionObject[p], p, this); // if definitionObject[p] is parent div, create DomNode which runs setDomeNode
             else
                 this._htmlElement.style[p.replace(/_/,'-')] = definitionObject[p]; // if definitionObject[p] is an attribute, opacity for example
     },
@@ -2180,8 +2179,7 @@ DomNode.prototype = {
     },
     newChild(definitionObject) { // returns pointer to child
         let id = this.getNewUId_();
-        return (this._childs[id] = new DomNode(definitionObject, this, id));
-        // return this._childs[definitionObject.name?definitionObject.name:id] = new DomNode(definitionObject, this, definitionObject.name?definitionObject.name:id);
+        return (this._childs[id] = new DomNode(definitionObject, id, this));
     },
     putChild(canvas) {
         if (canvas._parent)
