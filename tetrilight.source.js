@@ -176,6 +176,7 @@ let o is generic object
 let p is variable to browse in object
 let item is generic item, object or array or string boolean number
 forEach( (myVar)=>{ return myVar++; } );
+#f60 equivalent #ff6600
 
 **************** ANIMATIONS SEQUENCES ****************
 Events program, reacts to:
@@ -268,7 +269,7 @@ const SIZES = {
     _svgFullGridHeight         : null,
     _fullGridsIntervalMinX     : 160, //svg units
     _fullGridsIntervalMinY     : 100, //svg units
-    _backgroundColor           : 'black',
+    //_backgroundColor           : '#000',
     _svgGridWidth              : null,
     _svgGridHeight             : null,
     _svgBorder                 : 12,
@@ -326,12 +327,12 @@ function MainMenu() { // queue or stack
         {type:'g', id:'game',
             gradients: {type:'g', id:'gradients',
                 background_gradient: {type:'linearGradient', id:'background_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
-                    offset1: {type:'stop', offset:'50%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:1'},
-                    offset2: {type:'stop', offset:'100%', style:'stop-color:#AAAAAA;stop-opacity:1'}
+                    offset1: {type:'stop', offset:'50%', style:'stop-color:#000;stop-opacity:1'},
+                    offset2: {type:'stop', offset:'100%', style:'stop-color:#AAA;stop-opacity:1'}
                 },
                 ceil_gradient: {type:'linearGradient', id:'ceil_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
-                    offset1: {type:'stop', offset:'30%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:1'},
-                    offset2: {type:'stop', offset:'100%', style:'stop-color:'+SIZES._backgroundColor+';stop-opacity:0'}
+                    offset1: {type:'stop', offset:'30%', style:'stop-color:#000;stop-opacity:1'},
+                    offset2: {type:'stop', offset:'100%', style:'stop-color:#000;stop-opacity:0'} // means rgba() with alpha 0
                 },
                 horizontal_shadows: {type:'linearGradient', id:'horizontal_shadows', x1:'0%', y1:'0%', x2:'100%', y2:'0%',
                     offset1: {type:'stop',offset:'0%',style:'stop-color:black;stop-opacity:1'}, //0.7
@@ -341,12 +342,12 @@ function MainMenu() { // queue or stack
                 }
             },
             background: {type:'rect', x:0, y:0, width:'100%', height:'100%', fill:'url(#background_gradient)'},
-            control: {type:'rect',x:0, y:0, width:'100%', height:'5%', fill:'black',
+            control: {type:'rect',x:0, y:0, width:'100%', height:'5%', fill:'#000',
                 onclick:'GAME.addGrid()'},
             grids: {type:'g', id:'grids'}
         }
     );
-    for (var p in SPRITES._colors)
+    for (var p in SPRITES._colors) // making gradients for all colors
         this._svg._childs.gradients.newChild({
             type: 'linearGradient', id: 'gradient_block_'+p, x1:'0%', y1:'0%', x2:'100%', y2:'100%',
                 a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[p].dark)+';stop-opacity:1'},
@@ -1047,7 +1048,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         },/*
         combos: {
             type:'text', font_family: FONTS.messageFont.font, font_size: 60, font_weight:'bold', // $$$$$$
-            stroke: SIZES._backgroundColor, stroke_width:1.5, text_anchor:'middle', fill:'url(#gradient_block_'+this._gridColor.name+')'
+            stroke: '#000', stroke_width:1.5, text_anchor:'middle', fill:'url(#gradient_block_'+this._gridColor.name+')'
         }*/
     });
     this._mainSvg = this._svg._childs.frame._childs.main;
@@ -2556,7 +2557,7 @@ class SpriteObj {
         return !!this._imagesData[sortedArgs];
     }
     // Graphic function, convert a [RGB] array + alpha value to text
-    static rgbaTxt(color, alpha=null) {
+    static rgbaTxt(color, alpha=null) { // alpha usefull to define gradients black to transparent
         return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
     }
     // Graphic function, to make a linear gradient
