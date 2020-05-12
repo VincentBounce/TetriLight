@@ -309,7 +309,7 @@ function MainMenu() { // queue or stack
             width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxGameHeight,
             y: _ => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
-    this._domNode.setDomNode({opacity: 0.05}) // #DEBUG SVG make opacity for all div and canvas under this div
+    this._domNode.setDomNode({opacity: 0.2}) // #CANVAS make opacity for all div and canvas under this div
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
@@ -355,17 +355,21 @@ function MainMenu() { // queue or stack
                 a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
                 b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
         this._svg._childs.gradients.newChild({ // to down
-            type: 'linearGradient', id: `gradient_${myColor}_down`, x1: 0, y1: 0, x2: 0, y2: 0.8, // real or %
+            type: 'linearGradient', id: `gradient_${myColor}_down`, x1: 0, y1: 0.1, x2: 0, y2: 0.9, // real or %
                 a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
                 b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
         this._svg._childs.gradients.newChild({ // to left
-            type: 'linearGradient', id: `gradient_${myColor}_left`, x1: 0, y1: 0, x2: 0.8, y2: 0,
+            type: 'linearGradient', id: `gradient_${myColor}_left`, x1: 0.1, y1: 0, x2: 0.9, y2: 0,
                 a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'},
                 b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'} });
         this._svg._childs.gradients.newChild({ // to right
-            type: 'linearGradient', id: `gradient_${myColor}_right`, x1: 0, y1: 0, x2: 0.8, y2: 0,
+            type: 'linearGradient', id: `gradient_${myColor}_right`, x1: 0.1, y1: 0, x2: 0.9, y2: 0,
                 a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
                 b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
+        this._svg._childs.gradients.newChild({ // to right
+            type: 'radialGradient', id: `flame_gradient_${myColor}`, r: 1, cx: 0.5, cy: 1, fx: 0.5, fy: 1,
+            offset1: {type: 'stop', offset: 0, style: 'stop-color:'+rgbText(SPRITES._colors[myColor].medium)+';stop-opacity:0.2'},
+            offset2: {type: 'stop', offset: 1, style: 'stop-color:'+rgbText(SPRITES._colors[myColor].medium)+';stop-opacity:0'} });
     }
     
 }
@@ -455,7 +459,7 @@ function TetrisSpritesCreation() {
     this._spriteBackground = new SpriteObj({ // define backgroung color here: black > grey
         _nocache: true,
         drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
-            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#fff',1,'#fff'); // #DEBUG SVG (c,0,0,0,h,0.5,'#000',1,'#AAA');
+            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#fff',1,'#fff'); // #CANVAS (c,0,0,0,h,0.5,'#000',1,'#AAA');
             c.fillRect(x,y,w,h) }
     });
     this._spriteGridFront = new SpriteObj({ // we draw 3 trapeze that we merge
@@ -1012,11 +1016,6 @@ function TetrisGrid(playerKeysSet, gridColor){
                 type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height:SIZES._svgGridHeight
             }
         },
-        flame_gradient: { // flame gradient generated one time for each grid, can be placed at beginning
-            type: 'radialGradient', id: `flame_gradient_grid${this._gridIndex}`, r: 1, cx: 0.5, cy: 1, fx: 0.5, fy: 1,
-            offset1: {type: 'stop', offset: 0, style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0.2'},
-            offset2: {type: 'stop', offset: 1, style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0'}
-        },
         frame: {
             type: 'g', id: 'frame', clip_path: `url(#grid_${this._gridIndex}_clipping)`,
             main: {
@@ -1038,7 +1037,7 @@ function TetrisGrid(playerKeysSet, gridColor){
                 shadows_h:
                     {type: 'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: 'url(#horizontal_shadows)'},
                 flame:
-                    {type: 'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: `url(#flame_gradient_grid${this._gridIndex})`}
+                    {type: 'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: `url(#flame_gradient_${this._gridColor.name})`}
             }
         },
         border_bottom: {
@@ -1062,14 +1061,16 @@ function TetrisGrid(playerKeysSet, gridColor){
         },
         ceil: {
             type:'rect', x:-SIZES._svgBorder-1, y:-3-SIZES._svgBoxSize, width: SIZES._svgFullGridWidth+2, height: SIZES._svgBoxSize*4, fill:'url(#ceil_gradient)'
-        },/*
+        },
         combos: {
-            type:'text', font_family: FONTS.messageFont.font, font_size: 60, font_weight:'bold', // $$$$$$
+            type:'text', font_family: FONTS.messageFont, font_size: 60, font_weight:'bold', // font_size
             stroke: '#000', stroke_width:1.5, text_anchor:'middle', fill:'url(#gradient_block_'+this._gridColor.name+')'
-        }*/
+        }
     });
     this._mainSvg = this._svg._childs.frame._childs.main;
-    
+	let rightX = 3*SIZES._svgBorder + SIZES._svgPreviewSize/2 + SIZES._svgGridWidth;
+	this._svg._childs.preview.setTranslate(rightX, 2*SIZES._svgBoxSize);
+	this._svg._childs.score.setTranslate(rightX, 4.5*SIZES._svgBoxSize);
 
 
     this._nextShapePreview = new NextShapePreview(this);
@@ -1626,9 +1627,23 @@ class NextShapePreview {
     constructor(grid) {
         this._grid = grid;
         this._domNode = this._grid._domNode._childs.nextShapePreviewSprite;
-        for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++)
+        this._miniMatrix = [];
+        let svgFullSize	= SIZES._svgPreviewSize/5;
+        let svgSize		= svgFullSize - svgFullSize/10
+        for (let i=-SPRITES._shapesSpan;i <= SPRITES._shapesSpan;i++) {
+            this._miniMatrix[i] = [];
             for (let j=-SPRITES._shapesSpan;j <= SPRITES._shapesSpan;j++)
-                this._domNode.nodeDrawSprite({xSprite: i, ySprite: j, col: this._grid._gridColor.name, __onOff: false}); // off
+                //this._domNode.nodeDrawSprite({xSprite: i, ySprite: j, col: this._grid._gridColor.name, __onOff: false}); // #CANVAS off
+                this._miniMatrix[i][j] = grid._svg._childs.preview.newChild({
+                    type	: 'rect',
+                    x		: -svgSize/2 + i*(svgFullSize),
+                    y		: -svgSize/2 - j*(svgFullSize),
+                    width	: svgSize,
+                    height	: svgSize,
+                    opacity : SPRITES._previewOpacity,
+                    fill	: rgbText(this._grid._gridColor.medium)
+                });
+        }
     }
     mark(shape) {
         for (let b=0;b < shape._polyominoBlocks.length;b++)
@@ -1923,7 +1938,8 @@ class TetrisScore {
         }
     }
     writeScore_(scoreText) {
-        this._grid._domNode._childs.scoreZoneDiv.setTextIntoSizedField({text: scoreText}); // here all program write score, just comment for #DEBUG
+        this._grid._domNode._childs.scoreZoneDiv.setTextIntoSizedField({text: scoreText}); // #CANVAS here all program write score, just comment for #DEBUG
+        this._grid._svg._childs.score.setText(scoreText, SIZES._svgPreviewSize, 3); // #SVG
     }
 }
 // VARIOUS BASIC FUNCTIONS
@@ -2066,7 +2082,7 @@ SvgObj.prototype = {
         this._svgElement.textContent = text;
         if (width) {
             let charCount = Math.max((''+text).length, maxHeightMinCharCount);
-            this.set1('font-size', GAME._fontRatio * width/charCount); 
+            this.set1('font-size', 1.8 * width/charCount); 
         }
     },
     setTranslate(x, y) {
