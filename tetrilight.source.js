@@ -28,11 +28,13 @@ Bonus same as 2 rows when all is cleared (Perfect clear)
 
 **************** GRAPHIC CHOICE ****************
 SVG:
+    each SVG element is visible in Elements Explorer
     blur because sizes in %
     calculate render on each move
     implicit built-in page resize zoom
 Canvas:
-    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen //$canvas
+    each canvas element is obscur in Elements Explorer
+    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen
     move without calculation
     computing page resize zoom with JS explicit code
     window.devicePixelRatio: read only, ratio 1.75 on my 4K LCD === physical px / px independant device
@@ -307,7 +309,7 @@ function MainMenu() { // queue or stack
             width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxGameHeight,
             y: _ => SPRITES.pxTopMenuZoneHeight, sprite: SPRITES._spriteBackground }
         }, 'gameAreaDiv'); // one arg only for setDomNode
-    this._domNode.setDomNode({opacity: 0.05}) // #DEBUG for SVG make opacity for all div and canvas under this div
+    this._domNode.setDomNode({opacity: 0.05}) // #DEBUG SVG make opacity for all div and canvas under this div
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
@@ -325,33 +327,47 @@ function MainMenu() { // queue or stack
     SVG_BODY.set({height: window.innerHeight+'px'}); //IE>=9 : pb resize
     this._svg = SVG_BODY.newChild( // SVG gradients
         {type:'g', id:'game',
-            gradients: {type:'g', id:'gradients',
-                background_gradient: {type:'linearGradient', id:'background_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
-                    offset1: {type:'stop', offset:'50%', style:'stop-color:#000;stop-opacity:1'},
-                    offset2: {type:'stop', offset:'100%', style:'stop-color:#AAA;stop-opacity:1'}
+            gradients: {type:'g', id:'gradients', // all gradients
+                background_gradient: {type:'linearGradient', id:'background_down_gradient', x1: 0, y1: 0, x2: 0, y2: 1,
+                    offset1: {type:'stop', offset: 0.5, style:'stop-color:#000;stop-opacity:1'},
+                    offset2: {type:'stop', offset: 1, style:'stop-color:#AAA;stop-opacity:1'}
                 },
-                ceil_gradient: {type:'linearGradient', id:'ceil_gradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%',
-                    offset1: {type:'stop', offset:'30%', style:'stop-color:#000;stop-opacity:1'},
-                    offset2: {type:'stop', offset:'100%', style:'stop-color:#000;stop-opacity:0'} // means rgba() with alpha 0
+                ceil_gradient: {type:'linearGradient', id:'ceil_gradient', x1: 0, y1: 0, x2: 0, y2: 1,
+                    offset1: {type:'stop', offset: 0.3, style:'stop-color:#000;stop-opacity:1'},
+                    offset2: {type:'stop', offset: 1, style:'stop-color:#000;stop-opacity:0'} // means rgba() with alpha 0
                 },
-                horizontal_shadows: {type:'linearGradient', id:'horizontal_shadows', x1:'0%', y1:'0%', x2:'100%', y2:'0%',
-                    offset1: {type:'stop',offset:'0%',style:'stop-color:black;stop-opacity:1'}, //0.7
+                horizontal_shadows: {type:'linearGradient', id:'horizontal_shadows', x1: 0, y1: 0, x2: 1, y2: 0,
+                    offset1: {type:'stop',offset:'0%',style:'stop-color:black;stop-opacity:1'}, // 0.7
                     offset2: {type:'stop',offset:'6%',style:'stop-color:black;stop-opacity:0'},
                     offset3: {type:'stop',offset:'94%',style:'stop-color:black;stop-opacity:0'},
                     offset4: {type:'stop',offset:'100%',style:'stop-color:black;stop-opacity:1'}
                 }
             },
-            background: {type:'rect', x:0, y:0, width:'100%', height:'100%', fill:'url(#background_gradient)'},
+            background: {type:'rect', x:0, y:0, width:'100%', height:'100%', fill:'url(#background_down_gradient)', opacity: 1}, // optional opacity
             control: {type:'rect',x:0, y:0, width:'100%', height:'5%', fill:'#000',
                 onclick:'GAME.addGrid()'},
             grids: {type:'g', id:'grids'}
         }
     );
-    for (var p in SPRITES._colors) // making gradients for all colors
-        this._svg._childs.gradients.newChild({
-            type: 'linearGradient', id: 'gradient_block_'+p, x1:'0%', y1:'0%', x2:'100%', y2:'100%',
-                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[p].dark)+';stop-opacity:1'},
-                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[p].light)+';stop-opacity:1'} });
+    for (var myColor in SPRITES._colors) { // making dynamically gradients for all colors, from dark to light
+        this._svg._childs.gradients.newChild({ // down-right
+            type: 'linearGradient', id: `gradient_block_${myColor}`, x1:'0%', y1:'0%', x2:'100%', y2:'100%',
+                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
+                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
+        this._svg._childs.gradients.newChild({ // to down
+            type: 'linearGradient', id: `gradient_${myColor}_down`, x1: 0, y1: 0, x2: 0, y2: 0.8, // real or %
+                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
+                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
+        this._svg._childs.gradients.newChild({ // to left
+            type: 'linearGradient', id: `gradient_${myColor}_left`, x1: 0, y1: 0, x2: 0.8, y2: 0,
+                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'},
+                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'} });
+        this._svg._childs.gradients.newChild({ // to right
+            type: 'linearGradient', id: `gradient_${myColor}_right`, x1: 0, y1: 0, x2: 0.8, y2: 0,
+                a: {type:'stop', offset:  '0%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].dark)+';stop-opacity:1'},
+                b: {type:'stop', offset:'100%', style:'stop-color:'+rgbText(SPRITES._colors[myColor].light)+';stop-opacity:1'} });
+    }
+    
 }
 MainMenu.prototype = {
     _domNode: null,
@@ -439,7 +455,7 @@ function TetrisSpritesCreation() {
     this._spriteBackground = new SpriteObj({ // define backgroung color here: black > grey
         _nocache: true,
         drawSprite: (c, x, y, a, w, h) => { // context c, x, y, args a, canvas width w, canvas height h
-            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#000',1,'#AAA');
+            c.fillStyle=SpriteObj.linearGradient(c,0,0,0,h,0.5,'#fff',1,'#fff'); // #DEBUG SVG (c,0,0,0,h,0.5,'#000',1,'#AAA');
             c.fillRect(x,y,w,h) }
     });
     this._spriteGridFront = new SpriteObj({ // we draw 3 trapeze that we merge
@@ -925,6 +941,7 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._lockedShapes    = [];
     this._rowsToClearSet  = new Set();
 
+	SIZES._svgBlockSize = SIZES._svgBoxSize - 2;
     SIZES._svgGridWidth = SIZES._svgBoxSize * RULES.horizontalCellsCount; //grid size 360
     SIZES._svgGridHeight = SIZES._svgBoxSize * RULES.verticalCellsCount; //grid size 720
     SIZES._svgFullGridWidth = SIZES._svgGridWidth + 2*SIZES._svgBorder;
@@ -988,53 +1005,53 @@ function TetrisGrid(playerKeysSet, gridColor){
     this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
 
     this._svg = MAIN_MENU._svg._childs.grids.newChild({ // SVG graphic pieces
-        type:'g', id:'grid_'+this._gridIndex, //_svg is g group
+        type:'g', id: `grid${this._gridIndex}`, //_svg is g group
         clipping: {
-            type:'clipPath', id:'grid_'+this._gridIndex+'_clipping',
+            type: 'clipPath', id: `grid${this._gridIndex}_clipping`, // hole to display grid
             rectangle: {
                 type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height:SIZES._svgGridHeight
             }
         },
-        flame_gradient: {                                                            //IE9 : #id must be differents
-            type: 'radialGradient', id: 'flame'+this._gridIndex, r: '100%', cx: '50%', cy: '100%', fx: '50%', fy: '100%',
-            offset1: {type: 'stop', offset: '0%', style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0.2'},
-            offset2: {type: 'stop', offset: '100%', style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0'}
+        flame_gradient: { // flame gradient generated one time for each grid, can be placed at beginning
+            type: 'radialGradient', id: `flame_gradient_grid${this._gridIndex}`, r: 1, cx: 0.5, cy: 1, fx: 0.5, fy: 1,
+            offset1: {type: 'stop', offset: 0, style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0.2'},
+            offset2: {type: 'stop', offset: 1, style: 'stop-color:'+rgbText(this._gridColor.medium)+';stop-opacity:0'}
         },
         frame: {
-            type:'g', id:'frame', clip_path:'url(#grid_'+this._gridIndex+'_clipping)',
+            type: 'g', id: 'frame', clip_path: `url(#grid_${this._gridIndex}_clipping)`,
             main: {
-                type:'g', id:'main',
+                type: 'g', id: 'main',
                 background:
-                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: '#111'},
+                    {type: 'rect', x: 0, y: 0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: '#111'},
                 grid_relief_v:
-                    {type:'line', x1:-3, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
-                    style:'fill:none;stroke:#222222;stroke-width:'+SIZES._svgGridHeight+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                    {type: 'line', x1: -3, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+                    style: `fill:none; stroke:#222; stroke-width:${SIZES._svgGridHeight}; stroke-dasharray:2,${SIZES._svgBlockSize};`},
                 grid_relief_h:
-                    {type:'line', x1: SIZES._svgGridWidth/2, y1:-3, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
-                    style:'fill:none;stroke:#222222;stroke-width:'+SIZES._svgGridWidth+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                    {type: 'line', x1: SIZES._svgGridWidth/2, y1:-3, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+                    style: `fill:none; stroke:#222; stroke-width:${SIZES._svgGridWidth}; stroke-dasharray:2,${SIZES._svgBlockSize};`},
                 grid_main_v:
-                    {type:'line', x1:-1, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
-                    style:'fill:none;stroke:#000;stroke-width:'+SIZES._svgGridHeight+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                    {type: 'line', x1: -1, y1: SIZES._svgGridHeight/2, x2: SIZES._svgGridWidth, y2: SIZES._svgGridHeight/2,
+                    style: `fill:none; stroke:#000; stroke-width:${SIZES._svgGridHeight}; stroke-dasharray:2,${SIZES._svgBlockSize};`},
                 grid_main_h:
-                    {type:'line', x1: SIZES._svgGridWidth/2, y1:-1, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
-                    style:'fill:none;stroke:#000;stroke-width:'+SIZES._svgGridWidth+';stroke-dasharray:2,'+SIZES._svgBlockSize+';'},
+                    {type: 'line', x1: SIZES._svgGridWidth/2, y1:-1, x2: SIZES._svgGridWidth/2, y2: SIZES._svgGridHeight,
+                    style: `fill:none; stroke:#000; stroke-width:${SIZES._svgGridWidth} ;stroke-dasharray:2,${SIZES._svgBlockSize};`},
                 shadows_h:
-                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:'url(#horizontal_shadows)'},
+                    {type: 'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: 'url(#horizontal_shadows)'},
                 flame:
-                    {type:'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill:'url(#flame'+this._gridIndex+')'}
+                    {type: 'rect', x:0, y:0, width: SIZES._svgGridWidth, height: SIZES._svgGridHeight, fill: `url(#flame_gradient_grid${this._gridIndex})`}
             }
         },
         border_bottom: {
-            type:'path', d:'M 0 '+SIZES._svgGridHeight+' h '+SIZES._svgGridWidth+' l '+SIZES._svgBorder+' '+SIZES._svgBorder+' h -'+(SIZES._svgGridWidth + 2*SIZES._svgBorder)+' z',
-            fill:'url(#gradient_block_'+this._gridColor.name+')'
-        },
-        border_right: {
-            type:'path', d:'M 0 0 v '+SIZES._svgGridHeight+' l -'+SIZES._svgBorder+' '+SIZES._svgBorder+' v -'+(SIZES._svgGridHeight+SIZES._svgBorder)+' z',
-            fill:'url(#gradient_block_'+this._gridColor.name+')'
+            type: 'path', d:'M 0 '+SIZES._svgGridHeight+' h '+SIZES._svgGridWidth+' l '+SIZES._svgBorder+' '+SIZES._svgBorder+' h -'+(SIZES._svgGridWidth + 2*SIZES._svgBorder)+' z',
+            fill: `url(#gradient_${this._gridColor.name}_down)`
         },
         border_left: {
+            type: 'path', d:'M 0 0 v '+SIZES._svgGridHeight+' l -'+SIZES._svgBorder+' '+SIZES._svgBorder+' v -'+(SIZES._svgGridHeight+SIZES._svgBorder)+' z',
+            fill: `url(#gradient_${this._gridColor.name}_left)`
+        },
+        border_right: {
             type:'path', d:'M '+SIZES._svgGridWidth+' 0 v '+SIZES._svgGridHeight+' l '+SIZES._svgBorder+' '+SIZES._svgBorder+' v -'+(SIZES._svgGridHeight+SIZES._svgBorder)+' z',
-            fill:'url(#gradient_block_'+this._gridColor.name+')'
+            fill: `url(#gradient_${this._gridColor.name}_right)`
         },
         preview: {
             type:'g', id:'preview'
@@ -1820,10 +1837,10 @@ class TetrisBlock {
         this._domNode.moveToGridCell({i: this._iPosition, j: this._jPosition});
     }
     putBlockInRealBlocksNode() {
-        this._grid._realBlocksNode.putChild(this._domNode);
+        this._grid._realBlocksNode.appendCanvasNodeAsChild(this._domNode);
     }
     putBlockNodeIn(myParentNode) {
-        myParentNode.putChild(this._domNode);
+        myParentNode.appendCanvasNodeAsChild(this._domNode);
     }
 };
 // TetrisScore Class, based on riginal Nintendo scoring system
@@ -2012,7 +2029,7 @@ SvgObj.prototype = {
     _svgElement   : null, //public, DOM SVG
     _childs       : null,
     _parent       : null, //pointer to parent
-    _parentIndex  : null, //index of child in this._childs, integer or name
+    _parentIndex  : null, //index of child in this._childs, integer or name, change to _svgIndex
     _translateText: null,
     _scaleText    : null,
     _rotateText   : null,
@@ -2230,7 +2247,6 @@ SvgObj.prototype = {
         return child;
     }}
 };*/
-
 // DomNode Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
@@ -2321,9 +2337,9 @@ DomNode.prototype = {
         delete this._childs;
         this._htmlElement.parentNode.removeChild(this._htmlElement);
     },
-    getNewUId_() {
+    /*getNewUId_() {
         return ++DomNode.prototype._idCount;
-    },
+    },*/
     setTransformOrigin(origin) {
         this._htmlElement.style['transformOrigin'] = origin;
     },
@@ -2478,15 +2494,15 @@ DomNode.prototype = {
         if (x) this.setX(Math.round(x-this.getWidth()/2));
         if (y) this.setY(Math.round(y-this.getHeight()/2));
     },
-    putChild(canvas) {
-        if (canvas._parent)
-            delete canvas._parent._childs[canvas._nameId]; // manage parent
-        if ( !canvas._nameId || (typeof canvas._nameId === 'number') )
-            canvas._nameId = this.getNewUId_();// ++ _idCount
-        this._childs[canvas._nameId] = canvas; // manage parent
-        canvas._parent = this; // manage parent
-        canvas.moveNodeTo(canvas._x, canvas._y);
-        this._htmlElement.appendChild(canvas._htmlElement);
+    appendCanvasNodeAsChild(canvasDomNode) {
+        if (canvasDomNode._parent)
+            delete canvasDomNode._parent._childs[canvasDomNode._nameId]; // manage parent
+        if ( !canvasDomNode._nameId || (typeof canvasDomNode._nameId === 'number') )
+            canvasDomNode._nameId = ++GAME._nextPrimaryKey;
+        this._childs[canvasDomNode._nameId] = canvasDomNode; // manage parent
+        canvasDomNode._parent = this; // manage parent
+        canvasDomNode.moveNodeTo(canvasDomNode._x, canvasDomNode._y);
+        this._htmlElement.appendChild(canvasDomNode._htmlElement);
     },
     createText(font, fontWeight, color, textShadow, textCharCountWidthMin) {
         this._textCharCountWidthMin = textCharCountWidthMin?textCharCountWidthMin:1; 
