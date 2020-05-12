@@ -1059,6 +1059,14 @@ function TetrisGrid(playerKeysSet, gridColor){
             type:'text', font_family: FONTS.scoreFont, font_weight:'bold', text_anchor:'middle',
             fill:'url(#gradient_block_'+this._gridColor.name+')'
         },
+        controlsMap: {
+            type:'text', font_family: FONTS.scoreFont, font_weight:'bold', text_anchor:'middle',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
+        controlsMap2: {
+            type:'text', font_family: FONTS.scoreFont, font_weight:'bold', text_anchor:'middle',
+            fill:'url(#gradient_block_'+this._gridColor.name+')'
+        },
         ceil: {
             type:'rect', x:-SIZES._svgBorder-1, y:-3-SIZES._svgBoxSize, width: SIZES._svgFullGridWidth+2, height: SIZES._svgBoxSize*4, fill:'url(#ceil_gradient)'
         },
@@ -1069,8 +1077,13 @@ function TetrisGrid(playerKeysSet, gridColor){
     });
     this._mainSvg = this._svg._childs.frame._childs.main;
 	let rightX = 3*SIZES._svgBorder + SIZES._svgPreviewSize/2 + SIZES._svgGridWidth;
-	this._svg._childs.preview.setTranslate(rightX, 2*SIZES._svgBoxSize);
-	this._svg._childs.score.setTranslate(rightX, 4.5*SIZES._svgBoxSize);
+	this._svg._childs.preview.setTranslate(rightX, 3*SIZES._svgBoxSize);
+    this._svg._childs.score.setTranslate(rightX, 5.5*SIZES._svgBoxSize);
+    this._svg._childs.controlsMap.setTranslate(rightX, 0.5*SIZES._svgBoxSize);
+    this._svg._childs.controlsMap.setTextIntoSizedField(this._playerKeysSet.symbols[0], SIZES._svgPreviewSize, 5)
+    this._svg._childs.controlsMap2.setTranslate(rightX, 1.3*SIZES._svgBoxSize);
+    this._svg._childs.controlsMap2.setTextIntoSizedField(this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3], SIZES._svgPreviewSize, 5)
+
 
 
     this._nextShapePreview = new NextShapePreview(this);
@@ -1939,7 +1952,7 @@ class TetrisScore {
     }
     writeScore_(scoreText) {
         this._grid._domNode._childs.scoreZoneDiv.setTextIntoSizedField({text: scoreText}); // #CANVAS here all program write score, just comment for #DEBUG
-        this._grid._svg._childs.score.setText(scoreText, SIZES._svgPreviewSize, 3); // #SVG
+        this._grid._svg._childs.score.setTextIntoSizedField(scoreText, SIZES._svgPreviewSize, 3); // #SVG
     }
 }
 // VARIOUS BASIC FUNCTIONS
@@ -2078,11 +2091,11 @@ SvgObj.prototype = {
     getText() { //works only if type === "text"
         return this._svgElement.textContent;
     },
-    setText(text, width, maxHeightMinCharCount) { //works only if type == "text"
+    setTextIntoSizedField(text, fieldWidth, fieldCharCount) { // works only if type == "text"
         this._svgElement.textContent = text;
-        if (width) {
-            let charCount = Math.max((''+text).length, maxHeightMinCharCount);
-            this.set1('font-size', 1.8 * width/charCount); 
+        if (fieldWidth) {
+            let charCount = Math.max((''+text).length, fieldCharCount);
+            this.set1('font-size', 1.8 * fieldWidth/charCount); // 1.8 is font ratio
         }
     },
     setTranslate(x, y) {
