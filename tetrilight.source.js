@@ -29,7 +29,8 @@ Bonus same as 2 rows when all is cleared (Perfect clear)
 **************** GRAPHIC CHOICE ****************
 SVG:
     each SVG element is visible in Elements Explorer
-    blur because sizes in %
+    gradient possible on fonts
+    small blur because sizes in %
     calculate render on each move
     implicit built-in page resize zoom
 Canvas:
