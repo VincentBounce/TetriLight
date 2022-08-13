@@ -10,9 +10,11 @@ All browsers support MP3 and WAV, excepted Edge/IE for WAV
 **************** GITHUB ****************
 remote: tetrilight-github instead origin
 branches:
-    master: canvas dev [to finish]
+    main: same as canvas
+    canvas: canvas dev [to finish]
     svg: SVG dev [try in progress]
     es5-fit-ie11: latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11
+    async: test using async functions
 
 **************** VOCABULARY ****************
 to clear = to sweep, cleared = swept
