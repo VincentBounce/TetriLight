@@ -1,11 +1,20 @@
 /******************************************************************
 ****************   TetriLight - Vincent BOURDEAU   ****************
-****************   2011 and 2020 - v0.2            ****************
+****************   2011 and 2020 and 2023 - v0.3   ****************
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
 Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
 Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
+
+**************** GITHUB ****************
+remote: tetrilight-github instead origin
+branches:
+    main: same as canvas
+    canvas: canvas dev [to finish]
+    svg: SVG dev [try in progress]
+    es5-fit-ie11: latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11
+    async: test using async functions
 
 **************** VOCABULARY ****************
 to clear = to sweep, cleared = swept
@@ -28,11 +37,14 @@ Bonus same as 2 rows when all is cleared (Perfect clear)
 
 **************** GRAPHIC CHOICE ****************
 SVG:
-    blur because sizes in %
+    each SVG element is visible in Elements Explorer
+    gradient possible on fonts
+    small blur because sizes in %
     calculate render on each move
     implicit built-in page resize zoom
 Canvas:
-    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen //$canvas
+    each canvas element is obscur in Elements Explorer
+    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen
     move without calculation
     computing page resize zoom with JS explicit code
     window.devicePixelRatio: read only, ratio 1.75 on my 4K LCD === physical px / px independant device
@@ -133,29 +145,6 @@ myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it
             matrix[index] = [];
             for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; // height -1 to +(2x20) });
 merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
-
-**************** VISUAL STUDIO CODE ****************
-To execute a command: CTRL + SHIFT + P
-Settings are centralized: Global User (all workspaces) or Current workspace (.vscode folder)
-GitHub: first install on PC from https://git-scm.com/download/win / then run Terminal
-GitHub: remove a remote: git remote rm old-remote
-GitHub: rename a local branch: git branch -m es5-fit-ie9 es5-fit-ie11
-GitHub: rename a remote branch: git push tetrilight-github :es5-fit-ie9 es5-fit-ie11
-GitHub: merge drop-timer branch into master branch: git checkout master / git merge drop-timer
-GitHub: then delete branch locally: git branch -d drop-timer
-GitHub: then delete branch remotely: git push tetrilight-github --delete drop-timer
-GitHub: cleaning outdated branches (remotely deleted, but still showed in VS Code): git fetch --prune
-GitHub: solve git fatal no configured push destination: git push --set-upstream tetrilight-github 2-players-menu
-Monokai ST3 extension: gives function blue coloration instead green in 'Monokai' standard theme
-Color Highlight extension: to colorize colors declarations into code
-Alignment extension: ALT + = to align selection
-Live Server extension: file .vscode\launch.json: "url": "http://localhost:5500/tetrilight.source.html",
-ESLint extension: first install npm on PC from https://nodejs.org/en/
-ESLint extension: to install it: npm install -g eslint
-ESLint extension: to build package.json: npm init
-ESLint extension: to setup most popular style guide (Airbnb): npx eslint --init
-...
-Settings Sync extension: to save VS Code configuration in GitHub
 
 **************** NAMING CONVENTION ****************
 // #DEBUG: to track bug
@@ -2256,7 +2245,7 @@ class SpriteObj {
         return !!this._imagesData[sortedArgs];
     }
     // Graphic function, convert a [RGB] array + alpha value to text
-    static rgbaTxt(color, alpha=null) {
+    static rgbaTxt(color, alpha=null) { // alpha usefull to define gradients black to transparent
         return `rgba(${color[0]},${color[1]},${color[2]},${((alpha===null)?1:alpha)})`;
     }
     // Graphic function, to make a linear gradient
