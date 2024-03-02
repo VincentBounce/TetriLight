@@ -207,11 +207,11 @@ MainMenu [1 instance]
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
 // GLOBAL CONSTANTS
 const RULES                     = { // tetris rules
-    gameSpeedRatio              : 1.5, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
+    gameSpeedRatio              : 1, // default 1 normal speed, decrease speed < 1 < increase global game speed #DEBUG
     initialVolume               : 0.1, // default 0.6, 0 to 1, if #DEBUG
-    transferRowsCountMin        : 1, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
-    pentominoesRowsCountMin     : 1, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
-    horizontalCellsCount        : 5, // default 10, min 5 #DEBUG
+    transferRowsCountMin        : 2, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
+    pentominoesRowsCountMin     : 3, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
+    horizontalCellsCount        : 10, // default 10, min 5 #DEBUG
     verticalCellsCount          : 21, // default 21             = (20 visible + 1 hidden) #DEBUG
     topLevel                    : 25, // default 25, max level (steps of drop acceleration)
     risingRowsHolesCountMaxRatio: 0.3, // default 0.3, <        = 0.5, max holes into each rising row, example: 0.5 = 50% means 5 holes for 10 columns
