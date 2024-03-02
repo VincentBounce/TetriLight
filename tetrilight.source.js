@@ -1176,7 +1176,6 @@ TetrisGrid.prototype            = {
             this._anims.messageAnim.startAnim,
             [{text: 'You<BR/>lose', fieldCharCount: 4}]);
         this._gridMessagesQueue.execNowOrEnqueue(this, this.afterLost_);
-        // AUDIO.audioStop('musicMusic');
         for (let p in this._lockedBlocks._lockedBlocksArray)
             this._lockedBlocks._lockedBlocksArray[p].setBlockColor(SPRITES._colors['grey']);
     },
