@@ -1,20 +1,20 @@
 /******************************************************************
-****************   TetriLight - Vincent BOURDEAU   ****************
-****************   2011 and 2020 and 2024 - v0.3   ****************
+****************   TetriLight - Vincent Bounce     ****************
+****************   2011 and 2020 and 2024 - v0.4   ****************
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
-Tested on 2020-05-01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
+Tested on 2020-05-01, it fits Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
 Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
 
 **************** GITHUB ****************
 remote: tetrilight-github instead origin
 branches:
-    main: same as canvas
-    canvas: canvas dev [to finish]
-    svg: SVG dev [try in progress]
-    es5-fit-ie11: latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11
-    async: test using async functions
+    canvas: canvas dev [playable]
+    svg: SVG dev [in progress]
+    main: started canvas dev here, to delete
+    es5-fit-ie11: latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11, to delete
+    async: trial using async functions, to delete
 
 **************** VOCABULARY ****************
 to clear = to sweep, cleared = swept
@@ -1805,125 +1805,6 @@ class EventsQueue {
         }
     }
 }
-//SvgObj Class, SVG object
-//new(parent:): optional parent
-//newChil(name:): optional unique attribute name
-function SvgObj(svgDefinition) { //svgDefinition is attributes
-    this._svgElement = document.createElementNS(SVG_NS, svgDefinition.type);
-    this._childs = {};
-    this._translateText = '';
-    this._rotateText = '';
-    if (svgDefinition.parent) //if parent is supplied OR is not null
-        svgDefinition.parent.appendChild(this._svgElement);
-    delete svgDefinition.parent; //to avoid it in this.set()
-    this.set(svgDefinition);
-}
-SvgObj.prototype = {
-    _count        : 0, //for unamed elements
-    _svgElement   : null, //public, DOM SVG
-    _childs       : null,
-    _parent       : null, //pointer to parent
-    _parentIndex  : null, //index of child in this._childs, integer or name
-    _translateText: null,
-    _scaleText    : null,
-    _rotateText   : null,
-    del() { //optional because garbbage collector
-        for (let p in this._childs)
-            this._childs[p].del(); //delete this._childs[p] made by child
-        this._count = 0;
-        if (this._parent) delete this._parent._childs[this._parentIndex]; //manage parent
-        delete this._childs;
-        this._svgElement.parentNode.removeChild(this._svgElement);
-        delete this._svgElement;
-    },
-    get(svgDefinition) {
-        return this._svgElement.getAttributeNS(null, svgDefinition);
-    },
-    set1(svgDefinition, value) {    
-        this._svgElement.setAttributeNS(null, svgDefinition, value);
-    },
-    set(svgDefinition) {
-        for (let p in svgDefinition)
-            if (!svgDefinition[p].type) //if sheet attribute without type
-                this._svgElement.setAttributeNS(null, p.replace(/_/, '-'), svgDefinition[p]); // equivalent new RegExp("_","g"),
-            else {
-                svgDefinition[p].parent = this._svgElement;
-                this._childs[p] = new SvgObj(svgDefinition[p]);
-                this._childs[p]._parent = this; //manage parent
-                this._childs[p]._parentIndex = p; //manage parent, create an instance for chars
-            }
-    },
-    getText() { //works only if type == "text"
-        return this._svgElement.textContent;
-    },
-    setText(text, width, maxHeightMinCharCount) { //works only if type == "text"
-        this._svgElement.textContent = text;
-        if (width) {
-            let charCount = Math.max((''+text).length, maxHeightMinCharCount);
-            this.set1('font-size', game._fontRatio * width/charCount); 
-        }
-    },
-    setTranslate(x, y) {
-        this._translateText = `translate(${x},${y})`;
-        this.set({transform: this._translateText});
-    },
-    setScale(sx, sy) { //sy optional
-        if (!sy) sy = sx;
-        this._scaleText = `scale(${sx},${sy})`;
-        this.set({transform: this._scaleText});
-    },
-    setRotate(r, x, y) { //sy optional
-        this._rotateText = `rotate(${r},${x},${y})`;
-        this.set({transform: this._rotateText});
-    },
-    cancelTransform() {
-        this._translateText = '';
-        this._scaleText = '';
-        this._rotateText = '';
-        this.set({transform:''});
-    },
-    newChild(svgDefinition) { //returns pointer to child
-        svgDefinition.parent = this._svgElement;
-        //return this._childs[svgDefinition.name?svgDefinition.name:this._count++] = new SvgObj(svgDefinition);
-        this._childs[this._count] = new SvgObj(svgDefinition);
-        this._childs[this._count]._parent = this; //manage parent
-        this._childs[this._count]._parentIndex = this._count; //manage parent
-        return this._childs[this._count ++];
-    },
-    putChild(svg) {
-        if (svg._parent) delete svg._parent._childs[svg._parentIndex]; //manage parent
-        if (typeof (svg._parentIndex) == 'number')
-            svg._parentIndex = this._count ++;
-        this._childs[svg._parentIndex] = svg; //manage parent
-        svg._parent = this; //manage parent
-        this._svgElement.appendChild(svg._svgElement);
-    },
-    delChilds() {
-        for (let p in this._childs)
-            this._childs[p].del();
-        this._count = 0;
-    },
-    hide() {
-        this._svgElement.setAttributeNS(null, 'display', 'none');
-    },
-    show() {
-        this._svgElement.setAttributeNS(null, 'display', 'inherit');
-    },
-    addChildCloneOf(svg) {
-        let id = svg._parentIndex;
-        if (typeof (svg._parentIndex) == 'number')
-            id = this._count ++;
-        let child = this._childs[id];
-        child = new SvgObj({});
-        child._parent = this;
-        child._parentIndex = id;
-        child._svgElement = svg._svgElement.cloneNode(false); //don't copy nodes here
-        this._svgElement.appendChild(child._svgElement);
-        for (let p in svg._childs)
-            child.addChildCloneOf(svg._childs[p], true); //copying nodes here
-        return child;
-    }
-};
 // DomNode Class, manages HTML Elements, x:0 is implicit
 function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last arguments for recursive calls and PutChild
     this._childs = {};
