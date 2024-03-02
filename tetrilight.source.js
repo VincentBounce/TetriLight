@@ -1,9 +1,9 @@
 /******************************************************************
 ****************   TetriLight - Vincent BOURDEAU   ****************
-****************   2011 and 2020 and 2023 - v0.3   ****************
+****************   2011 and 2020 and 2024 - v0.3   ****************
 *******************************************************************
 Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
-Tested on 2020 05 01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
+Tested on 2020-05-01, fit Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
 Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
 All browsers support MP3 and WAV, excepted Edge/IE for WAV
 
@@ -251,11 +251,12 @@ function init() {
     for (let p in DURATIONS) DURATIONS[p] /= RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
     AUDIO = new Audio(SOUNDS);
     AUDIO.changeVolume(false);
-    MAIN_MENU = new MainMenu();
+    MAIN_MENU = new MainMenu(); // #DEBUG
     // if (GAME) GAME.destroyGame();
     GAME = new TetrisGame();
     GAME.addGrid();
-    //GAME.addGrid(); // #DEBUG
+    GAME.addGrid();
+    GAME.addGrid();
 }
 // MainMenu Class, menu manager, make new one to open a TetrisGame
 function MainMenu() { // queue or stack
@@ -264,7 +265,7 @@ function MainMenu() { // queue or stack
     // window.oncontextmenu = function(event){ this.cancelEvent_(event); }; // right click
     // below creation for MAIN dom node
     SPRITES = new TetrisSpritesCreation(); // need dom node created to get sizes for scaling
-    this._domNode = new DomNode({ // menus on top of the screen
+    this._domNode = new DomNode({ // menus on top of the screen #DEBUG white
         body: true,
         topScreenSprite: { type: 'canvas',
             width: _ => SPRITES.pxGameWidth, height: _ => SPRITES.pxTopMenuZoneHeight, sprite:SPRITES._spriteBackground }, // to create an HTML top free space above the tetris game
@@ -469,7 +470,7 @@ function TetrisSpritesCreation() {
 TetrisSpritesCreation.prototype = {
     _zoomRatio              : 1, // default 1, float current zoom ratio
     _scaleFactor            : 33, // default 33, int scale unit < SPRITES.pxBlockSize && > = 1
-    pxTopMenuZoneHeight     : 20, // default 0 or 20, Y top part screen of the game, to display others informations #DEBUG
+    pxTopMenuZoneHeight     : 0, // default 0 or 20, Y top part screen of the game, to display information #DEBUG
     pxGameWidth             : null,
     pxGameHeight            : null,
         pxHalfGameHeight    : null,
@@ -612,7 +613,7 @@ TetrisGame.prototype = {
     _iPositionStart         : null,
     _jPositionStart         : null,
     _playersCount           : 0,
-    _gameState              : GAME_STATES.running, // others: GAME_STATES.paused, GAME_STATES.running
+    _gameState              : GAME_STATES.running, // possible: GAME_STATES.paused, GAME_STATES.running
     _shapeIdTick            : 0,
     _nextBlockIndex         : 0,
     _pentominoesBriefMode   : null,            
@@ -621,9 +622,9 @@ TetrisGame.prototype = {
     _anims                  : {}, // only 1 instance of game
     _freeColorsArray        : null, // available colors for players
     _gameKeysSets           : [ // up down left right, https://keycode.info/
-        {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true}, // WASD on QWERTY for left player, ZQSD on AZERTY
         {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
-        {symbols: ['\u2227','<','\u2228','>'], keys: ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'], free: true}
+        {symbols: ['\u2227','<','\u2228','>'], keys: ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'], free: true},
+        {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true} // WASD on QWERTY for left player, ZQSD on AZERTY
     ],
     _storedPolyominoes : [                                                                 // 5x5 shapes only, coordinates, angles count
         // 4 trominoes or domino or monomino
@@ -754,7 +755,7 @@ TetrisGame.prototype = {
     startGame() {
         this._gameState = GAME_STATES.running;
         AUDIO.audioStop('musicMusic');
-        // AUDIO.audioPlay('musicMusic');
+        AUDIO.audioPlay('musicMusic'); // works only if a click or keystroke is received from a menu before the game starts #DEBUG
     },
     transferRows(from, count) { // from grid
         let toGridArray = [];
@@ -1193,6 +1194,7 @@ TetrisGrid.prototype            = {
             this._matrix[i][jRow].destroyBlock();
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
+
         if ( (this.isGridAvailableToPlay()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]: // UP
                 this.rotationAsked();
