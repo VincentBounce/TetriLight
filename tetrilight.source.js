@@ -240,7 +240,7 @@ const SOUNDS                  = {
     selectFX                  : {ext: 'wav'},
     musicMusic                : {ext: 'mp3', vol: 0.5} };
 // values > 0 to avoid (value === 0 == false)
-const GAME_STATES = { paused   : 1, running: 2};
+const GAME_STATES = { paused   : 1, running: 2, runningBeforeKeyPressed: 3};
 const GRID_STATES = { ready    : 1, playing: 2, lost   : 3}; // connected but not started
 const BLOCK_TYPES = { ghost    : 1, inShape: 2, orphan : 3};
 const SEARCH_MODE = { down     : 1, up     : 2};
@@ -300,7 +300,7 @@ MainMenu.prototype = {
                     GAME.pauseOrResume(); // to enter pause
                 break; // always exit after this instruction
             default:
-                if (GAME._gameState === GAME_STATES.running) // if game is not paused
+                if (GAME._gameState !== GAME_STATES.paused) // if game is not paused
                     GAME._gridsListArray.forEach( myGrid => myGrid.chooseControlAction(keyboardEvent) );
         }
     },
@@ -613,7 +613,7 @@ TetrisGame.prototype = {
     _iPositionStart         : null,
     _jPositionStart         : null,
     _playersCount           : 0,
-    _gameState              : GAME_STATES.running, // possible: GAME_STATES.paused, GAME_STATES.running
+    _gameState              : GAME_STATES.runningBeforeKeyPressed, // others states: GAME_STATES.paused, GAME_STATES.running
     _shapeIdTick            : 0,
     _nextBlockIndex         : 0,
     _pentominoesBriefMode   : null,            
@@ -668,7 +668,7 @@ TetrisGame.prototype = {
         // this._pentominoesBriefMode.destroyPentoMode();// old, remove all timers
     },
     pauseOrResume() { // pause or resume
-        this._gameState = (this._gameState === GAME_STATES.running) ? GAME_STATES.paused : GAME_STATES.running;
+        this._gameState = (this._gameState !== GAME_STATES.paused) ? GAME_STATES.paused : GAME_STATES.running;
         AUDIO.pauseOrResume('musicMusic'); // pause or resume playing music only, because FX sounds end quickly
         AUDIO.audioPlay('selectFX'); // always play sound FX for pause or resume
         this._pentominoesBriefMode.pauseOrResume(); // if pentominoes mode, pause it
@@ -752,11 +752,11 @@ TetrisGame.prototype = {
         }
         return allGridsBlocksCount/playingGridsCount;
     },
-    startGame() {
+    /*startGame() { #DEBUG
         this._gameState = GAME_STATES.running;
         AUDIO.audioStop('musicMusic');
-        AUDIO.audioPlay('musicMusic'); // works only if a click or keystroke is received from a menu before the game starts #DEBUG
-    },
+        AUDIO.audioPlay('musicMusic'); // works only if a click or keystroke is received from a menu before the game starts
+    },*/
     transferRows(from, count) { // from grid
         let toGridArray = [];
         this._gridsListArray.forEach( myGrid => {
@@ -1194,7 +1194,10 @@ TetrisGrid.prototype            = {
             this._matrix[i][jRow].destroyBlock();
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
-
+        if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) {
+            AUDIO.audioPlay('musicMusic');
+            GAME._gameState = GAME_STATES.running;
+        }
         if ( (this.isGridAvailableToPlay()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]: // UP
                 this.rotationAsked();
