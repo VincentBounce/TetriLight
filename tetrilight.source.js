@@ -1194,7 +1194,7 @@ TetrisGrid.prototype            = {
             this._matrix[i][jRow].destroyBlock();
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
-        if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) {
+        if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) { // because web browsers are blocking music before the first keystroke
             AUDIO.audioPlay('musicMusic');
             GAME._gameState = GAME_STATES.running;
         }
@@ -1207,14 +1207,14 @@ TetrisGrid.prototype            = {
                 break; // left
             case this._playerKeysSet.keys[2]: // DOWN
                 //if ( !this._keyDownPressedAtLeast200ms ) this._keyPressTimer.restartTimer();
-                if ( !keyboardEvent.repeat) this.beginSoftDropping(); //to avoid hard drop by keeping keydown, but only by 2 times keydown
+                if ( !keyboardEvent.repeat) this.beginSoftDropping(); // to avoid hard drop by keeping keydown, but only by 2 times keydown
                 break; // down
             case this._playerKeysSet.keys[3]: // RIGHT
                 this.horizontalMoveAsked(1);
                 break; // right
             default:
         }
-        else switch (keyboardEvent.code) { //(keyboardEvent.type === 'keyup'), allow reload on DOWN key pressed yup even during animation
+        else switch (keyboardEvent.code) { // (keyboardEvent.type === 'keyup'), allow reload on DOWN key pressed yup even during animation
             case (this._playerKeysSet.keys[2]): // DOWN
                 this._keyPressedUpForNextShape = true; // necessary to make control possible, but impossible just after last drop
                 //console.log(this._keyDownPressedAtLeast200ms);
