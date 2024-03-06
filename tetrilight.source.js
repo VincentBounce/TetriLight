@@ -1738,7 +1738,7 @@ function DomNode(definitionObject, nodeNameId, nodeParent=null) { // 2 last argu
                 this._sprite = definitionObject.sprite;
                 delete definitionObject.sprite;
             }
-            this._drawingContext2D = this._htmlElement.getContext('2d');
+            this._drawingContext2D = this._htmlElement.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
             this._htmlElement.width = this.widthSprite;
             //this._htmlElement.style.width = this.widthSprite*ratio+'px';
             this._htmlElement.height = this.heightSprite;
