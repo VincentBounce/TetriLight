@@ -1,6 +1,6 @@
 # 🧱TetriLight - JavaScript 3-player Tetris on the same monitor
 
-Pure HTML5 fully resizable and animated JS Canvas Tetris. *No image, no framework, no imported API, no imported library.*
+JS Tetris: HTML5 Canvas | Fully resizable and animated | 100% offline | 100% coded, no framework, no API, no library
 
 Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Safari 17.3✅ | Firefox 123✅.
 
@@ -8,29 +8,33 @@ Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canv
 
 Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
-## To play
+## 🕹To play
+
+**[▶️Run it here](https://vincentbounce.github.io/TetriLight/)** or download the source code and run `index.html` locally.
 
 Use keys `WASD`, `IJKL`, and `<∧∨>` respectively for players 1, 2, and 3. If you're less than 3 players, just let zombie games lose.
 
 When you have 1 or 2 players remaining, to add a new player, click on the upper-left corner of the page with the mouse.
 
-## Rules
+Press `P` to pause, and `P` again to resume.
 
-When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
+## 📏Rules
 
 When a player clears 2 (`RULES.transferRowsCountMin`) or more lines together, then he drops the same quantity of bad grey lines to other players.
 
+When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
+
 The game is lost when a new shape can't be placed `!_fallingShape.canMoveToPlaced`.
 
-The level starts from 0 and increments +1 every 10 rows cleared
-Hard drops double traveled cells count.
+**Score**
 
-Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then `* (level + 1)`
+- The level starts from 0 and increments +1 every 10 rows cleared.
+- Hard drops double traveled cells count.
+- Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then `* (level + 1)`
+- The combos rows count formula is `the same * 50%`.
+- The bonus is the same as 2 rows when all is cleared (a perfect clear).
 
-The combos rows count formula is `the same * 50%`
-The bonus is the same as 2 rows when all is cleared (a perfect clear).
-
-## Wording
+## 🔤Wording
 
 ```
 to clear = to sweep, cleared = swept

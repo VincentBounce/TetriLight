@@ -92,7 +92,7 @@ const RULES                     = { // tetris rules
     initialVolume               : 0.1, // default 0.6, 0 to 1, if #DEBUG
     transferRowsCountMin        : 2, // default 2, min height of rows to drop bad grey lines to others players, decrease for #DEBUG
     pentominoesRowsCountMin     : 3, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
-    horizontalCellsCount        : 10, // default 10, min 5 #DEBUG
+    horizontalCellsCount        : 10, // default 10, min 5 for #DEBUG
     verticalCellsCount          : 21, // default 21             = (20 visible + 1 hidden) #DEBUG
     topLevel                    : 25, // default 25, max level (steps of drop acceleration)
     risingRowsHolesCountMaxRatio: 0.3, // default 0.3, <        = 0.5, max holes into each rising row, example: 0.5 = 50% means 5 holes for 10 columns
@@ -104,14 +104,15 @@ const DURATIONS                 = { // tetris durations, periods in ms
     rising1RowDuration          : 150, // 0150 ms or 250, increase for #DEBUG
     rotatingDuration            : 400, // 0400 ms
     gridQuakeDuration           : 150, // 0150 ms or 200, increase for #DEBUG, incompressible by any key excepted pause
-    centralMessagesDuration     : 1500, // 1500 ms, central messages displaying duration, replaced, not queued
+    centralMessagesDuration     : 1200, // 1200 ms, central messages displaying duration, replaced, not queued
     displayingScoreDuration     : 1500, // 1500 ms
     hardDropDuration            : 200, // 0200 ms, increase for #DEBUG
     lostMessageDuration         : 3500, // 3500 ms, period to display score
     softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
     initialDropPeriod           : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
-const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
+//const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Permanent Marker' }; // online fonts
 //const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
+const FONTS                   = { scoreFont: 'Tahoma, sans-serif', messageFont: 'Gill Sans, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
     landFX                    : {ext: 'wav'},
     rotateFX                  : {ext: 'wav'},
@@ -679,6 +680,10 @@ class PentominoesBriefMode {
                 myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
                 myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
                 myGrid._nextShapePreview.mark(myGrid._nextShape);
+                myGrid._gridMessagesQueue.execNowOrEnqueue( // display message in each grid
+                    myGrid._anims.messageAnim,
+                    myGrid._anims.messageAnim.startAnim,
+                    [{text: 'Normal<BR>mode', fieldCharCount: 5}]);
             }
         });
     }
@@ -691,7 +696,11 @@ class PentominoesBriefMode {
                 myGrid._nextShapePreview.unMark(myGrid._nextShape); // to mark immediately next shape on preview
                 myGrid._nextShape = new TetrisShape(myGrid); // previous falling shape is garbage collected
                 myGrid._nextShapePreview.mark(myGrid._nextShape);
-            }
+                myGrid._gridMessagesQueue.execNowOrEnqueue( // display message in other grids
+                    myGrid._anims.messageAnim,
+                    myGrid._anims.messageAnim.startAnim,
+                    [{text: (myGrid === gridWichTriggeredPentoMode ? 'Trominoes' : 'Pentominoes') + '<BR>mode', fieldCharCount: 6}]);
+                }
         }, this ); // this way to pass this._gridWichTriggeredPentoMode
         this._pentoModeTimer.setTimerPeriod(DURATIONS.pentominoesModeDuration*clearedLinesCount) // *3 for 3 lines cleared, *4 for 4 lines cleared
             .restartTimer();
@@ -760,7 +769,7 @@ function TetrisGrid(playerKeysSet, gridColor){
         text: this._playerKeysSet.symbols[0]+'</BR>'+this._playerKeysSet.symbols[1]+' '+this._playerKeysSet.symbols[2]+' '+this._playerKeysSet.symbols[3],
         fieldCharCount: 8 }); // up down left right
     this._domNode._childs.scoreZoneDiv.createText(FONTS.scoreFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0 0 0.4em '+SpriteObj.rgbaTxt(this._gridColor.light), 3);
-    this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'bold', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
+    this._domNode._childs.messageZoneDiv.createText(FONTS.messageFont, 'normal', SpriteObj.rgbaTxt(this._gridColor.light), '0.05em 0.05em 0em '+SpriteObj.rgbaTxt(this._gridColor.dark));
     this._nextShapePreview = new NextShapePreview(this);
     this._anims = {}; // need to initialize before creating new score which contains anim
     this._score = new TetrisScore(this); // contains animation, 
@@ -919,7 +928,7 @@ TetrisGrid.prototype            = {
         if (this._animsStack.length === 0) // dequeue at end of anims stack, equivalent to (!this._animsStack.length), #DEBUG before
             this._gridEventsQueue.dequeue();
     },
-    startGrid() {
+    startGrid() { //start playing for this grid
         this._gridState = GRID_STATES.playing
         this._nextShape = new TetrisShape(this);
         this.newFallingShape();
@@ -931,6 +940,10 @@ TetrisGrid.prototype            = {
         // end putRowsAtStart
         if (GAME._gameState === GAME_STATES.paused)
             this.pauseOrResume();
+        this._gridMessagesQueue.execNowOrEnqueue( // display Go!
+            this._anims.messageAnim,
+            this._anims.messageAnim.startAnim,
+            [{text: 'Go!', fieldCharCount: 2.5}]);
     },
     newFallingShape() {
         this._fallingShape = this._nextShape;
@@ -1055,7 +1068,7 @@ TetrisGrid.prototype            = {
         this._gridMessagesQueue.execNowOrEnqueue( // empty queues necessary?
             this._anims.messageAnim,
             this._anims.messageAnim.startAnim,
-            [{text: 'You<BR/>lose', fieldCharCount: 4}]);
+            [{text: 'You<BR/>lose', fieldCharCount: 3}]);
         this._gridMessagesQueue.execNowOrEnqueue(this, this.afterLost_);
         for (let p in this._lockedBlocks._lockedBlocksArray)
             this._lockedBlocks._lockedBlocksArray[p].setBlockColor(SPRITES._colors['grey']);
@@ -1565,7 +1578,7 @@ class TetrisScore {
         this._combos++;
         if (this._combos >= 1) {
             this._delta += this._factors[Math.min(this._combos, 5)] * (this._level+1) * 0.5; // 50% of lines cleared together
-            this._grid._anims.messageAnim.startAnim({text: this._combos+((this._combos<2)?' combo':' x')});
+            this._grid._anims.messageAnim.startAnim({ text: this._combos+((this._combos<2)?' combo':' x'), fieldCharCount: 4 }); // 5 with Rock Salt font
             // $$$sound of coins
         }
     }
@@ -1580,7 +1593,7 @@ class TetrisScore {
     }
     computePerfectClear_(sweptRowsCount) {
         if (this._grid._lockedBlocks._blocksCount === sweptRowsCount * RULES.horizontalCellsCount) { // means same cleared blocks qty than grid currently had
-            this._grid._anims.messageAnim.startAnim({ text: 'Perfect<BR/>clear', fieldCharCount: 5 });
+            this._grid._anims.messageAnim.startAnim({ text: 'Perfect<BR/>clear', fieldCharCount: 3.5 }); // 5 with Rock Salt font
             this._delta += this._factors[2] * (this._level+1);
         }
     }
@@ -1596,7 +1609,7 @@ class TetrisScore {
             this._grid._dropTimer.setTimerPeriod(this._grid._normalDropPeriod);
             this._grid._anims.messageAnim.startAnim({
                 text: (this._level < RULES.topLevel) ? (`Level ${this._level}`) : (`<BR/>TOP<BR/> level ${this._level}`), // fit ES6
-                fieldCharCount: 5 }); // last arg: higher for smaller text, not to queue, each new one replace previous one
+                fieldCharCount: 3.5 }); // last arg: higher for smaller text, not to queue, each new one replace previous one, 5 with Rock Salt font
         }
     }
     writeScore_(scoreText) {
