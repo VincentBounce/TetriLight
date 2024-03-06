@@ -4,6 +4,9 @@
 **************** 2011 to 2024 - v0.4          ****************
 **************************************************************
 
+https://github.com/VincentBounce/TetriLight
+https://vincentbounce.github.io/TetriLight/
+
 **************** MINOR BUGS ****************
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
 If top line only is cleared AND top line has blocks under, then the anim and sound of droping occurs again
@@ -111,8 +114,7 @@ const DURATIONS                 = { // tetris durations, periods in ms
     softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
     initialDropPeriod           : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 //const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Rock Salt' }; // online fonts
-//const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
-const FONTS                   = { scoreFont: 'Tahoma, sans-serif', messageFont: 'Impact, Gill Sans, sans-serif' }; // web safe fonts = offline fonts
+const FONTS                   = { scoreFont: 'Tahoma, sans-serif', messageFont: 'Impact, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
     landFX                    : {ext: 'wav'},
     rotateFX                  : {ext: 'wav'},
@@ -130,7 +132,7 @@ const DROP_TYPES  = { soft     : 1, hard   : 2}; // 1 and 2 are useful for score
 
 // INIT called by HTML browser
 function init() {
-    for (let p in DURATIONS) DURATIONS[p] /= RULES.gameSpeedRatio;    // change durations with coeff, float instead integer no pb, to slowdown game
+    for (let p in DURATIONS) DURATIONS[p] /= RULES.gameSpeedRatio; // change durations with coeff, float instead integer no pb, to slowdown game
     AUDIO = new Audio(SOUNDS);
     AUDIO.changeVolume(false);
     MAIN_MENU = new MainMenu(); // #DEBUG
@@ -160,7 +162,7 @@ function MainMenu() { // queue or stack
     SPRITES.zoom1Step(0); // we set all px sizes
     this._domNode._childs.playingAreaSprite.nodeDrawSprite(); // paint black background
     // this._domNode._childs.message1Div.createText('FONTS.messageFont', 'bold', 'black', '');
-    // this._domNode._childs.message1Div.setTex('totototo');
+    // this._domNode._childs.message1Div.setTex('$$$');
     this._domNode._htmlElement.addEventListener('click',
         function(eventClick) {
             if ((eventClick.offsetX < SPRITES.pxButtonSize) && (eventClick.offsetY < SPRITES.pxButtonSize))
@@ -209,7 +211,8 @@ Audio.prototype = {
     },
     audioPlay(name) {
         this._sounds[name].paused = false;
-        this._sounds[name].sound.play();
+        if (GAME._gameState !== GAME_STATES.runningBeforeKeyPressed) // Uncaught (in promise) DOMException: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD
+            this._sounds[name].sound.play();
     },
     audioStop(name) {
         this._sounds[name].paused = false;
@@ -487,6 +490,7 @@ function TetrisGame() {
         animOwner: this // otherwise, it's animation context by default
     });
     this._gameEventsQueue = new EventsQueue();    // animating applied on this._anims.moveGridsAnim
+    // AUDIO.audioPlay('musicMusic'); impossible to play music here because audioPlay call GAME which is not yet created in this constructor
 }
 TetrisGame.prototype = {
     _gridsListArray         : null,
@@ -634,11 +638,6 @@ TetrisGame.prototype = {
         }
         return allGridsBlocksCount/playingGridsCount;
     },
-    /*startGame() { #DEBUG
-        this._gameState = GAME_STATES.running;
-        AUDIO.audioStop('musicMusic');
-        AUDIO.audioPlay('musicMusic'); // works only if a click or keystroke is received from a menu before the game starts
-    },*/
     transferRows(from, count) { // from grid
         let toGridArray = [];
         this._gridsListArray.forEach( myGrid => {
@@ -1036,7 +1035,6 @@ TetrisGrid.prototype            = {
         myShapes.forEach( myShape => myShape.moveAndPlaceShape(0, myShape._jVector, DROP_TYPES.hard) ) // move to placed on grid
     },
     countAndClearRows() { // locks block and computes rows to transfer and _scores
-        // old: AUDIO.audioPlay('landFX');
         if (this._fallingShape !== null) // for recursive calls with fallingshape === null
             this._fallingShape.clearGhostBlocks();
         let rowsToClearCount = this._rowsToClearSet.size;
@@ -1087,7 +1085,7 @@ TetrisGrid.prototype            = {
             this._matrix[i][jRow].destroyBlock();
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
-        if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) { // because web browsers are blocking music before the first keystroke
+        if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) { // Uncaught (in promise) DOMException: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD
             AUDIO.audioPlay('musicMusic');
             GAME._gameState = GAME_STATES.running;
         }
