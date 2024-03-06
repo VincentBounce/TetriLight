@@ -58,7 +58,7 @@ pivot = orientation
 
 - `canvas` canvas dev (playable)
 - `svg` SVG dev (dev not finished)
-- `main` started canvas dev here (archived)
+- `main` started canvas dev here (archived, to merge with canvas)
 - `es5-fit-ie11` latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11 (archived)
 - `async` trial using async functions (archived)
 
