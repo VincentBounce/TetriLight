@@ -1086,8 +1086,8 @@ TetrisGrid.prototype            = {
     },
     chooseControlAction(keyboardEvent) { //no controls during animations, this.isGridAvailableToPlay solves bug of not reloading on keyup after a drop
         if (GAME._gameState === GAME_STATES.runningBeforeKeyPressed) { // Uncaught (in promise) DOMException: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD
-            AUDIO.audioPlay('musicMusic');
             GAME._gameState = GAME_STATES.running;
+            AUDIO.audioPlay('musicMusic');
         }
         if ( (this.isGridAvailableToPlay()) && keyboardEvent.type === 'keydown') switch (keyboardEvent.code) {
             case this._playerKeysSet.keys[0]: // UP
