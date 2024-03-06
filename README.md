@@ -10,7 +10,7 @@ Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
 ## To Play
 
-Just use keys `WASD`, `IJKL` and `<∧∨>` respectively for player 1, 2 and 3. I you're less than 3 players, just let zombie games losing.
+Use keys `WASD`, `IJKL` and `<∧∨>` respectively for player 1, 2 and 3. I you're less than 3 players, just let zombie games losing .
 
 When you are 1 or 2 players remaining, to add a new player, just click on the upper-left corner of the page with the mouse.
 

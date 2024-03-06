@@ -1,7 +1,8 @@
-/******************************************************************
-****************   TetriLight - Vincent Bounce     ****************
-****************   2011 to 2024 - v0.4             ****************
-*******************************************************************
+/*************************************************************
+**************** TetriLight - ꓱꓛꓠꓵꓳꓭ ꓕꓠꓱꓛꓠꓲꓥ ****************
+**************** https://x.com/VincentBounce  ****************
+**************** 2011 to 2024 - v0.4          ****************
+**************************************************************
 
 **************** MINOR BUGS ****************
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
@@ -13,8 +14,7 @@ $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
 != became !==, 10min tested: stable, check if slower
 == became ===, 10min tested: stable, check if slower
-Prototypes became Class, check if slower
-frame rate
+Prototypes became Class, check if slower frame rate
 
 **************** JS REMINDER ****************
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
