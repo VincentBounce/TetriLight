@@ -4,34 +4,31 @@ Pure HTML5 fully resizable and animated JS Canvas Tetris. *No image, no framewor
 
 Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Safari 17.3✅ | Firefox 123✅.
 
-It fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript)
+Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript)
 
 Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
-## To Play
+## To play
 
-Use keys `WASD`, `IJKL` and `<∧∨>` respectively for player 1, 2 and 3. I you're less than 3 players, just let zombie games losing .
+Use keys `WASD`, `IJKL`, and `<∧∨>` respectively for players 1, 2, and 3. If you're less than 3 players, just let zombie games lose.
 
-When you are 1 or 2 players remaining, to add a new player, just click on the upper-left corner of the page with the mouse.
+When you have 1 or 2 players remaining, to add a new player, click on the upper-left corner of the page with the mouse.
 
-## Tetris game rules
+## Rules
 
-When a player clears 3 or more `RULES.pentominoesRowsCountMin` lines together, then he have 1 to 3 blocks per shape,
-and others players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
+When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
 
-When a player clears 2 or more `RULES.transferRowsCountMin` lines together, then he drops same quantity of bad grey lines to others players.
+When a player clears 2 (`RULES.transferRowsCountMin`) or more lines together, then he drops the same quantity of bad grey lines to other players.
 
-Game is lost when new shape can't be placed `!_fallingShape.canMoveToPlaced`.
+The game is lost when a new shape can't be placed `!_fallingShape.canMoveToPlaced`.
 
-Game starts at level 0
+The level starts from 0 and increments +1 every 10 rows cleared
+Hard drops double traveled cells count.
 
-Level starts 0, increments +1 every 10 rows cleared
-Hard drops double travelled cells count
+Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then `* (level + 1)`
 
-Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then *(level + 1)
-
-Combos rows count formula is same * 50%
-Bonus same as 2 rows when all is cleared (Perfect clear)
+The combos rows count formula is `the same * 50%`
+The bonus is the same as 2 rows when all is cleared (a perfect clear).
 
 ## Wording
 
@@ -65,11 +62,11 @@ pivot = orientation
 
 **Canvas (currently used)**
 
-- each canvas element is obscur in Elements Explorer
+- each canvas element is obscured in Elements Explorer
 - blur because `window.devicePixelRatio !== 1` 1.75 for example in 4K screen
 - move without calculation
 - computing page resize zoom with JS explicit code
-- `window.devicePixelRatio` read only, ratio 1.75 on my 4K LCD === physical px / px independant device
+- `window.devicePixelRatio` read-only, ratio 1.75 on my 4K LCD === physical px / px independant device
 
 ```
 DIV
@@ -94,7 +91,7 @@ DIV
 - `#DEBUG` to track bug
 - `$$$` to check or fix later
 - `$function` used to track bug
-- `GLOBAL_VARIABLE_OR_CONSTANT` global variable to handle a class, or global constant
+- `GLOBAL_VARIABLE_OR_CONSTANT` global variable to handle a class or a global constant
 - `MyClass` public class with first letter uppercase (Pascal Case)
 - `_privateVariable` private variable accessible only by class
 - `privateMethod_` private method accessible only by class
@@ -102,23 +99,23 @@ DIV
 - `publicMethod` public method (Lower Camel Case)
 - `publicVariable` public variable (Lower Camel Case)
 - `destroyMyClass` class destructor function
-- `let myVariable` is local variable in the fonction
+- `let myVariable` is the local variable in the function
 - `let x, y` are positions on browser, in pixels (x -> right, y -> down)
-- `let i, j` are positions of blocks into grid (i -> right, j -> up)
-- `let o` is generic object
-- `let p` is variable to browse in object
-- `let item` is generic item, object or array or string boolean number
+- `let i, j` are positions of blocks in the grid (i -> right, j -> up)
+- `let o` is a generic object
+- `let p` is a variable to browse in the object
+- `let item` is a generic item: object or array or string boolean number
 - `forEach( (myVar)=>{ return myVar++; } );`
 
 ## Animation sequences
 
 **Events program, reacts to**
 
-- timeouts after animations, after drop period on each slot
+- timeouts after animations, after the drop period on each slot
 - keys pressed
 - mouse clicks
 
-**Queuing new actions, new exclusive anims when**
+**Queuing new actions, new exclusive animations when**
 
 - `(hardDrop > quake)0-1 > (clearRows > hardDrop > quake)0-*` riseGreyBlocks actions are stuck
 - `(riseGreyBlocks)1-* > (hitShape > (clearRows > hardDrop > quake)0-* )0-1 >` fallingShape is stuck
@@ -153,8 +150,8 @@ MainMenu [1 instance]
                 _level
 ```
 
-# 😉 Author
+# 😉 Author 🇫🇷 ꓱꓛꓠꓵꓳꓭ ꓕꓠꓱꓛꓠꓲꓥ
 
-**🇫🇷 ꓱꓛꓠꓵꓳꓭ ꓕꓠꓱꓛꓠꓲꓥ** | **𝕏 [@VincentBounce](https://x.com/VincentBounce)** | **YouTube [@VincentBounce](https://www.youtube.com/@VincentBounce/)** | **Instagram [@VincentBounce](https://instagr.am/vincentbounce/)**
+**𝕏 [@VincentBounce](https://x.com/VincentBounce)** | **YouTube [@VincentBounce](https://www.youtube.com/@VincentBounce/)** | **Instagram [@VincentBounce](https://instagr.am/vincentbounce/)**
 
 TetriLight v0.4 edited in 2011, 2020 and 2024
