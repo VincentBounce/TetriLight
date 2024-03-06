@@ -1,60 +1,7 @@
 /******************************************************************
 ****************   TetriLight - Vincent Bounce     ****************
-****************   2011 and 2020 and 2024 - v0.4   ****************
+****************   2011 to 2024 - v0.4             ****************
 *******************************************************************
-Pure HTML5 JS CANVAS, no picture, no framework, no API, fully resizable
-Tested on 2020-05-01, it fits Chrome, Brave, Edge, Opera, Safari, Firefox (slow)
-Fit ECMAScript 6 (2015) + HTML5 Canvas + https://standardjs.com/rules.html + Airbnb style
-All browsers support MP3 and WAV, excepted Edge/IE for WAV
-
-**************** GITHUB ****************
-remote: tetrilight-github instead origin
-branches:
-    canvas: canvas dev [playable]
-    svg: SVG dev [in progress]
-    main: started canvas dev here, to delete
-    es5-fit-ie11: latest version compatible [JS ES5=ECMAScript 2009] to fit Internet Explorer 11, to delete
-    async: trial using async functions, to delete
-
-**************** VOCABULARY ****************
-to clear = to sweep, cleared = swept
-a row = a line
-a cell = a slot = a box
-sprites = graphics = gfx
-pivot = orientation
-
-**************** TETRIS GAME RULES ****************
-When a player clears 3 or more (RULES.pentominoesRowsCountMin) lines together, then he have 1 to 3 blocks per shape,
-and others players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
-When a player clears 2 or more (RULES.transferRowsCountMin) lines together, then he drops same quantity of bad grey lines to others players.
-Game is lost when new shape can't be placed (!_fallingShape.canMoveToPlaced).
-Game starts at level 0
-Level starts 0, increments +1 every 10 rows cleared
-Hard drops double travelled cells count
-Cleared rows count formula is 40 for 1, 100 for 2, 300 for 3, 1200 for 4, 6600 for 5 at level 0, then *(level + 1)
-Combos rows count formula is same * 50%
-Bonus same as 2 rows when all is cleared (Perfect clear)
-
-**************** GRAPHIC CHOICE ****************
-SVG:
-    each SVG element is visible in Elements Explorer
-    gradient possible on fonts
-    small blur because sizes in %
-    calculate render on each move
-    implicit built-in page resize zoom
-Canvas:
-    each canvas element is obscur in Elements Explorer
-    blur because window.devicePixelRatio !==1, 1.75 for example in 4K screen
-    move without calculation
-    computing page resize zoom with JS explicit code
-    window.devicePixelRatio: read only, ratio 1.75 on my 4K LCD === physical px / px independant device
-    DIV
-        _htmlElement: DIV
-        _htmlElement: CANVAS
-            _drawingContext2D: CanvasRenderingContext2D (choose smooth)
-                globalAlpha, imageSmoothingEnabled, imageSmoothingQuality
-
-WebGL: not massively adopted
 
 **************** MINOR BUGS ****************
 Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
@@ -69,18 +16,7 @@ $$$ pause doesn't pause coming grid movements
 Prototypes became Class, check if slower
 frame rate
 
-**************** CHANGES FROM ECMAScript 5 (2009) ****************
-window.requestAnimationFrame, window.cancelAnimationFrame: W3C 2015: Firefox 23 / IE 10 / Chrome / Safari 7
-IE11 (standard with Windows 10) not working with:
-    (`Level ${this._level}`)
-    let myFunc = function(x){return x;} --> let myFunc = (x)=>{return x;} --> x=>x
-    cloneSheeps = sheeps.slice(); --> cloneSheepsES6 = [...sheeps]
-    func(arg=null)
-    myArray.fill()
-ECMAScript 2015: let, const, Transform: IE11 OK
-ECMAScript 2017: async await
-
-**************** CODE JS ****************
+**************** JS REMINDER ****************
 SVG: can change in realtime, retained mode (gradient evaluated on each change)
     for large surface, small number of objects
 HTML5 Canvas: draw and forget, immediate mode (gradient done): CHOOSEN!
@@ -107,7 +43,7 @@ myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
     With arrow functions the this keyword always represents the object that defined the arrow function.
 React (78% market): HTML, CSS, JS faster dev / Angular (21% market): Java, C# cleaner code, match TypeScript
 
-**************** CODE JS ARRAY ****************
+**************** JS ARRAY REMINDER ****************
 queue(fifo) / gridAnimsStackPush(filo)
 shift<<, unshift>> [array] <<push, >>pop
 delete myArray[0]: just set slot to undefined
@@ -145,63 +81,8 @@ myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it
             matrix[index] = [];
             for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; // height -1 to +(2x20) });
 merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
-
-**************** NAMING CONVENTION ****************
-// #DEBUG: to track bug
-// $$$: to check or fix later
-$function: used to track bug
-GLOBAL_VARIABLE_OR_CONSTANT: global variable to handle a class, or global constant
-MyClass: public class with first letter uppercase (Pascal Case)
-_privateVariable: private variable accessible only by class
-privateMethod_: private method accessible only by class
-privateMethodBody_: private method body called only by 1 method
-publicMethod: public method (Lower Camel Case)
-publicVariable: public variable (Lower Camel Case)
-destroyMyClass: class destructor function
-let myVariable is local variable in the fonction
-let x, y are positions on browser, in pixels (x -> right, y -> down)
-let i, j are positions of blocks into grid (i -> right, j -> up)
-let o is generic object
-let p is variable to browse in object
-let item is generic item, object or array or string boolean number
-forEach( (myVar)=>{ return myVar++; } );
-
-**************** ANIMATIONS SEQUENCES ****************
-Events program, reacts to:
-    timeouts after animations, after drop period on each slot
-    keys pressed
-    mouse clicks
-Queuing new actions, new exclusive anims when:
-(hardDrop > quake)0-1 > (clearRows > hardDrop > quake)0-* : riseGreyBlocks actions are stuck
-(riseGreyBlocks)1-* > (hitShape > (clearRows > hardDrop > quake)0-* )0-1 > : fallingShape is stuck
-messages and scores anims are not exclusive, each new one replace previous one
-0-1 means iterating from 0 to 1 time. 0-* from 0 to x times
-pauseOrResume stops every timers, music. It let FX finish. It block controls
-
-**************** CLASS ****************
-MainMenu [1 instance]
-    MAIN_MENU._domNode: DomNode [1 instance]
-    SPRITES: TetrisSpritesCreation [1 instance]
-        SpriteObj: sprite objects
-    GAME: TetrisGame [1 instance]
-        _gameEventsQueue
-        PentominoesBriefMode
-        TetrisGrid [x instance]
-            _playedPolyominoesType
-            _playerKeysSet
-            _animsStack
-            _anims: all grid anims
-            _gridEventsQueue
-            _gridMessagesQueue
-            lose()
-            _lockedBlocks: [] of Blocks
-            _lockedShapes: [] of Shapes: Blocks: Node
-            _fallingShape: Shape
-            _nextShape: Shape
-            TetrisScore
-                _score
-                _level
 */
+
 "use strict"; // use JavaScript in strict mode to make code better and prevent errors
 // GLOBAL VARIABLES, each one handle one class instance only
 let MAIN_MENU, GAME, AUDIO, SPRITES;            // SPRITES: TetrisSpritesCreation
