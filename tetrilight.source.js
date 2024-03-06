@@ -4,86 +4,17 @@
 **************** 2011 to 2024 - v0.4          ****************
 **************************************************************
 
-https://github.com/VincentBounce/TetriLight
-https://vincentbounce.github.io/TetriLight/
+Source https://github.com/VincentBounce/TetriLight
+Play 🕹 https://vincentbounce.github.io/TetriLight/
 
-**************** MINOR BUGS ****************
-Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row
-If top line only is cleared AND top line has blocks under, then the anim and sound of droping occurs again
+**************** Minor known bugs ****************
+Small bug, if riseGreyBlocks and 1 or more row appears, need to wait next drop to clear this row.
+If top line only is cleared AND top line has blocks under, then the anim and sound of droping occurs again.
 $$$ test browser when start!
 $$$ display fps
 $$$ ListAutoIndex called 1x, useless?
 $$$ pentomode blinking to solve
 $$$ pause doesn't pause coming grid movements
-!= became !==, 10min tested: stable, check if slower
-== became ===, 10min tested: stable, check if slower
-Prototypes became Class, check if slower frame rate
-
-**************** JS REMINDER ****************
-SVG: can change in realtime, retained mode (gradient evaluated on each change)
-    for large surface, small number of objects
-HTML5 Canvas: draw and forget, immediate mode (gradient done): CHOOSEN!
-    for small surface, large number of objects
-JS editor: Visual Studio Code with "Monokay" theme
-Debugger: Chrome with CTRL+SHIFT+I
-delete myObject.myAttribute: not exist anymore, [undefined], then garbage collector comes
-myObject.myAttribute = null: value is [null], then garbage collector comes
-let = cond ? if_true : if_false
-let x = {}; x = null (typeof === "object") / x = undefined (typeof === "undefined")
-typeof: item[undefined, boolean, number, string, object[array, set], function]
-'' === "" === `` / item <> element
-console.log(obj1, obj2, obj3...) to log objects into console (F12 key) on Chrome;
-console.clear() to clear before
-console.table() to have a clear table
-let result = myClassInstance.publicMethod(); <> let myMethod = myClassInstance.publicMethod;
-callee function (appelée), calling function (appelante)
-(function () { ...instructions... })(); it's IIFE, means Immediately invoked function expression
-only Object or Array variables can be assigned by references
-myMethod.call(this, arg1, arg2...) === myMethod.apply(this, [arg1, arg2...])
->= operator
-=> used to define a func 
-    In regular functions the this keyword represented the object that called the function, which could be the window, the document, a button or whatever.
-    With arrow functions the this keyword always represents the object that defined the arrow function.
-React (78% market): HTML, CSS, JS faster dev / Angular (21% market): Java, C# cleaner code, match TypeScript
-
-**************** JS ARRAY REMINDER ****************
-queue(fifo) / gridAnimsStackPush(filo)
-shift<<, unshift>> [array] <<push, >>pop
-delete myArray[0]: just set slot to undefined
-myArray.shift(): remove the 1st slot from the table, decrease the length
-    WARNING shift all indexes, start is alway 0
-    WARNING even an Empty slot
-for (let p in MyArray) delete myArray[p]: set to undefined / not Empty slots
-instrument = [...instrument, 'violin', 'guitar'] // same as push violin, push guitar
-instrument = ['violin', 'guitar', ...instrument] // same as unshift violin, unshift guitar
-objectName.propertyName === objectName["propertyName"]
-myArray = new Array(6) adds an array of 6 Empty slots, from 0 to 5
-WARNING:
-    Empty: without value
-    null: with value
-    undefined: with value
-myArray["propertyName"]=3.14 adds a property, NOT an array index, array lenght still unchanged
-myArray[-1]=3.14 adds a property, NOT an array index, array length still unchanged
-myArray[666]=3.14 adds an array index, array length goes to 667
-for (let p in myArray) browse each index AND each properties, WARNING p is string
-    browse also ones with null and undefined values
-    WARNING excepted Empty slots (without value) in array (skipping indices that were never assigned a value)
-myArray.forEach() browse each index, NOT properties
-    browse also ones with null and undefined values
-    WARNING excepted Empty slots (without value) in array (skipping indices that were never assigned a value)
-myArray = New Array(6).fill(null).forEach() browse each index
-    browse also ones with null and undefined values
-delete myArray[4] makes the 5th slot Empty
-myArray.forEach() return nothing WARNING, first argument is READ ONLY WARNING
-myArray.fill([]) return array, WARNING new Array is evaluated 1 time only, so it refers to same for each slot filled!
-    KO:    _matrix = [...[new Array(RULES.horizontalCellsCount+2).fill(null).forEach( (column, index, matrix)=>{
-            column = []; // column is READ ONLY, use matrix[index] instead
-            for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) column[j] = null; // height -1 to +(2x20)    })]]; // WARNING column is READ ONLY, use matrix[index][j] instead
-    OK:    _matrix = new Array(RULES.horizontalCellsCount+2).fill(null); // need to fill whole table, to make forEach browsing all slots
-        _matrix.forEach( (column, index, matrix)=>{ // left and right boxes as margins columns, program fail if removed
-            matrix[index] = [];
-            for (let j=GAME._matrixBottom;j <= GAME._matrixHeight;j++) matrix[index][j] = null; // height -1 to +(2x20) });
-merge 2 objects with different properties: myNewObject = Object.assign(firstOject, secondObject, {myThirdObjectProperty: 555}); or myNewObject = {...firstOject, ...secondObject, myThirdObjectProperty: 555};
 */
 
 "use strict"; // use JavaScript in strict mode to make code better and prevent errors
@@ -97,7 +28,7 @@ const RULES                     = { // tetris rules
     pentominoesRowsCountMin     : 3, // default 3, min height of rows to start pentominoes mode, decrease for #DEBUG
     horizontalCellsCount        : 10, // default 10, min 5 for #DEBUG
     verticalCellsCount          : 21, // default 21             = (20 visible + 1 hidden) #DEBUG
-    topLevel                    : 25, // default 25, max level (steps of drop acceleration)
+    topLevel                    : 25, // default 25, max level (no more steps of drop acceleration)
     risingRowsHolesCountMaxRatio: 0.3, // default 0.3, <        = 0.5, max holes into each rising row, example: 0.5 = 50% means 5 holes for 10 columns
     fps                         : 60/1000 }; // default 60/1000 = 60frames per 1000ms, average requestAnimationFrame() browser frame rate
 const DURATIONS                 = { // tetris durations, periods in ms
