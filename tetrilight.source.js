@@ -111,8 +111,8 @@ const DURATIONS                 = { // tetris durations, periods in ms
     softDropPeriod              : 50, // 0050 ms, if this is max DropDuration
     initialDropPeriod           : 1100 }; // 0700 ms, >= _softDropPeriod, decrease during game, increase for #DEBUG, incompressible duration by any key excepted pause
 //const FONTS                   = { scoreFont: 'Ubuntu', messageFont: 'Permanent Marker' }; // online fonts
-//const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
-const FONTS                   = { scoreFont: 'Arial, sans-serif', messageFont: 'Gill Sans, sans-serif' }; // web safe fonts = offline fonts
+const FONTS                   = { scoreFont: 'Arial, Helvetica, sans-serif', messageFont: 'Impact, Charcoal, sans-serif' }; // web safe fonts = offline fonts
+//const FONTS                   = { scoreFont: 'Arial, sans-serif', messageFont: 'Gill Sans, sans-serif' }; // web safe fonts = offline fonts
 const SOUNDS                  = { 
     landFX                    : {ext: 'wav'},
     rotateFX                  : {ext: 'wav'},
