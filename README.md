@@ -2,6 +2,8 @@
 
 JS Tetris: HTML5 Canvas | Fully resizable and animated | 100% offline | 100% coded, no framework, no API, no library
 
+![TetriLight screenshot](screenshot.png)
+
 Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Safari 17.3✅ | Firefox 123✅.
 
 Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript)
