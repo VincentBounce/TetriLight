@@ -10,13 +10,13 @@ Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canv
 
 ---
 
-## [▶️Run it here](https://vincentbounce.github.io/TetriLight/)
+## [🕹Play here](https://vincentbounce.github.io/TetriLight/)
 
 **Alternative: download the source code and run `index.html` locally.**
 
 ---
 
-## 🕹Controls
+## ⌨️Controls
 
 Use keys `WASD`, `IJKL`, and `<∧∨>` respectively for players 1, 2, and 3. If you're less than 3 players, just let zombie games lose.
 
