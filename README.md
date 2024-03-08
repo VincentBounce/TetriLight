@@ -2,7 +2,7 @@
 
 HTML5/JavaSript/Canvas | Resizable | Animated | Offline | 100% coded (no framework, no API, no library)
 
-![TetriLight screenshot](screenshot.png)
+![TetriLight screenshot](screenshot.jpg)
 
 Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Firefox 123✅ | Safari 17.3✅.
 
