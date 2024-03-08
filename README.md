@@ -6,9 +6,7 @@ HTML5/JavaSript/Canvas | Fully resizable and animated | 100% offline | 100% code
 
 Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Firefox 123✅ | Safari 17.3✅.
 
-Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript)
-
-Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
+Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript) | Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
 ---
 
