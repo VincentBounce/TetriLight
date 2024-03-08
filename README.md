@@ -1,18 +1,24 @@
-# 🧱TetriLight - JavaScript 3-player Tetris on the same monitor
+# 🧱TetriLight - JS 3-player Tetris on the same monitor
 
-JS Tetris: HTML5 Canvas | Fully resizable and animated | 100% offline | 100% coded, no framework, no API, no library
+HTML5/JavaSript/Canvas | Fully resizable and animated | 100% offline | 100% coded, no framework, no API, no library
 
 ![TetriLight screenshot](screenshot.png)
 
-Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Safari 17.3✅ | Firefox 123✅.
+Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅ | Firefox 123✅ | Safari 17.3✅.
 
 Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript)
 
 Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
-## 🕹To play
+---
 
-**[▶️Run it here](https://vincentbounce.github.io/TetriLight/)** or download the source code and run `index.html` locally.
+## [▶️Run it here](https://vincentbounce.github.io/TetriLight/)
+
+**Alternative: download the source code and run `index.html` locally.**
+
+---
+
+## 🕹Controls
 
 Use keys `WASD`, `IJKL`, and `<∧∨>` respectively for players 1, 2, and 3. If you're less than 3 players, just let zombie games lose.
 
