@@ -1,6 +1,6 @@
 # 🧱TetriLight - JS 3-player Tetris on the same monitor
 
-HTML5/JavaSript/Canvas | Fully resizable and animated | 100% offline | 100% coded, no framework, no API, no library
+HTML5/JavaSript/Canvas | Resizable | Animated | Offline | 100% coded (no framework, no API, no library)
 
 ![TetriLight screenshot](screenshot.png)
 
