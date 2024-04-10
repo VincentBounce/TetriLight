@@ -441,7 +441,8 @@ TetrisGame.prototype = {
     _gameKeysSets           : [ // up down left right, https://keycode.info/
         {symbols: ['I','J','K','L'], keys          : ['KeyI', 'KeyJ', 'KeyK', 'KeyL'], free                   : true},
         {symbols: ['\u2227','<','\u2228','>'], keys: ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'], free: true},
-        {symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true} // WASD on QWERTY for left player, ZQSD on AZERTY
+        {symbols: ['E','S','D','F'], keys          : ['KeyE', 'KeyS', 'KeyD', 'KeyF'], free                   : true}
+        //{symbols: ['W','A','S','D'], keys          : ['KeyW', 'KeyA', 'KeyS', 'KeyD'], free                   : true} // WASD on QWERTY/QWERTZ for left player | Recognized as ZQSD on AZERTY
     ],
     _storedPolyominoes : [                                                                 // 5x5 shapes only, coordinates, angles count
         // 4 trominoes or domino or monomino
