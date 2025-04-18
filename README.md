@@ -14,7 +14,9 @@ Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canv
 
 # [🕹Play here](https://vincentbounce.github.io/TetriLight/)
 
-**Alternative: download the source code and run `index.html` locally.**
+**Open https://vincentbounce.github.io/TetriLight/**
+
+**Alternative: download the source code and run `index.html` locally**
 
 ## ⌨️Controls
 
