@@ -9,12 +9,12 @@ Tested on 2024-03-06: Chrome 122✅ | Edge 122✅ | Brave 1.63✅ | Opera 106✅
 Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canvas + [JS Standard Style](https://standardjs.com/rules.html) + [Airbnb style](https://github.com/airbnb/javascript) | Music [Tayga Minila by JC`zic](https://soundcloud.com/jczic/tayga-minimal).
 
 ---
+---
+---
 
-## [🕹Play here](https://vincentbounce.github.io/TetriLight/)
+# [🕹Play here](https://vincentbounce.github.io/TetriLight/)
 
 **Alternative: download the source code and run `index.html` locally.**
-
----
 
 ## ⌨️Controls
 
@@ -50,6 +50,8 @@ sprites = graphics = gfx
 pivot = orientation
 ```
 
+---
+---
 ---
 
 # 🛠️Code
@@ -159,6 +161,10 @@ MainMenu [1 instance]
                 _score
                 _level
 ```
+
+---
+---
+---
 
 # 😉 Author 🇫🇷 ꓱꓛꓠꓵꓳꓭ ꓕꓠꓱꓛꓠꓲꓥ
 
