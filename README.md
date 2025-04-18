@@ -12,7 +12,7 @@ Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canv
 ---
 ---
 
-# [🕹Play here](https://vincentbounce.github.io/TetriLight/)
+# [🕹Play here](https://vincentbounce.github.io/TetriLight)
 
 **Open https://vincentbounce.github.io/TetriLight/**
 
