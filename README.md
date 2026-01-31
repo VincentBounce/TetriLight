@@ -1,4 +1,4 @@
-# 🧱TetriLight /// 3-player Tetris on one keyboard
+# 🧱TetriLight /// 3-player Tetris on 1 keyboard
 
 HTML5/JavaSript/Canvas | Resizable | Animated | Offline | 100% coded (no framework, no API, no library)
 
