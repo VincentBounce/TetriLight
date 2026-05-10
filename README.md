@@ -28,23 +28,25 @@ Press `P` to pause, and `P` again to resume.
 
 ## 📏Rules
 
-**Clearing penalty**
+### Clearing penalty
 
-When a player clears 2 (`RULES.transferRowsCountMin`) or more lines together, then he drops the same quantity of bad grey lines to other players.
+When a player clears 2 or more lines together, then he drops the same quantity of bad grey lines to other players.
+(2 is set in the variable `RULES.transferRowsCountMin`)
 
-**Pentominoes-Trominoes mode**
+### Pentominoes-Trominoes mode
 
-When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds.
+When a player clears 3 or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds.
+(3 is set in the variable `RULES.pentominoesRowsCountMin`)
 
 Pentominoes were first considered by Alexey Pajitnov, the original creator of Tetris [(Wikipedia source)](https://en.wikipedia.org/wiki/Tetris#Creation_(1984%E2%80%931985))
 
 > He became inspired to convert pentomino tiling puzzles to the computer after he bought a pentomino puzzle set from a store and played with it in his office. […] He felt that the game would be needlessly complicated with the twelve different shapes of pentominoes, so he scaled the concept down to tetrominoes, of which there are only seven shapes. 
 
-**End of game**
+### End of game
 
-The game is lost when a new shape can't be placed `!_fallingShape.canMoveToPlaced`.
+The game is lost when a new shape can't be placed (variable `!_fallingShape.canMoveToPlaced`).
 
-**Score**
+### Score
 
 - The level starts from 0 and increments +1 every 10 rows cleared.
 - Hard drops double traveled cells count.
