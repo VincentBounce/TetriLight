@@ -28,7 +28,7 @@ Press `P` to pause, and `P` again to resume.
 
 ## 📏Rules
 
-**Clear penalty**
+**Clearing penalty**
 
 When a player clears 2 (`RULES.transferRowsCountMin`) or more lines together, then he drops the same quantity of bad grey lines to other players.
 
