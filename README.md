@@ -33,7 +33,7 @@ Press `P` to pause, and `P` again to resume.
 When a player clears 2 or more lines together, then he drops the same quantity of bad grey lines to other players.
 (2 is set in the variable `RULES.transferRowsCountMin`)
 
-### Pentominoes-Trominoes mode
+### Pentominoes mode (5-block shapes)
 
 When a player clears 3 or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds.
 (3 is set in the variable `RULES.pentominoesRowsCountMin`)
