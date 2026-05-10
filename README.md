@@ -12,7 +12,7 @@ Fits [ECMAScript 6 (2015)](https://262.ecma-international.org/6.0/) + HTML5 Canv
 ---
 ---
 
-# [🕹Play here](https://vincentbounce.github.io/TetriLight)
+# [🕹Play here /// tetraminoes & pentominoes/triominoes mode](https://vincentbounce.github.io/TetriLight)
 
 **Open https://vincentbounce.github.io/TetriLight/**
 
@@ -30,7 +30,7 @@ Press `P` to pause, and `P` again to resume.
 
 When a player clears 2 (`RULES.transferRowsCountMin`) or more lines together, then he drops the same quantity of bad grey lines to other players.
 
-When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds (it's called Pentominoes/Trominoes mode).
+When a player clears 3 (`RULES.pentominoesRowsCountMin`) or more lines together, then he has 1 to 3 blocks per shape, and other players have 5 blocks per shape, during 15 or 20 seconds. It's called **pentominoes/trominoes mode.**
 
 The game is lost when a new shape can't be placed `!_fallingShape.canMoveToPlaced`.
 
